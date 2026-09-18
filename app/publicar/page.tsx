@@ -19,11 +19,11 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   /** En Next 15 `searchParams` pasa a ser Promise (ver nota en la ruta de detalle). */
-  searchParams: Promise<{ creada?: string }>;
+  searchParams: Promise<{ creada?: string; editada?: string; sinNumero?: string }>;
 }
 
 export default async function PublicarPage({ searchParams }: Props) {
-  const { creada } = await searchParams;
+  const { creada, editada, sinNumero } = await searchParams;
 
   if (!esSupabaseConfigurado()) return <ConfiguracionPendiente />;
 
@@ -53,21 +53,11 @@ export default async function PublicarPage({ searchParams }: Props) {
   return (
     <>
       <main className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-neutro-900">
-              Panel del anfitrión
-            </h1>
-            <p className="mt-1 text-sm text-neutro-600">{user.email}</p>
-          </div>
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="inline-flex h-11 items-center rounded-xl border border-neutro-300 px-4 text-sm font-bold text-neutro-700 transition hover:bg-neutro-100"
-            >
-              Cerrar sesión
-            </button>
-          </form>
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-neutro-900">
+            Panel del anfitrión
+          </h1>
+          <p className="mt-1 text-sm text-neutro-600">{user.email}</p>
         </div>
 
         {creada === "1" && (
@@ -76,6 +66,26 @@ export default async function PublicarPage({ searchParams }: Props) {
             className="mt-5 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-800"
           >
             ✓ Publicación creada. Ya aparece en el catálogo.
+          </p>
+        )}
+
+        {editada === "1" && (
+          <p
+            role="status"
+            className="mt-5 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-800"
+          >
+            ✓ Cambios guardados. El catálogo y la ficha ya los muestran.
+          </p>
+        )}
+
+        {sinNumero === "1" && (
+          <p
+            role="alert"
+            className="mt-5 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-4 py-3 text-sm font-semibold text-neutro-700"
+          >
+            Tu anuncio se publicó, pero no pudimos guardar tu número de WhatsApp: pulsa «Editar
+            anuncio» para intentarlo de nuevo. Mientras tanto, las reservas llegan al WhatsApp de la
+            plataforma.
           </p>
         )}
 

@@ -4,6 +4,14 @@ import type { GeneroHabitacion, TipoHabitacion } from "@/types";
 import { formatearCOP } from "@/lib/formato";
 
 export interface HabitacionForm {
+  /**
+   * Identificador de una habitación ya guardada.
+   *
+   * Va ausente en las nuevas. Es lo que permite editar un anuncio publicado
+   * reconciliando: actualizar las existentes, insertar las nuevas y quitar solo
+   * las que el anfitrión haya eliminado (sin perder su disponibilidad).
+   */
+  id?: string;
   tipo: TipoHabitacion;
   genero: GeneroHabitacion;
   /** Precio como texto para el input; se convierte a número al enviar. */

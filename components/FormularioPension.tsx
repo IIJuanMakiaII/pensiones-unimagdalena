@@ -10,6 +10,14 @@ import EditorHabitaciones, {
   HABITACION_INICIAL,
   type HabitacionForm,
 } from "@/components/EditorHabitaciones";
+import {
+  BARRIOS,
+  NORMAS,
+  SERVICIOS,
+  claseEtiqueta,
+  claseInput,
+} from "@/lib/formulario-pension";
+import CampoWhatsApp from "@/components/CampoWhatsApp";
 
 /**
  * Estado inicial del formulario. Vive aquí (no en el módulo de acciones) porque
@@ -17,42 +25,6 @@ import EditorHabitaciones, {
  * importarlo desde allí llegaba al cliente como referencia de servidor.
  */
 const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
-
-/** Servicios ofrecidos con más frecuencia en Santa Marta. */
-const SERVICIOS = [
-  "WiFi de alta velocidad",
-  "Aire acondicionado",
-  "Lavandería",
-  "Cocina compartida",
-  "Agua y energía incluidas",
-  "3 comidas al día",
-  "Zona de estudio",
-  "Parqueadero",
-];
-
-const NORMAS = [
-  "No fumadores",
-  "Silencio después de las 10 p. m.",
-  "Visitas hasta las 8 p. m.",
-  "Entrada libre 24 h",
-  "Cocina compartida con horario",
-  "Respetar zonas comunes",
-];
-
-const BARRIOS = [
-  "Mamatoco",
-  "El Pando",
-  "Zaragoza",
-  "Gaira",
-  "San Fernando",
-  "Los Troncos",
-  "Centro",
-  "Otro",
-];
-
-const claseInput =
-  "mt-1 w-full rounded-xl border border-neutro-300 bg-neutro-50 px-3 py-3 text-neutro-900 outline-none transition focus:border-primary-600 focus:bg-white";
-const claseEtiqueta = "block text-sm font-semibold text-neutro-700";
 
 /** Formulario de publicación de una pensión (Server Action + validación). */
 export default function FormularioPension() {
@@ -157,6 +129,8 @@ export default function FormularioPension() {
             Los estudiantes filtran por distancia: este dato decide si apareces.
           </p>
         </div>
+
+        <CampoWhatsApp />
 
         <div>
           <span className={claseEtiqueta}>Habitaciones que ofreces</span>

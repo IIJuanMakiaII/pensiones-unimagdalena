@@ -167,6 +167,15 @@ function AccionesPublicacion({ pensionId, activa }: { pensionId: string; activa:
           />
         </form>
 
+        {/* Editar está siempre disponible: una publicación retirada también
+            necesita corregirse antes de volver a publicarla. */}
+        <Link
+          href={`/publicar/${pensionId}/editar`}
+          className="inline-flex h-11 items-center rounded-xl border border-primary-600 px-4 text-sm font-bold text-primary-700 transition hover:bg-primary-50"
+        >
+          Editar anuncio
+        </Link>
+
         {/* El enlace al catálogo solo aparece si la publicación está activa: una
             publicación retirada no es accesible al público, así que enlazarla
             llevaría a un 404. */}

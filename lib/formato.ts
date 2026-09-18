@@ -82,9 +82,51 @@ export function mensajeWhatsApp(pension: Pension, habitacion?: Habitacion): stri
   );
 }
 
+/** Longitud exacta del número propio de una pensión (sin código de país). */
+export const DIGITOS_WHATSAPP = 10;
+
+export const MENSAJE_WHATSAPP_INVALIDO =
+  "Escribe el número de WhatsApp de 10 dígitos, por ejemplo 300 123 4567";
+
+/**
+ * Deja la entrada del anfitrión como la guarda la base: **10 dígitos**.
+ *
+ * Quita espacios, guiones, paréntesis y el `+`; y si el número viene con el
+ * código de país (57 + 10 dígitos = 12), lo retira. Sin esto, pegar
+ * «+57 300 123 4567» sería el error más frecuente: la base lo rechazaría porque
+ * su restricción exige exactamente 10 dígitos.
+ */
+export function normalizarWhatsappPropio(valor: string): string {
+  const digitos = normalizarNumeroWhatsApp(valor);
+  if (digitos.length === DIGITOS_WHATSAPP + 2 && digitos.startsWith("57")) {
+    return digitos.slice(2);
+  }
+  return digitos;
+}
+
+/** Un número propio es válido solo si tiene exactamente 10 dígitos. */
+export function whatsappPropioValido(valor: string): boolean {
+  return new RegExp(`^\\d{${DIGITOS_WHATSAPP}}$`).test(valor);
+}
+
+/**
+ * Número que abre el botón de reserva de una pensión.
+ *
+ *  1. Su **número propio** (10 dígitos) → se le antepone `57`, porque el
+ *     estudiante puede escribir desde fuera de Colombia.
+ *  2. **Respaldo de la plataforma** (`NEXT_PUBLIC_WHATSAPP_NUMBER`) cuando el
+ *     anuncio aún no tiene número propio: los que se publicaron antes de que
+ *     existiera el campo. No es un olvido — es la red que evita dejar un botón
+ *     de reserva roto —, y desaparece en cuanto el anfitrión fija el suyo.
+ */
+export function numeroDeReserva(pension: Pension): string {
+  const propio = normalizarWhatsappPropio(pension.whatsapp ?? "");
+  return whatsappPropioValido(propio) ? `57${propio}` : WHATSAPP_NUMERO;
+}
+
 /** Enlace wa.me con el mensaje prellenado, listo para abrir en pestaña nueva. */
 export function enlaceWhatsApp(pension: Pension, habitacion?: Habitacion): string {
-  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(
+  return `https://wa.me/${numeroDeReserva(pension)}?text=${encodeURIComponent(
     mensajeWhatsApp(pension, habitacion)
   )}`;
 }

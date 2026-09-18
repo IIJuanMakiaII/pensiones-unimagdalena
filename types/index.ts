@@ -46,6 +46,15 @@ export interface Pension {
    */
   calificacion: number;
   verificado: boolean;
+  /**
+   * WhatsApp del anfitrión para esta pensión: **exactamente 10 dígitos**, sin
+   * código de país (se añade el 57 al construir el enlace).
+   *
+   * Opcional a propósito: los anuncios publicados antes de que existiera este
+   * campo usan el número de la plataforma como respaldo. Nunca se publica en
+   * datos estructurados ni metadatos, solo viaja en el enlace de reserva.
+   */
+  whatsapp?: string | null;
 
   // --- Ubicación exacta (opcional): si existe, el mapa muestra el pin real ---
   latitud?: number | null;
@@ -89,6 +98,17 @@ export interface EntradaHabitacion {
   precio_mensual_cop: number;
   alimentacion_incluida: boolean;
   disponible: boolean;
+}
+
+/**
+ * Habitación capturada al **editar** un anuncio ya publicado.
+ *
+ * Conserva el `id` de la habitación existente (ausente si es nueva), que es lo
+ * que permite actualizarla en lugar de borrarla y volver a crearla: así no se
+ * pierde su estado de disponibilidad.
+ */
+export interface EntradaHabitacionEditada extends EntradaHabitacion {
+  id?: string;
 }
 
 /**

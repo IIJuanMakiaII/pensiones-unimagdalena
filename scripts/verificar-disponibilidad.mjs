@@ -309,21 +309,32 @@ comprobar(
 
 /* --- 5. La tarjeta del catálogo, con la publicación sin habitaciones libres */
 const home = await pedirHasta("/", (r) => r.html.includes("Sin habitaciones libres ahora"));
-comprobar("5. la publicación aparece en el catálogo", home.html.includes(TITULO));
+/**
+ * Las comprobaciones se hacen sobre la TARJETA de la publicación de prueba, no
+ * sobre la página entera. Con la página entera el resultado depende del resto del
+ * catálogo: en cuanto otra publicación tuvo una habitación libre, su CTA de
+ * reserva —legítimo— hizo fallar la comprobación. Una aserción global solo es
+ * válida mientras el catálogo esté vacío, y eso no es una invariante.
+ */
+const tarjeta = (home.html.match(/<article\b[\s\S]*?<\/article>/g) ?? []).filter((t) =>
+  t.includes(TITULO)
+);
+
+comprobar("5. la publicación aparece en el catálogo", tarjeta.length === 1, `tarjetas=${tarjeta.length}`);
 comprobar(
   "5. la tarjeta avisa de que no hay habitaciones libres",
   /* Este texto solo lo produce la rama "tiene habitaciones, todas ocupadas". */
-  home.html.includes("Sin habitaciones libres ahora"),
-  `apariciones="${(home.html.match(/Sin habitaciones libres ahora/g) ?? []).length}"`
+  tarjeta.some((t) => t.includes("Sin habitaciones libres ahora")),
+  tarjeta.length ? `"Sin habitaciones libres ahora"=${tarjeta[0].includes("Sin habitaciones libres ahora")}` : "sin tarjeta"
 );
 comprobar(
-  "5. ninguna tarjeta ofrece reservar una habitación ocupada",
-  !home.html.includes("Reservar por WhatsApp"),
-  `apariciones="${(home.html.match(/Reservar por WhatsApp/g) ?? []).length}"`
+  "5. la tarjeta NO ofrece reservar una habitación ocupada",
+  tarjeta.length > 0 && tarjeta.every((t) => !t.includes("Reservar por WhatsApp")),
+  `apariciones="${tarjeta.join("").match(/Reservar por WhatsApp/g)?.length ?? 0}"`
 );
 comprobar(
   "5. la tarjeta ofrece consultar por WhatsApp",
-  home.html.includes("Consultar por WhatsApp")
+  tarjeta.some((t) => t.includes("Consultar por WhatsApp"))
 );
 
 /* --- 6. Retirar la publicación la oculta al público ----------------------- */

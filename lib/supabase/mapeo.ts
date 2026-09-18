@@ -26,6 +26,8 @@ export interface PensionFila {
   creada_en: string;
   latitud?: number | null;
   longitud?: number | null;
+  /** WhatsApp propio del anuncio (10 dígitos); `null` si no lo ha fijado. */
+  whatsapp?: string | null;
 }
 
 export interface HabitacionFila {
@@ -74,6 +76,7 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
     verificado: Boolean(fila.verificado),
     latitud: typeof fila.latitud === "number" ? fila.latitud : null,
     longitud: typeof fila.longitud === "number" ? fila.longitud : null,
+    whatsapp: fila.whatsapp ?? null,
     habitaciones,
   };
 }
