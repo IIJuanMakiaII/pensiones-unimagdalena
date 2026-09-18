@@ -6,6 +6,7 @@ import { SITIO_IMAGEN, SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
 import InstalarApp from "@/components/InstalarApp";
 import AvisoOffline from "@/components/AvisoOffline";
+import Cabecera from "@/components/Cabecera";
 
 /**
  * Fuentes autoalojadas con next/font: se descargan en el build y se sirven desde
@@ -164,6 +165,8 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
+        {/* Cabecera estática: la sesión se resuelve en el cliente (ver EntradaCuenta). */}
+        <Cabecera />
         {children}
         <AvisoOffline />
         <InstalarApp />

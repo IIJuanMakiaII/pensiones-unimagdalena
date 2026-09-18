@@ -100,7 +100,7 @@ export default function FormularioLogin({ destino, configurado }: Props) {
       <p className="mt-4 text-center text-sm text-neutro-600">
         ¿Aún no tienes cuenta?{" "}
         <Link href="/registro" className="font-bold text-primary-700 hover:underline">
-          Registra tu pensión
+          Hazte una cuenta de anfitrión
         </Link>
       </p>
     </form>
