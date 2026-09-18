@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 export default function RegistroPage() {
   return (
     <>
-      <main className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-4 py-10">
+      <main
+        id="resultados"
+        tabIndex={-1}
+        className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-4 py-10"
+      >
         <Link href="/" className="mb-6 font-display text-lg font-extrabold text-primary-700">
           ← Volver al catálogo
         </Link>

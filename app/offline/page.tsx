@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 /** Página de respaldo que el service worker sirve cuando no hay red (PWA). */
 export default function SinConexion() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-6 py-16 text-center">
+    <main
+      id="resultados"
+      tabIndex={-1}
+      className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-6 py-16 text-center"
+    >
       <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-600 text-white">
         <svg
           viewBox="0 0 24 24"

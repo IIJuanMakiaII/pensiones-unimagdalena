@@ -52,7 +52,7 @@ export default async function PublicarPage({ searchParams }: Props) {
 
   return (
     <>
-      <main className="mx-auto max-w-3xl px-4 py-8 md:px-6">
+      <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-neutro-900">
             Panel del anfitrión
@@ -126,7 +126,7 @@ export default async function PublicarPage({ searchParams }: Props) {
 function ConfiguracionPendiente() {
   return (
     <>
-      <main className="mx-auto max-w-3xl px-4 py-10 md:px-6">
+      <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-10 md:px-6">
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">
           Modo dinámico pendiente de activar
         </h1>
@@ -180,7 +180,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key`}
 function ErrorSesion() {
   return (
     <>
-      <main className="mx-auto max-w-2xl px-4 py-16 text-center md:px-6">
+      <main id="resultados" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-16 text-center md:px-6">
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">
           No pudimos verificar tu sesión
         </h1>

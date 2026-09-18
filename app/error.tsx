@@ -20,7 +20,11 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-6 py-16 text-center">
+    <main
+      id="resultados"
+      tabIndex={-1}
+      className="flex min-h-dvh flex-col items-center justify-center bg-neutro-50 px-6 py-16 text-center"
+    >
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-100 text-accent-700" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-7 w-7">
           <path d="M12 8v5" />

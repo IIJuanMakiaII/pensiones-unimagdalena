@@ -59,7 +59,7 @@ export default async function EditarPensionPage({ params }: Props) {
 
   return (
     <>
-      <main className="mx-auto max-w-3xl px-4 py-8 md:px-6">
+      <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
         <p className="mb-4 text-sm">
           <Link href="/publicar" className="font-bold text-primary-700 hover:underline">
             ← Volver a mi panel

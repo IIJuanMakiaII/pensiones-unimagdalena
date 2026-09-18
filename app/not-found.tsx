@@ -2,7 +2,11 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
+    <main
+      id="resultados"
+      tabIndex={-1}
+      className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center"
+    >
       <p className="text-5xl" aria-hidden="true">
         🏠
       </p>
