@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-neutro-50 text-neutro-800 font-body antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display;
+}
+
+/* Precios con cifras de ancho fijo (evita saltos al cambiar de valor con filtros) */
+.precio {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ocultar scrollbar en filas de chips horizontales manteniendo el scroll táctil */
+.scrollbar-oculto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-oculto::-webkit-scrollbar {
+  display: none;
+}
+
+/* Transición suave de resultados al cambiar filtros */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animar-aparecer {
+  animation: aparecer 0.15s ease-out both;
+}
+
+/* Accesibilidad: foco visible consistente (verde de marca #325334) */
+:focus-visible {
+  outline: 3px solid #325334;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
