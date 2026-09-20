@@ -88,10 +88,30 @@ Consolidación de los 84 hallazgos de origen. Donde varios informes reportaron e
 
 ### Oleada 1 — Primeras dos semanas
 
-> **Estado (2026-09-17): EN CURSO** — implementados y verificados **M-09, M-10,
+> **Estado (2026-09-20): EN CURSO** — implementados y verificados **M-09, M-10,
 > M-11, M-12, M-13 y M-14** (el circuito anfitrión publica → estudiante filtra →
-> reserva). Pendientes: M-07, M-08, M-15, M-16 y M-19.
-> Detalle y evidencias: [../oleada-1-implementada.md](../oleada-1-implementada.md).
+> reserva).
+>
+> **Parciales, con lo que falta dicho:**
+> - **M-15** — hecho: gestionar disponibilidad, retirar/republicar y **editar** un
+>   anuncio (nombre, descripción, fotos, habitaciones). **Falta:** borrar.
+> - **M-16** — hecho: git y repositorio privado en GitHub, con los avances subidos.
+>   **Falta:** integración continua y pruebas automatizadas en cada cambio.
+>
+> **Pendientes enteros:** M-07, M-08 y M-19.
+> Detalle y evidencias: [../oleada-1-implementada.md](../oleada-1-implementada.md) y
+> [../oleada-3-implementada.md](../oleada-3-implementada.md).
+>
+> **Añadidos posteriores a este informe** (peticiones del fundador, ya entregadas y
+> verificadas): cabecera con entrada de cuenta, WhatsApp propio por anuncio, y un
+> análisis de costos y lanzamiento en
+> [../negocio/costos-y-lanzamiento.md](../negocio/costos-y-lanzamiento.md).
+>
+> **Hallazgos nuevos de la última verificación, que no estaban en la auditoría:**
+> correo de confirmación propio (el servicio integrado se corta por cupo y un
+> anfitrión no termina de registrarse), **recuperación de contraseña** (M-24 lo
+> incluía, pero es bloqueante para un anfitrión que la olvide) y textos legales de
+> tratamiento de datos.
 
 M-07 · M-08 (bandera `PERMITIR_CATALOGO_DEMO=false` en producción y error visible) · M-09 + M-14 (RPC transaccional que crea pensión y habitaciones, con `WITH CHECK`) · M-10 + M-11 (coherencia de precio y desanidar el CTA) · M-12 · M-13 · M-16 (git + CI con `typecheck → lint → test → build`) · M-17 · M-18 · M-19.
 
