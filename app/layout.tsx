@@ -7,6 +7,7 @@ import { serializarJsonLd } from "@/lib/json-ld";
 import InstalarApp from "@/components/InstalarApp";
 import AvisoOffline from "@/components/AvisoOffline";
 import Cabecera from "@/components/Cabecera";
+import { Analytics } from "@vercel/analytics/next";
 
 /**
  * Fuentes autoalojadas con next/font: se descargan en el build y se sirven desde
@@ -174,6 +175,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializarJsonLd(jsonLdSitio) }}
         />
+        {/* Medición sin cookies (ver lib/medicion.ts): no añade aviso de cookies
+            y solo envía el identificador del anuncio, nunca datos personales. */}
+        <Analytics />
       </body>
     </html>
   );

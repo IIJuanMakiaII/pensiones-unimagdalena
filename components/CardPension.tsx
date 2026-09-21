@@ -6,6 +6,7 @@ import type { FiltrosUI } from "@/lib/filtros";
 import { contarDisponibles, habitacionDestacada } from "@/lib/filtros";
 import { galeriaDe, precioDesde } from "@/lib/pension";
 import { enlaceWhatsApp, etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
+import { medirContacto } from "@/lib/medicion";
 import Carrusel from "@/components/Carrusel";
 import SelloVerificado from "@/components/SelloVerificado";
 import BotonFavorito from "@/components/BotonFavorito";
@@ -128,6 +129,14 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             href={enlaceWhatsApp(pension, destacada)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              medirContacto({
+                pension: pension.id,
+                origen: "tarjeta",
+                propio: Boolean(pension.whatsapp),
+                con_habitacion: true,
+              })
+            }
             className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white shadow-sm transition hover:bg-whatsapp-dark"
           >
             <WhatsAppIcon />
@@ -145,6 +154,14 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
               href={enlaceWhatsApp(pension)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                medirContacto({
+                  pension: pension.id,
+                  origen: "tarjeta",
+                  propio: Boolean(pension.whatsapp),
+                  con_habitacion: false,
+                })
+              }
               className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white transition hover:bg-whatsapp-dark"
             >
               <WhatsAppIcon />
@@ -156,6 +173,14 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             href={enlaceWhatsApp(pension)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              medirContacto({
+                pension: pension.id,
+                origen: "tarjeta",
+                propio: Boolean(pension.whatsapp),
+                con_habitacion: false,
+              })
+            }
             className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white shadow-sm transition hover:bg-whatsapp-dark"
           >
             <WhatsAppIcon />

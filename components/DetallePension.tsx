@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PensionConHabitaciones } from "@/types";
 import {
   enlaceWhatsApp,
@@ -8,6 +8,7 @@ import {
   etiquetaTipo,
   formatearCOP,
 } from "@/lib/formato";
+import { medirContacto, medirVerFicha } from "@/lib/medicion";
 import { WhatsAppIcon } from "@/components/CardPension";
 
 interface Props {
@@ -28,6 +29,13 @@ export default function DetallePension({ pension }: Props) {
   const seleccionada = pension.habitaciones.find(
     (h) => h.id === seleccionadaId
   );
+
+  // Visita a la ficha: el paso del embudo que hay entre filtrar y contactar.
+  useEffect(() => {
+    medirVerFicha({ pension: pension.id, tiene_libres: disponibles.length > 0 });
+    // Solo al montar: una vez por visita, no en cada cambio de habitación.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="pb-28 md:pb-0">
@@ -84,7 +92,15 @@ export default function DetallePension({ pension }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 /* Mantiene sincronizada la barra fija del móvil con lo reservado. */
-                onClick={() => setSeleccionadaId(h.id)}
+                onClick={() => {
+                  setSeleccionadaId(h.id);
+                  medirContacto({
+                    pension: pension.id,
+                    origen: "ficha",
+                    propio: Boolean(pension.whatsapp),
+                    con_habitacion: true,
+                  });
+                }}
                 aria-label={`Reservar ${etiquetaTipo(h.tipo)} ${etiquetaGenero(h.genero)} por WhatsApp`}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-sm font-bold text-white transition hover:bg-whatsapp-dark"
               >
@@ -120,6 +136,14 @@ export default function DetallePension({ pension }: Props) {
             href={enlaceWhatsApp(pension)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              medirContacto({
+                pension: pension.id,
+                origen: "ficha",
+                propio: Boolean(pension.whatsapp),
+                con_habitacion: false,
+              })
+            }
             className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-5 text-[15px] font-bold text-white transition hover:bg-whatsapp-dark"
           >
             <WhatsAppIcon />
@@ -168,6 +192,14 @@ export default function DetallePension({ pension }: Props) {
               href={enlaceWhatsApp(pension, seleccionada)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                medirContacto({
+                  pension: pension.id,
+                  origen: "barra_movil",
+                  propio: Boolean(pension.whatsapp),
+                  con_habitacion: true,
+                })
+              }
               className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-5 text-[15px] font-bold text-white shadow-lg transition hover:bg-whatsapp-dark"
             >
               <WhatsAppIcon />

@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 interface Props {
   /** En Next 15 `searchParams` también pasa a ser Promise (ver nota en la ruta de detalle). */
-  searchParams: Promise<{ destino?: string }>;
+  searchParams: Promise<{ destino?: string; aviso?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { destino: destinoSolicitado } = await searchParams;
+  const { destino: destinoSolicitado, aviso } = await searchParams;
   // Solo rutas internas: `startsWith("/")` dejaba pasar `//evil.com`, que el
   // navegador interpreta como dominio externo (redirección abierta).
   const destino =
@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <Link href="/" className="mb-6 font-display text-lg font-extrabold text-primary-700">
           ← Volver al catálogo
         </Link>
-        <FormularioLogin destino={destino} configurado={esSupabaseConfigurado()} />
+        <FormularioLogin destino={destino} configurado={esSupabaseConfigurado()} aviso={aviso} />
       </main>
       <Footer />
     </>

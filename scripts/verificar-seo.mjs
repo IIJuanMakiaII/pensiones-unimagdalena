@@ -136,6 +136,31 @@ if (hayCatalogo) {
   console.log("\n=== Ficha ===\n  (omitida: no hay pensiones publicadas, no se prerenderiza ninguna ficha)");
 }
 
+/* -------------------------------------- robots.txt y sitemap.xml (tarea #24) --- */
+
+console.log("\n=== robots.txt y sitemap.xml ===");
+try {
+  const robots = await readFile(".next/server/app/robots.txt.body", "utf8");
+  revisar("robots.txt permite el catálogo", "Allow: /", "presente", robots);
+  revisar("robots.txt excluye la zona privada", "Disallow: /publicar", "presente", robots);
+  revisar("robots.txt anuncia el sitemap", "Sitemap:", "presente", robots);
+} catch {
+  // Sin archivo, la comprobación debe FALLAR (no omitirse en silencio).
+  revisar("robots.txt generado en el build", "robots.txt", "presente", "");
+}
+
+try {
+  const sitemap = await readFile(".next/server/app/sitemap.xml.body", "utf8");
+  revisar("sitemap.xml incluye la portada", "<loc>", "presente", sitemap);
+  // Lo que entra en el sitemap se indexa: la demo de presentaciones nunca debe
+  // aparecer aquí, o al apagarla quedarían fichas fantasma en Google.
+  revisar("sitemap.xml NO anuncia la demo", "pension-costa-verde", "ausente", sitemap);
+  revisar("sitemap.xml no anuncia rutas privadas", "/login", "ausente", sitemap);
+  revisar("sitemap.xml no anuncia la edición", "/editar", "ausente", sitemap);
+} catch {
+  revisar("sitemap.xml generado en el build", "sitemap.xml", "presente", "");
+}
+
 console.log(
   fallos === 0
     ? `\nTodas las verificaciones pasaron (${hayCatalogo ? "con catálogo" : "catálogo vacío"}).`

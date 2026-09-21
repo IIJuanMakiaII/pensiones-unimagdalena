@@ -86,6 +86,45 @@ export async function obtenerPensionPorId(id: string): Promise<PensionConHabitac
   }
 }
 
+/**
+ * Anuncios **reales** publicados en la base, sin la semilla de demostración.
+ *
+ * Es la fuente del `sitemap.xml`, y la diferencia con `obtenerPensiones()` es
+ * deliberada: aquella cae al catálogo de ejemplo cuando Supabase no responde, y
+ * un sitemap es una promesa pública a los buscadores — anunciar una ficha de
+ * demostración la indexaría, y al apagar la demo quedarían URLs fantasma.
+ *
+ * Por eso aquí, ante cualquier duda (sin credenciales o error de red), se
+ * devuelve una lista vacía: es preferible anunciar poco que anunciar mentira.
+ */
+export async function obtenerPensionesReales(): Promise<PensionConHabitaciones[]> {
+  if (!esSupabaseConfigurado()) return [];
+
+  try {
+    const supabase = crearClientePublico();
+    const { data: pensiones, error } = await supabase
+      .from("pensiones")
+      .select("*")
+      .eq("activa", true)
+      .order("creada_en", { ascending: false });
+
+    if (error || !pensiones) {
+      console.error("Sitemap: no se pudo leer el catálogo real:", error?.message);
+      return [];
+    }
+
+    const ids = (pensiones as PensionFila[]).map((p) => p.id);
+    const { data: habitaciones } = ids.length
+      ? await supabase.from("habitaciones").select("*").in("pension_id", ids)
+      : { data: [] };
+
+    return combinar(pensiones as PensionFila[], (habitaciones ?? []) as HabitacionFila[]);
+  } catch (error) {
+    console.error("Sitemap: fallo de conexión con Supabase:", error);
+    return [];
+  }
+}
+
 /** Publicaciones de un anfitrión (panel de /publicar). */
 export async function obtenerPensionesDelAnfitrion(
   anfitrionId: string

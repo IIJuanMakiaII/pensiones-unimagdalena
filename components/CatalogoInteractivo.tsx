@@ -13,6 +13,7 @@ import {
   type FiltrosUI,
 } from "@/lib/filtros";
 import { useFavoritos } from "@/hooks/useFavoritos";
+import { medirFiltros } from "@/lib/medicion";
 import Filtros from "@/components/Filtros";
 import CardPension from "@/components/CardPension";
 import EstadoVacio from "@/components/EstadoVacio";
@@ -94,6 +95,28 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
     () => aplicarFiltros(activas, filtros, limitesPrecio.max, favoritos),
     [activas, filtros, favoritos]
   );
+
+  /**
+   * Medición de filtros, con retardo a propósito: arrastrar el slider emite
+   * decenas de cambios y enviar uno por píxel llenaría la medición de ruido sin
+   * aportar nada. Un segundo y medio después del último cambio se registra el
+   * estado en el que el estudiante se quedó, junto con cuántos resultados vio.
+   */
+  useEffect(() => {
+    const temporizador = setTimeout(() => {
+      medirFiltros({
+        precio_maximo: filtros.precioMaximoCop,
+        genero: filtros.genero,
+        distancia: filtros.rangoDistancia,
+        alimentacion: filtros.soloConAlimentacion,
+        solo_verificadas: filtros.soloVerificadas,
+        solo_favoritas: filtros.soloFavoritas,
+        resultados: resultados.length,
+      });
+    }, 1500);
+
+    return () => clearTimeout(temporizador);
+  }, [filtros, resultados.length]);
 
   const limpiar = () =>
     cambiarFiltros({ ...FILTROS_INICIALES, precioMaximoCop: limitesPrecio.max });

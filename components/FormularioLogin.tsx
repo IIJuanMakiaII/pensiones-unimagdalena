@@ -9,15 +9,21 @@ import { mensajeDeError } from "@/lib/auth-mensajes";
 interface Props {
   destino: string;
   configurado: boolean;
+  /** Aviso que llega desde la URL (por ejemplo, un enlace de correo caducado). */
+  aviso?: string;
 }
 
 /** Formulario de acceso de anfitriones (Supabase Auth). */
-export default function FormularioLogin({ destino, configurado }: Props) {
+export default function FormularioLogin({ destino, configurado, aviso }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    configurado ? null : "Supabase aún no está configurado: falta agregar las credenciales en .env.local."
+    configurado
+      ? aviso === "enlace"
+        ? "Ese enlace de correo ya no servía (caducan por seguridad y se usan una sola vez). Pide uno nuevo para crear tu contraseña."
+        : null
+      : "Supabase aún no está configurado: falta agregar las credenciales en .env.local."
   );
   const [enviando, setEnviando] = useState(false);
 
@@ -87,6 +93,11 @@ export default function FormularioLogin({ destino, configurado }: Props) {
           className="mt-1 h-12 w-full rounded-xl border border-neutro-300 bg-neutro-50 px-3 text-neutro-900 outline-none transition focus:border-primary-600 focus:bg-white"
           placeholder="Mínimo 6 caracteres"
         />
+        <p className="mt-2 text-right">
+          <Link href="/recuperar" className="text-sm font-bold text-primary-700 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
       </div>
 
       <button
