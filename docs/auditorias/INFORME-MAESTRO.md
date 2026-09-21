@@ -89,16 +89,27 @@ Consolidación de los 84 hallazgos de origen. Donde varios informes reportaron e
 ### Oleada 1 — Primeras dos semanas
 
 > **Estado (2026-09-20): EN CURSO** — implementados y verificados **M-09, M-10,
-> M-11, M-12, M-13 y M-14** (el circuito anfitrión publica → estudiante filtra →
-> reserva).
+> M-11, M-12, M-13, M-14 y M-19** (el circuito anfitrión publica → estudiante filtra
+> → reserva, más el mapa del sitio, la medición del embudo y la recuperación de
+> cuenta).
 >
 > **Parciales, con lo que falta dicho:**
+> - **M-07** — **en curso.** La semilla (identificador legible) y la base (UUID)
+>   siguen en espacios incompatibles; se está unificando la dirección pública. La
+>   mitad de datos va primero (tarea #26) y la visible después (tarea #27).
 > - **M-15** — hecho: gestionar disponibilidad, retirar/republicar y **editar** un
 >   anuncio (nombre, descripción, fotos, habitaciones). **Falta:** borrar.
 > - **M-16** — hecho: git y repositorio privado en GitHub, con los avances subidos.
->   **Falta:** integración continua y pruebas automatizadas en cada cambio.
+>   **Falta:** integración continua y pruebas automatizadas en cada cambio (tarea
+>   #28).
 >
-> **Pendientes enteros:** M-07, M-08 y M-19.
+> **M-08 — aplazado por decisión del fundador, no por olvido.** La demo se mantiene
+> **encendida** porque hace falta para enseñarla a los profesores y a los primeros
+> usuarios, y se apaga **antes de abrir al público**. Mientras esté encendida, el
+> `sitemap.xml` anuncia **solo los anuncios reales** de la base —nunca la semilla—,
+> de modo que las fichas de ejemplo **no pueden indexarse** ni dejar URLs fantasma
+> el día que se apaguen.
+>
 > Detalle y evidencias: [../oleada-1-implementada.md](../oleada-1-implementada.md) y
 > [../oleada-3-implementada.md](../oleada-3-implementada.md).
 >
@@ -109,9 +120,15 @@ Consolidación de los 84 hallazgos de origen. Donde varios informes reportaron e
 >
 > **Hallazgos nuevos de la última verificación, que no estaban en la auditoría:**
 > correo de confirmación propio (el servicio integrado se corta por cupo y un
-> anfitrión no termina de registrarse), **recuperación de contraseña** (M-24 lo
-> incluía, pero es bloqueante para un anfitrión que la olvide) y textos legales de
-> tratamiento de datos.
+> anfitrión no termina de registrarse) y **recuperación de contraseña** (M-24 lo
+> incluía, pero es bloqueante para un anfitrión que la olvide). **Ambos cerrados.**
+>
+> **Textos legales de tratamiento de datos — borradores entregados** en
+> [../legales/](../legales/), pendientes de revisión jurídica. La plataforma publica
+> el número de WhatsApp de terceros y hoy **no existe ninguna casilla de
+> autorización** en ningún formulario: el número de una persona se publica sin que
+> nadie lo haya autorizado. Los borradores incluyen la lista de preguntas concretas
+> que debe responder un abogado antes de abrir al público.
 
 M-07 · M-08 (bandera `PERMITIR_CATALOGO_DEMO=false` en producción y error visible) · M-09 + M-14 (RPC transaccional que crea pensión y habitaciones, con `WITH CHECK`) · M-10 + M-11 (coherencia de precio y desanidar el CTA) · M-12 · M-13 · M-16 (git + CI con `typecheck → lint → test → build`) · M-17 · M-18 · M-19.
 
