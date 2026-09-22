@@ -1,0 +1,269 @@
+name: Integración continua
+
+# Se ejecuta en CADA subida (y en cada propuesta de cambio), no bajo demanda:
+# el objetivo es que ningún cambio llegue a `main` sin pasar las comprobaciones.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integracion-continua-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Valor de EJEMPLO, no un secreto: el número de WhatsApp de la plataforma va
+  # dentro del bundle del navegador (es público por diseño). El build de
+  # producción exige que la variable exista —si falta, falla a propósito—, así
+  # que aquí se usa el mismo marcador que documenta `.env.example`.
+  NEXT_PUBLIC_WHATSAPP_NUMBER: "573001234567"
+  NEXT_PUBLIC_SITE_URL: "https://ejemplo.invalid"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Bloque 1 — todo lo que no necesita base de datos ni servidor.
+  # Es el bloque esencial: si algo aquí falla, la subida no debe considerarse buena.
+  # ---------------------------------------------------------------------------
+  sin-base-de-datos:
+    name: 1 · Sin base de datos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 22 no es una preferencia: las pruebas unitarias ejecutan archivos
+          # `.ts` directamente gracias al «type stripping», estable desde Node 22.
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias (respetando package-lock.json)
+        run: npm ci
+
+      - name: Tipos (tsc --noEmit)
+        run: npm run tipos
+
+      - name: Lint — se salta con motivo si no hay ESLint
+        run: npm run verificar:lint
+
+      - name: Pruebas unitarias de la lógica pura
+        run: npm run probar
+
+      - name: Compilación de producción
+        run: npm run build
+
+      - name: Guardián de credenciales
+        run: npm run verificar:secretos
+
+      - name: Contraste WCAG (lee tailwind.config.ts)
+        run: npm run verificar:contraste
+
+      - name: SEO sobre el build
+        run: npm run verificar:seo
+
+      - name: Publicar el build para los bloques siguientes
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-next
+          # `.next` es un directorio oculto: sin `include-hidden-files` no se subiría.
+          include-hidden-files: true
+          retention-days: 1
+          path: |
+            .next
+            !.next/cache
+            public
+
+  # ---------------------------------------------------------------------------
+  # Bloque 2 — el mismo build, con el servidor levantado, sin base de datos.
+  # Comprueba lo que solo se puede ver sirviendo la aplicación.
+  # ---------------------------------------------------------------------------
+  con-servidor:
+    name: 2 · Con servidor (sin base de datos)
+    needs: sin-base-de-datos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias (respetando package-lock.json)
+        run: npm ci
+
+      - name: Recuperar el build verificado en el bloque 1
+        uses: actions/download-artifact@v4
+        with:
+          name: build-next
+
+      - name: Levantar el servidor de producción
+        run: |
+          npm start > /tmp/servidor.log 2>&1 &
+          for intento in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/; then
+              echo "Servidor listo tras ${intento} intento(s)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::El servidor no respondió en 60 segundos."
+          tail -n 40 /tmp/servidor.log
+          exit 1
+
+      - name: Humo (rutas públicas)
+        run: npm run verificar:humo
+
+      - name: Estructura HTML (contenido interactivo anidado)
+        run: node scripts/verificar-estructura.mjs http://127.0.0.1:3000 / /login /registro
+
+      - name: Registro del servidor si algo falla
+        if: failure()
+        run: tail -n 60 /tmp/servidor.log
+
+  # ---------------------------------------------------------------------------
+  # Bloque 3 — extremo a extremo con la base de datos real.
+  # Requiere los secretos del repositorio. Si no están, NO se ejecuta y se dice
+  # por qué: nunca se reporta como superado.
+  # ---------------------------------------------------------------------------
+  con-base-de-datos:
+    name: 3 · Con base de datos
+    needs: sin-base-de-datos
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      WHATSAPP: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias (respetando package-lock.json)
+        run: npm ci
+
+      - name: ¿Hay credenciales configuradas?
+        id: credenciales
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            echo "disponible=true" >> "$GITHUB_OUTPUT"
+            echo "Credenciales presentes."
+          else
+            echo "disponible=false" >> "$GITHUB_OUTPUT"
+            echo "Sin credenciales de Supabase."
+          fi
+
+      - name: SALTADO — comprobaciones con base de datos
+        if: steps.credenciales.outputs.disponible != 'true'
+        run: |
+          echo "::warning title=Bloque 3 SALTADO::Faltan los secretos NEXT_PUBLIC_SUPABASE_URL y/o NEXT_PUBLIC_SUPABASE_ANON_KEY: las comprobaciones extremo a extremo NO se ejecutaron."
+          {
+            echo "### Bloque 3 SALTADO — comprobaciones con base de datos"
+            echo ""
+            echo "**Motivo:** faltan los secretos NEXT_PUBLIC_SUPABASE_URL y/o NEXT_PUBLIC_SUPABASE_ANON_KEY en el repositorio."
+            echo ""
+            echo "Estas comprobaciones **no se ejecutaron** y por tanto **no cuentan como superadas**:"
+            echo ""
+            echo "| Comprobación | Qué verifica |"
+            echo "| --- | --- |"
+            echo "| humo | rutas servidas con datos reales |"
+            echo "| estructura | marcado de la ficha real |"
+            echo "| estados | 404 real de ficha inexistente o retirada |"
+            echo "| supabase | RLS: catálogo público y perfiles NO legibles por anónimos |"
+            echo ""
+            echo "Para activarlas, añade los secretos en Settings → Secrets and variables → Actions."
+            echo "Los nombres exactos y de dónde sale cada valor están en docs/integracion-continua.md."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Materializar .env.local desde los secretos
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: |
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+          NEXT_PUBLIC_SITE_URL=${SITE_URL:-https://ejemplo.invalid}
+          NEXT_PUBLIC_WHATSAPP_NUMBER=${WHATSAPP:-573001234567}
+          EOF
+          echo "Archivo .env.local creado (no se versiona: está en .gitignore)."
+
+      - name: Compilación de producción con las credenciales reales
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: npm run build
+
+      - name: Levantar el servidor
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: |
+          npm start > /tmp/servidor.log 2>&1 &
+          for intento in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/; then
+              echo "Servidor listo tras ${intento} intento(s)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::El servidor no respondió en 60 segundos."
+          tail -n 40 /tmp/servidor.log
+          exit 1
+
+      - name: Humo (rutas con datos reales)
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: npm run verificar:humo
+
+      - name: Estructura HTML de la ficha real
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: npm run verificar:estructura
+
+      - name: Códigos de estado (404 real de ficha retirada o inexistente)
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: npm run verificar:estados
+
+      - name: RLS de Supabase (solo lectura, con la clave pública)
+        if: steps.credenciales.outputs.disponible == 'true'
+        run: npm run verificar:supabase
+
+      - name: Registro del servidor si algo falla
+        if: failure()
+        run: tail -n 60 /tmp/servidor.log
+
+  # ---------------------------------------------------------------------------
+  # Resumen — deja escrito, en una sola pantalla, qué se ejecutó y qué no.
+  # Pensado para ser el único estado requerido en la protección de rama: falla si
+  # el bloque esencial no se superó, de modo que un verde signifique algo.
+  # ---------------------------------------------------------------------------
+  resumen:
+    name: 4 · Resumen
+    needs: [sin-base-de-datos, con-servidor, con-base-de-datos]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Estado de cada bloque
+        run: |
+          {
+            echo "### Estado de las comprobaciones"
+            echo ""
+            echo "| Bloque | Resultado |"
+            echo "| --- | --- |"
+            echo "| 1 · Sin base de datos (tipos, lint, unitarias, build, secretos, contraste, SEO) | ${{ needs.sin-base-de-datos.result }} |"
+            echo "| 2 · Con servidor, sin base de datos (humo, estructura) | ${{ needs.con-servidor.result }} |"
+            echo "| 3 · Con base de datos (humo, estructura, estados, RLS) | ${{ needs.con-base-de-datos.result }} |"
+            echo ""
+            echo "success = se ejecutó y pasó. failure = se ejecutó y falló. skipped = NO se ejecutó (mira el motivo en ese bloque)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fallar si el bloque esencial no se superó
+        if: needs.sin-base-de-datos.result != 'success'
+        run: |
+          echo "::error::El bloque 1 (sin base de datos) no se superó: ${{ needs.sin-base-de-datos.result }}."
+          exit 1

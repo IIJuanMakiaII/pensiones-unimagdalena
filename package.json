@@ -7,7 +7,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tipos": "tsc --noEmit",
+    "probar": "node --import ./pruebas/registrar.mjs --test pruebas/*.prueba.ts",
+    "verificar:lint": "node scripts/verificar-lint.mjs",
+    "verificar:secretos": "node scripts/verificar-secretos.mjs",
+    "verificar:contraste": "node scripts/verificar-contraste.mjs",
+    "verificar:seo": "node scripts/verificar-seo.mjs",
+    "verificar:humo": "node scripts/prueba-humo.mjs",
+    "verificar:estructura": "node scripts/verificar-estructura.mjs",
+    "verificar:estados": "node scripts/verificar-estados.mjs",
+    "verificar:supabase": "node scripts/verificar-supabase.mjs",
+    "verificar:disponibilidad": "node scripts/verificar-disponibilidad.mjs",
+    "verificar:storage": "node scripts/verificar-storage.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
