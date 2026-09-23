@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { obtenerPensionPorId, obtenerPensiones } from "@/lib/datos";
+import { obtenerPensionPorId, obtenerPensiones, obtenerPensionesReales } from "@/lib/datos";
 import { galeriaDe, imagenPrincipal, precioReservable } from "@/lib/pension";
 import Carrusel from "@/components/Carrusel";
 import SelloVerificado from "@/components/SelloVerificado";
@@ -13,6 +13,9 @@ import MapaUbicacion from "@/components/MapaUbicacion";
 import Footer from "@/components/Footer";
 import { SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
+import { resumenesDeBarrio, slugDeBarrio } from "@/lib/barrios";
+import { MIGA_INICIO, jsonLdMigas, type Miga } from "@/lib/migas";
+import Migas from "@/components/Migas";
 
 interface Props {
   /**
@@ -101,6 +104,26 @@ export default async function DetallePensionPage({ params }: Props) {
    */
   const precioParaReservar = precioReservable(pension);
 
+  /**
+   * La miga de pan incluye el barrio **solo si esa página existe**. El barrio lo
+   * escribe el anfitrión a mano y las páginas de barrio se construyen únicamente
+   * con publicaciones reales; con la demostración encendida hay anuncios de
+   * ejemplo cuyo barrio no tiene página. Enlazar desde una ficha indexada a una
+   * ruta que responde 404 sería peor que no ofrecer el enlace.
+   */
+  const slugsDeBarrio = new Set(
+    resumenesDeBarrio(await obtenerPensionesReales()).map((resumen) => resumen.slug),
+  );
+  const slugBarrio = slugDeBarrio(pension.barrio ?? "");
+
+  const migas: Miga[] = [
+    MIGA_INICIO,
+    ...(slugBarrio && slugsDeBarrio.has(slugBarrio)
+      ? [{ nombre: pension.barrio, ruta: `/barrios/${slugBarrio}` }]
+      : []),
+    { nombre: pension.titulo, ruta: `/pensiones/${pension.slug}` },
+  ];
+
   const jsonLdPension = {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
@@ -169,7 +192,9 @@ export default async function DetallePensionPage({ params }: Props) {
         </div>
 
         <div className="px-4 py-6 md:px-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutro-500">
+          <Migas migas={migas} />
+
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutro-500">
             {pension.barrio || "Santa Marta"} · Santa Marta
           </p>
           <h1 className="mt-1 flex items-center gap-2 font-display text-2xl font-extrabold text-neutro-800 md:text-3xl">
@@ -301,6 +326,10 @@ export default async function DetallePensionPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializarJsonLd(jsonLdPension) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializarJsonLd(jsonLdMigas(migas)) }}
       />
     </>
   );
