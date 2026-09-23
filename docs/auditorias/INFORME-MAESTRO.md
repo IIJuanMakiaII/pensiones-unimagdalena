@@ -88,20 +88,28 @@ Consolidación de los 84 hallazgos de origen. Donde varios informes reportaron e
 
 ### Oleada 1 — Primeras dos semanas
 
-> **Estado (2026-09-20): EN CURSO** — implementados y verificados **M-09, M-10,
-> M-11, M-12, M-13, M-14 y M-19** (el circuito anfitrión publica → estudiante filtra
-> → reserva, más el mapa del sitio, la medición del embudo y la recuperación de
-> cuenta).
+> **Estado (2026-09-23): cerrada salvo borrar.** Implementados y verificados **M-07,
+> M-09, M-10, M-11, M-12, M-13, M-14, M-16 y M-19** (el circuito anfitrión publica →
+> estudiante filtra → reserva, más la dirección pública legible, la integración
+> continua, el mapa del sitio, la medición del embudo y la recuperación de cuenta).
 >
-> **Parciales, con lo que falta dicho:**
-> - **M-07** — **en curso.** La semilla (identificador legible) y la base (UUID)
->   siguen en espacios incompatibles; se está unificando la dirección pública. La
->   mitad de datos va primero (tarea #26) y la visible después (tarea #27).
-> - **M-15** — hecho: gestionar disponibilidad, retirar/republicar y **editar** un
->   anuncio (nombre, descripción, fotos, habitaciones). **Falta:** borrar.
-> - **M-16** — hecho: git y repositorio privado en GitHub, con los avances subidos.
->   **Falta:** integración continua y pruebas automatizadas en cada cambio (tarea
->   #28).
+> **M-07 — cerrado.** Cada anuncio tiene dirección pública legible y estable
+> (`pensiones.slug`, única y no nula, con disparador declarado **solo en `INSERT`**:
+> editar el título no cambia una dirección ya compartida). La resolución pasa por una
+> única fuente de verdad y, lo que más importa, **«no existe» y «no se pudo
+> comprobar» ya no son lo mismo**: un corte de red no puede retirar un anuncio del
+> catálogo disfrazándose de 404. Los enlaces antiguos (UUID) redirigen con 308 desde
+> el middleware. Y se corrigió un **404 blando** que respondía 200 con el texto «no
+> encontrada» — mientras la demo estaba encendida no se notaba; al apagarla, sí.
+>
+> **M-16 — cerrado.** Integración continua en cada subida, con 81 pruebas unitarias en
+> menos de un segundo, sin credenciales y sin dependencias nuevas. Un verificador que
+> no puede ejecutarse **se salta de forma visible y explicada**, nunca reporta éxito:
+> una luz verde que no comprobó nada habría sido peor que no tener integración
+> continua.
+>
+> **M-15 — solo falta borrar** (tareas #33 y #34 en curso). Editar, retirar y
+> republicar ya están.
 >
 > **M-08 — aplazado por decisión del fundador, no por olvido.** La demo se mantiene
 > **encendida** porque hace falta para enseñarla a los profesores y a los primeros
@@ -136,7 +144,25 @@ M-07 · M-08 (bandera `PERMITIR_CATALOGO_DEMO=false` en producción y error visi
 
 ### Oleada 2 — Con tracción
 
-M-20 · M-21 + M-22 + migración a Next 16 · M-23 · M-24 · M-25 (páginas por barrio y guías) · M-26 · M-27.
+> **Estado (2026-09-23): EN CURSO.**
+> - **M-25 — cerrado.** Migas de pan con `BreadcrumbList` en la ficha, índice de
+>   barrios, una página por barrio y una guía informativa. Todas construidas con datos
+>   reales: sin barrios inventados, sin precios estimados y sin páginas de relleno. El
+>   rango de precios de cada barrio se calcula con lo que **se puede reservar**, no con
+>   el precio de referencia.
+> - **M-21 y M-22 — en curso** (tarea #31). Son los dos 🔴 que impiden compilar en
+>   Next 16; mientras no se cierren, el proyecto sigue anclado a Next 14.
+> - **M-24 — parcial, en curso** (tarea #35). Recuperación de contraseña ya entregada;
+>   quedan el deslizador accesible, los tamaños táctiles, el movimiento reducido, el
+>   ordenamiento, el botón Atrás y los estados vacíos.
+> - **M-17 — cerrado** (tarea #32), y **reclasificado**. El informe lo marcaba 🟡, pero
+>   en un equipo compartido significa que una persona puede acabar viendo la pantalla de
+>   restablecer contraseña de la anterior. Se cerró por delante de cosas más vistosas.
+> - **M-15 (borrar)** — se cierra dentro de la oleada 1, con las tareas #33 y #34.
+> - **Pendientes enteros:** **M-20** (escalabilidad de datos: `select('*')`, sin
+>   paginación, N+1 en el catálogo), **M-23** (una petición al servidor por cada paso del
+>   deslizador de precio), **M-26** (imágenes propias y Supabase Storage) y **M-27**
+>   (operación: entornos separados, observabilidad y las preguntas del abogado).
 
 ### Oleada 3 — Sostenimiento
 
