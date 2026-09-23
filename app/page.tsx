@@ -37,7 +37,7 @@ export default async function Home() {
       "@type": "ListItem",
       position: indice + 1,
       name: pension.titulo,
-      url: `${SITIO_URL}/pensiones/${pension.id}`,
+      url: `${SITIO_URL}/pensiones/${pension.slug}`,
     })),
   };
 

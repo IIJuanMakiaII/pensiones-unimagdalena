@@ -21,6 +21,8 @@ export default function FormularioRegistro({ configurado }: Props) {
   );
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  /** Aceptación de los textos legales (tarea #30): sin ella no se crea la cuenta. */
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
 
   const registrar = async (evento: React.FormEvent<HTMLFormElement>) => {
     evento.preventDefault();
@@ -28,17 +30,33 @@ export default function FormularioRegistro({ configurado }: Props) {
 
     setError(null);
     setAviso(null);
+
+    if (!aceptaTerminos) {
+      setError(
+        "Para crear la cuenta necesitamos que aceptes las condiciones de uso y el aviso de privacidad."
+      );
+      return;
+    }
+
     setEnviando(true);
 
     const supabase = crearClienteNavegador();
     const { data, error: errorAuth } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        // El trigger `crear_perfil_usuario` toma estos datos para la tabla usuarios.
-        data: { nombre, rol: "anfitrion" },
-        emailRedirectTo: `${window.location.origin}/publicar`,
-      },
+        options: {
+          // El trigger `crear_perfil_usuario` toma estos datos para la tabla usuarios.
+          data: {
+            nombre,
+            rol: "anfitrion",
+            // Constancia de la aceptación de los textos legales, con su fecha, en
+            // los metadatos de la cuenta. La autorización del número de contacto
+            // se registra aparte, al publicar (ver supabase/oleada-6.sql).
+            acepta_terminos: true,
+            terminos_aceptados_en: new Date().toISOString(),
+          },
+          emailRedirectTo: `${window.location.origin}/auth/confirmar?next=/publicar`,
+        },
     });
 
     setEnviando(false);
@@ -129,6 +147,41 @@ export default function FormularioRegistro({ configurado }: Props) {
           placeholder="Mínimo 6 caracteres"
         />
       </div>
+
+      {/* Los textos legales deben alcanzarse también desde el registro: la cuenta
+          se crea con ellos publicados (tarea #30). */}
+      <label className="mt-5 flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          name="aceptaTerminos"
+          value="si"
+          required
+          checked={aceptaTerminos}
+          onChange={(evento) => setAceptaTerminos(evento.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
+        />
+        <span className="text-sm leading-relaxed text-neutro-700">
+          He leído y acepto las{" "}
+          <Link
+            href="/legal/condiciones"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-primary-700 underline underline-offset-2"
+          >
+            condiciones de uso
+          </Link>{" "}
+          y el{" "}
+          <Link
+            href="/legal/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-primary-700 underline underline-offset-2"
+          >
+            aviso de privacidad
+          </Link>
+          .
+        </span>
+      </label>
 
       <button
         type="submit"

@@ -177,7 +177,11 @@ export default function FormularioEditarPension({ pension }: { pension: PensionC
           </p>
         </div>
 
-        <CampoWhatsApp valorInicial={pension.whatsapp} avisaSiFalta />
+        <CampoWhatsApp
+          valorInicial={pension.whatsapp}
+          avisaSiFalta
+          conAutorizacionPrevia={Boolean(pension.autorizacion_contacto_en)}
+        />
 
         <div>
           <span className={claseEtiqueta}>Habitaciones que ofreces</span>

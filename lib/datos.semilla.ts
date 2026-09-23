@@ -17,7 +17,13 @@ const img = (id: string, w = 900, crop = "entropy") =>
 /** Anfitrión ficticio que agrupa las publicaciones de ejemplo. */
 export const ANFITRION_DEMO = "00000000-0000-0000-0000-000000000001";
 
-export const PENSIONES_SEMILLA: Pension[] = [
+/**
+ * El tipo omite `slug` a propósito: en la demo el identificador **ya es legible**
+ * (`pension-costa-verde`), así que la dirección pública es el propio `id`. Se
+ * deriva en un solo punto (`catalogoDemo()`) en lugar de repetir el mismo valor
+ * dos veces y arriesgar que se desincronicen.
+ */
+export const PENSIONES_SEMILLA: Omit<Pension, "slug">[] = [
   {
     id: "pension-costa-verde",
     anfitrion_id: ANFITRION_DEMO,
@@ -153,6 +159,18 @@ export const PENSIONES_SEMILLA: Pension[] = [
     verificado: true,
   },
 ];
+
+/**
+ * Identificadores de las fichas de ejemplo.
+ *
+ * Lo usa el `middleware.ts` para una cosa muy concreta: estas fichas **no viven en
+ * la base de datos**, así que al comprobar si una dirección existe hay que
+ * eximirlas mientras el modo demostración esté encendido. La exención tiene que
+ * ser por lista y no por «todo lo que no sea UUID»: si fuera lo segundo, con la
+ * demo encendida ninguna dirección se comprobaría y una ficha inexistente
+ * respondería 200 (el *soft 404* que ya costó un hallazgo).
+ */
+export const IDS_SEMILLA: string[] = PENSIONES_SEMILLA.map((pension) => pension.id);
 
 export const HABITACIONES_SEMILLA: Habitacion[] = [
   // Pensión Costa Verde (Mamatoco)

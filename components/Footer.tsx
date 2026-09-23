@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WHATSAPP_NUMERO } from "@/lib/formato";
 
 /** Footer de confianza: sellos, contacto WhatsApp y aviso legal (§4.1.5). */
@@ -57,7 +58,24 @@ export default function Footer() {
           </div>
         </div>
 
-        <p className="mt-8 border-t border-white/10 pt-5 text-xs text-secondary-300">
+        {/* Los textos legales tienen que ser alcanzables desde cualquier vista:
+            publicar una autorización que no se puede leer no es una autorización. */}
+        <nav aria-label="Textos legales" className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-5 text-sm">
+          <Link
+            href="/legal/privacidad"
+            className="font-semibold text-secondary-100 underline-offset-2 hover:underline"
+          >
+            Aviso de privacidad
+          </Link>
+          <Link
+            href="/legal/condiciones"
+            className="font-semibold text-secondary-100 underline-offset-2 hover:underline"
+          >
+            Condiciones de uso
+          </Link>
+        </nav>
+
+        <p className="mt-4 text-xs text-secondary-300">
           © {new Date().getFullYear()} Pensiones Unimagdalena · Santa Marta,
           Magdalena, Colombia. Datos de demostración para el proyecto académico.
         </p>

@@ -92,7 +92,11 @@ export default function PanelPublicacion({ pension }: Props) {
       )}
 
       <div className="mt-4 border-t border-neutro-200 pt-4">
-        <AccionesPublicacion pensionId={pension.id} activa={pension.activa} />
+        <AccionesPublicacion
+          pensionId={pension.id}
+          slug={pension.slug}
+          activa={pension.activa}
+        />
       </div>
     </div>
   );
@@ -147,7 +151,17 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
 }
 
 /** Retirar o volver a publicar el anuncio completo. */
-function AccionesPublicacion({ pensionId, activa }: { pensionId: string; activa: boolean }) {
+function AccionesPublicacion({
+  pensionId,
+  slug,
+  activa,
+}: {
+  /** Identificador interno: sigue siendo la clave para editar (`/publicar/<id>/editar`). */
+  pensionId: string;
+  /** Dirección pública del anuncio: es la que se muestra al abrirlo en el catálogo. */
+  slug: string;
+  activa: boolean;
+}) {
   const [estado, accion] = useFormState(cambiarEstadoPublicacion, ESTADO_INICIAL);
 
   return (
@@ -181,7 +195,7 @@ function AccionesPublicacion({ pensionId, activa }: { pensionId: string; activa:
             llevaría a un 404. */}
         {activa ? (
           <Link
-            href={`/pensiones/${pensionId}`}
+            href={`/pensiones/${slug}`}
             className="inline-flex h-11 items-center rounded-xl bg-primary-600 px-4 text-sm font-bold text-white transition hover:bg-primary-700"
           >
             Ver en el catálogo

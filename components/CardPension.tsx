@@ -61,7 +61,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
         <Carrusel
           imagenes={galeriaDe(pension)}
           altBase={pension.titulo}
-          href={`/pensiones/${pension.id}`}
+          href={`/pensiones/${pension.slug}`}
           priority={prioridadImagen}
           diferirImagenes
           className="h-full w-full"
@@ -84,7 +84,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
         </p>
 
         <h3 className="font-display text-lg font-bold leading-snug text-neutro-800">
-          <Link href={`/pensiones/${pension.id}`} className="hover:text-primary-700">
+          <Link href={`/pensiones/${pension.slug}`} className="hover:text-primary-700">
             {pension.titulo}
           </Link>
         </h3>

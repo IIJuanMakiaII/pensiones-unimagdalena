@@ -23,7 +23,20 @@ export interface Usuario {
 
 export interface Pension {
   // --- Esquema solicitado (fuente de verdad en la base de datos) ---
+  /** Clave primaria (UUID). Identidad interna e inmutable. */
   id: string;
+  /**
+   * Dirección pública del anuncio: `/pensiones/<slug>`, en minúsculas y sin
+   * acentos (`residencia-makia`).
+   *
+   * Es única, legible y **estable**: no cambia al editar el título, porque una
+   * URL ya compartida por WhatsApp no puede morir porque el dueño corrija el
+   * nombre. Se asigna una sola vez, al publicar (disparador
+   * `antes_de_asignar_slug`), y el anfitrión no puede escribirla.
+   *
+   * En la semilla de demostración coincide con el `id`, que ya era legible.
+   */
+  slug: string;
   anfitrion_id: string; // FK -> usuarios.id (auth.users.id)
   titulo: string;
   descripcion: string;
@@ -55,6 +68,15 @@ export interface Pension {
    * datos estructurados ni metadatos, solo viaja en el enlace de reserva.
    */
   whatsapp?: string | null;
+  /**
+   * Fecha (ISO) en que el anfitrión autorizó publicar su número de WhatsApp.
+   *
+   * `null` o ausente = **no consta autorización**: los anuncios publicados antes
+   * de que existiera la casilla. No se rellena de forma retroactiva (fabricar un
+   * consentimiento sería peor que no tenerlo): el editor lo pide de nuevo. La base
+   * no permite publicar un número sin esta fecha (ver supabase/oleada-6.sql).
+   */
+  autorizacion_contacto_en?: string | null;
 
   // --- Ubicación exacta (opcional): si existe, el mapa muestra el pin real ---
   latitud?: number | null;

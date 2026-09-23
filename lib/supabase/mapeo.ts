@@ -10,6 +10,13 @@ import { IMAGEN_RESPALDO } from "@/lib/pension";
 
 export interface PensionFila {
   id: string;
+  /**
+   * Dirección pública (Oleada 5, tarea #26). Opcional aquí a propósito: si esta
+   * capa se ejecutara contra una base a la que todavía no se le aplicó la
+   * migración, el campo llega ausente y el mapeo cae al `id` en lugar de
+   * producir enlaces rotos (`/pensiones/undefined`).
+   */
+  slug?: string | null;
   anfitrion_id: string;
   titulo: string;
   descripcion: string | null;
@@ -28,6 +35,8 @@ export interface PensionFila {
   longitud?: number | null;
   /** WhatsApp propio del anuncio (10 dígitos); `null` si no lo ha fijado. */
   whatsapp?: string | null;
+  /** Constancia de la autorización para publicar el contacto (tarea #30). */
+  autorizacion_contacto_en?: string | null;
 }
 
 export interface HabitacionFila {
@@ -60,6 +69,10 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
 
   return {
     id: fila.id,
+    // Sin `slug` (base a la que aún no se le aplicó la migración) se cae al
+    // `id`: un enlace con UUID sigue funcionando, y siempre es mejor que un
+    // enlace con «undefined».
+    slug: fila.slug?.trim() ? fila.slug : fila.id,
     anfitrion_id: fila.anfitrion_id,
     titulo: fila.titulo,
     descripcion: fila.descripcion ?? "",
@@ -77,6 +90,7 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
     latitud: typeof fila.latitud === "number" ? fila.latitud : null,
     longitud: typeof fila.longitud === "number" ? fila.longitud : null,
     whatsapp: fila.whatsapp ?? null,
+    autorizacion_contacto_en: fila.autorizacion_contacto_en ?? null,
     habitaciones,
   };
 }

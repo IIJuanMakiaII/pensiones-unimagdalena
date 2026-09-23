@@ -19,9 +19,14 @@ const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 
 const casos = [
   ["uuid inexistente", "/pensiones/00000000-0000-4000-8000-000000000000", 404],
-  // La demo sigue encendida, así que el slug de la semilla es contenido válido.
-  // Cuando se apague la demo (M-08) pasará a comprobarse contra la base: 404.
-  ["slug de la semilla (demo)", "/pensiones/pension-mamatoco-1", 200],
+  // La demo sigue encendida, así que las fichas de la semilla son contenido
+  // válido. Cuando se apague la demo (M-08) pasarán a comprobarse contra la base.
+  //
+  // Aquí figuraba `pension-mamatoco-1`, un identificador que ya no existe en la
+  // semilla. Daba 200 porque el middleware servía el estado «no encontrada» con
+  // código de éxito (soft 404): la tarea #27 lo corrigió y de paso dejó a la vista
+  // que ese caso era un falso positivo. Se usa una ficha real de la semilla.
+  ["ficha de la semilla (demo encendida)", "/pensiones/pension-costa-verde", 200],
   ["ficha real (control)", "/pensiones/f555e5b3-6629-402a-ae37-32c366c3f022", 200],
   ["ruta inexistente", "/ruta-inexistente", 404],
 ];

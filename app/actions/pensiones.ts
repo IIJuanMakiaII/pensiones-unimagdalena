@@ -230,6 +230,13 @@ export async function crearPension(
    */
   const whatsapp = normalizarWhatsappPropio(texto("whatsapp"));
 
+  /**
+   * Autorización expresa para publicar el contacto (tarea #30). Obligatoria: el
+   * número de una persona no se publica sin constancia de que lo autorizó, y la
+   * base rechaza el envío si falta (restricción `pensiones_autorizacion_para_whatsapp`).
+   */
+  const autorizaContacto = String(formData.get("autorizaContacto") ?? "") === "si";
+
   const { habitaciones, errores: erroresHabitaciones } = leerHabitaciones(texto("habitaciones"));
 
   // Validación estricta antes de tocar la base de datos.
@@ -252,6 +259,11 @@ export async function crearPension(
   }
   if (!whatsappPropioValido(whatsapp)) {
     errores.push(`${MENSAJE_WHATSAPP_INVALIDO}.`);
+  }
+  if (!autorizaContacto) {
+    errores.push(
+      "Marca la casilla de autorización para publicar tu número de WhatsApp: sin ella no podemos mostrarlo en el anuncio."
+    );
   }
   errores.push(...erroresHabitaciones);
 
@@ -308,7 +320,9 @@ export async function crearPension(
   if (pensionId) {
     const { data: conNumero, error: errorNumero } = await supabase
       .from("pensiones")
-      .update({ whatsapp })
+      // El número y su autorización se guardan juntos: la base no acepta uno sin
+      // la otra (ver supabase/oleada-6.sql).
+      .update({ whatsapp, autorizacion_contacto_en: new Date().toISOString() })
       .eq("id", pensionId)
       .eq("anfitrion_id", user.id)
       .select("id");
@@ -342,7 +356,10 @@ function revalidarCatalogo(pensionId?: string) {
   revalidateTag(ETIQUETA_PENSIONES);
   revalidatePath("/");
   revalidatePath("/publicar");
-  if (pensionId) revalidatePath(`/pensiones/${pensionId}`);
+  // Se invalida el segmento entero: la dirección pública de una ficha es su slug,
+  // así que revalidar solo por identificador dejaría la URL compartida con caché
+  // vieja (y las publicaciones nuevas no tendrían ninguna entrada que invalidar).
+  if (pensionId) revalidatePath("/pensiones/[id]", "page");
 }
 
 /**
@@ -629,7 +646,9 @@ export async function actualizarPension(
   // Propiedad antes de escribir: un id ajeno o inventado no puede editar nada.
   const { data: propias, error: errorPropiedad } = await supabase
     .from("pensiones")
-    .select("id")
+    // Se trae también la autorización registrada: sirve para no volver a pedirla
+    // y para saber si este anuncio viene de antes de que existiera la casilla.
+    .select("id, autorizacion_contacto_en")
     .eq("id", pensionId)
     .eq("anfitrion_id", user.id);
 
@@ -647,6 +666,17 @@ export async function actualizarPension(
       mensaje: "Ese anuncio no pertenece a tu cuenta, así que no se guardó ningún cambio.",
     };
   }
+
+  /** Autorización que ya constaba para este anuncio (puede no haber ninguna). */
+  const autorizacionPrevia = propias[0]?.autorizacion_contacto_en ?? null;
+
+  /**
+   * Casilla de autorización (tarea #30). Nunca viene premarcada: si el anfitrión
+   * la marca ahora, se registra la fecha de este consentimiento; si no la marca y
+   * ya constaba una autorización anterior, esa se conserva — editar la descripción
+   * no debe borrar una autorización ya dada.
+   */
+  const autorizaContacto = String(formData.get("autorizaContacto") ?? "") === "si";
 
   const titulo = texto("titulo");
   const descripcion = texto("descripcion");
@@ -707,6 +737,13 @@ export async function actualizarPension(
   if (!whatsappPropioValido(whatsapp)) {
     errores.push(`${MENSAJE_WHATSAPP_INVALIDO}.`);
   }
+  // Sin autorización —ni la de ahora ni una registrada antes— no se publica el
+  // número. Es la comprobación que la base también exige (oleada-6.sql).
+  if (!autorizaContacto && !autorizacionPrevia) {
+    errores.push(
+      "Marca la casilla de autorización para publicar tu número de WhatsApp: sin ella no podemos mostrarlo en el anuncio."
+    );
+  }
   errores.push(...erroresHabitaciones);
 
   if (errores.length > 0) {
@@ -730,6 +767,9 @@ export async function actualizarPension(
       normas,
       imagenes,
       whatsapp,
+      // Solo se escribe la fecha cuando el anfitrión acaba de autorizar. Si ya
+      // constaba, se deja intacta: esa fecha es la prueba que buscábamos.
+      ...(autorizaContacto ? { autorizacion_contacto_en: new Date().toISOString() } : {}),
     })
     .eq("id", pensionId)
     .eq("anfitrion_id", user.id)

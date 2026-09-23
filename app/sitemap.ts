@@ -27,7 +27,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   const fichas: MetadataRoute.Sitemap = pensiones.map((pension) => ({
-    url: `${SITIO_URL}/pensiones/${pension.id}`,
+    // Dirección legible: es la que se comparte y la que resolverá el middleware.
+    url: `${SITIO_URL}/pensiones/${pension.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 0.8,

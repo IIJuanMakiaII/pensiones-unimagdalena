@@ -26,9 +26,15 @@ interface Props {
 /** El catálogo se revalida cada 60 s: las publicaciones nuevas aparecen solas. */
 export const revalidate = 60;
 
+/**
+ * Se prerenderiza la **dirección legible** de cada anuncio, no su identificador
+ * interno: es la dirección canónica, la que se comparte y la que se anuncia en el
+ * `sitemap.xml`. Si aquí se devolviera el UUID, el build generaría páginas en una
+ * dirección que ahora redirige, y la dirección buena quedaría sin prerenderizar.
+ */
 export async function generateStaticParams() {
   const pensiones = await obtenerPensiones();
-  return pensiones.map((pension) => ({ id: pension.id }));
+  return pensiones.map((pension) => ({ id: pension.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -54,11 +60,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: titulo,
     description: descripcion,
-    alternates: { canonical: `/pensiones/${pension.id}` },
+    alternates: { canonical: `/pensiones/${pension.slug}` },
     openGraph: {
       type: "website",
       locale: "es_CO",
-      url: `${SITIO_URL}/pensiones/${pension.id}`,
+      url: `${SITIO_URL}/pensiones/${pension.slug}`,
       siteName: "Pensiones Unimagdalena",
       title: titulo,
       description: descripcion,
@@ -78,6 +84,13 @@ export default async function DetallePensionPage({ params }: Props) {
   const pension = await obtenerPensionPorId(id);
   if (!pension) notFound();
 
+  /**
+   * La redirección del enlace antiguo (UUID → dirección legible) vive en
+   * `middleware.ts`, que sí puede fijar el código 308 antes de que se envíe la
+   * cabecera. Aquí no se repite: hacerlo en el render perdería el código de
+   * estado por la frontera de streaming y serviría el mismo anuncio en dos
+   * direcciones (contenido duplicado para los buscadores).
+   */
   const principal = imagenPrincipal(pension);
   const galeria = galeriaDe(pension);
   /**
@@ -95,7 +108,7 @@ export default async function DetallePensionPage({ params }: Props) {
     description:
       pension.descripcion ||
       `${pension.titulo} en ${pension.barrio}, Santa Marta. A ${pension.distancia_a_pie_minutos} minutos caminando de la Universidad del Magdalena.`,
-    url: `${SITIO_URL}/pensiones/${pension.id}`,
+    url: `${SITIO_URL}/pensiones/${pension.slug}`,
     image: galeria,
     address: {
       "@type": "PostalAddress",
@@ -191,7 +204,7 @@ export default async function DetallePensionPage({ params }: Props) {
             <BotonFavorito pensionId={pension.id} titulo={pension.titulo} variante="detalle" />
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
-                `Mira esta pensión cerca de Unimagdalena: ${pension.titulo} (${pension.barrio}) — ${SITIO_URL}/pensiones/${pension.id}`
+                `Mira esta pensión cerca de Unimagdalena: ${pension.titulo} (${pension.barrio}) — ${SITIO_URL}/pensiones/${pension.slug}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"

@@ -5,6 +5,14 @@ import {
   SUPABASE_URL,
   esSupabaseConfigurado,
 } from "@/lib/supabase/config";
+// Regla única de la dirección (segura en el edge: no arrastra dependencias).
+import {
+  FORMATO_UUID,
+  columnaDeIdentificador,
+  normalizarIdentificador,
+} from "@/lib/identificador";
+import { DEMO_HABILITADA } from "@/lib/sitio";
+import { IDS_SEMILLA } from "@/lib/datos.semilla";
 
 /**
  * Middleware del sitio.
@@ -42,23 +50,33 @@ export async function middleware(peticion: NextRequest) {
 /** Cookie de sesión de Supabase (`sb-<ref>-auth-token[...]`). */
 const COOKIE_SESION = /^sb-.*-auth-token/;
 
-/** Los ids reales son UUID; los slugs pertenecen a la semilla de demostración. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Modo demostración: mientras esté encendido, las fichas de ejemplo son válidas. */
-const DEMO_HABILITADA = process.env.NEXT_PUBLIC_MOSTRAR_DEMO === "1";
-
 /**
- * `true` = existe · `false` = no existe · `null` = no se pudo comprobar.
- * Nunca lanza: devuelve `null` para que el llamador deje pasar la petición.
+ * `existe` con la dirección legible del anuncio (para redirigir los enlaces
+ * antiguos) · `no-existe` · `error` (no se pudo comprobar).
+ *
+ * Nunca lanza: ante un fallo devuelve `error` y el llamador deja pasar la
+ * petición. Un problema de infraestructura no puede convertir una ficha legítima
+ * en un 404.
  */
-async function existePensionPublica(id: string): Promise<boolean | null> {
+async function buscarPensionPublica(
+  identificador: string
+): Promise<{ estado: "existe"; slug: string | null } | { estado: "no-existe" } | { estado: "error" }> {
   const control = new AbortController();
   const temporizador = setTimeout(() => control.abort(), 1500);
 
+  /**
+   * La columna tiene que ser la correcta: preguntar por la columna `id` (uuid) con
+   * una dirección legible no devuelve «cero filas», devuelve un **error de tipo**
+   * de PostgreSQL, y este middleware lo interpreta como «no se pudo comprobar»
+   * (deja pasar) → una ficha inexistente respondería 200 con el texto «no
+   * encontrada», que es el *soft 404* que queremos evitar.
+   */
+  const columna = columnaDeIdentificador(identificador);
+
   try {
     const respuesta = await fetch(
-      `${SUPABASE_URL}/rest/v1/pensiones?select=id&id=eq.${id}&activa=eq.true&limit=1`,
+      // Se trae el slug para poder redirigir un enlace antiguo a la dirección buena.
+      `${SUPABASE_URL}/rest/v1/pensiones?select=id,slug&${columna}=eq.${encodeURIComponent(identificador)}&activa=eq.true&limit=1`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -69,11 +87,12 @@ async function existePensionPublica(id: string): Promise<boolean | null> {
       }
     );
 
-    if (!respuesta.ok) return null;
-    const filas: unknown = await respuesta.json();
-    return Array.isArray(filas) && filas.length > 0;
+    if (!respuesta.ok) return { estado: "error" };
+    const filas = (await respuesta.json()) as { slug?: string | null }[];
+    if (!Array.isArray(filas) || filas.length === 0) return { estado: "no-existe" };
+    return { estado: "existe", slug: filas[0]?.slug ?? null };
   } catch {
-    return null;
+    return { estado: "error" };
   } finally {
     clearTimeout(temporizador);
   }
@@ -81,24 +100,44 @@ async function existePensionPublica(id: string): Promise<boolean | null> {
 
 async function comprobarFichaPublica(
   peticion: NextRequest,
-  id: string
+  identificador: string
 ): Promise<NextResponse | null> {
   if (!esSupabaseConfigurado()) return null;
 
-  // Los slugs de la semilla de demostración no viven en la base de datos: se
-  // dejan pasar solo mientras el modo demostración esté encendido. Con la demo
-  // apagada (producción) se comprueban como cualquier otro id, para que un slug
-  // heredado no quede servido con 200 en el sitemap.
-  if (!UUID.test(id) && DEMO_HABILITADA) return null;
+  const valor = normalizarIdentificador(identificador);
 
-  // Un visitante con sesión puede ser el anfitrión: su ficha retirada debe
-  // seguir siendo visible para él, así que no se le bloquea ni se consulta.
-  if (peticion.cookies.getAll().some((cookie) => COOKIE_SESION.test(cookie.name))) {
+  // Las fichas de ejemplo no viven en la base de datos: se eximen por LISTA
+  // mientras el modo demostración esté encendido. Eximir «todo lo que no sea
+  // UUID» sería un error — ninguna dirección se comprobaría y una ficha
+  // inexistente respondería 200 con el texto «no encontrada».
+  if (DEMO_HABILITADA && IDS_SEMILLA.includes(valor)) return null;
+
+  const conSesion = peticion.cookies.getAll().some((cookie) => COOKIE_SESION.test(cookie.name));
+
+  const resultado = await buscarPensionPublica(valor);
+  if (resultado.estado === "error") return null;
+
+  if (resultado.estado === "existe") {
+    /**
+     * Enlace antiguo (identificador interno) → redirección **permanente** a la
+     * dirección legible.
+     *
+     * Se resuelve aquí y no en la página a propósito: la ficha tiene una frontera
+     * de streaming (`loading.tsx`), así que cuando el componente se ejecuta la
+     * cabecera 200 ya se envió y la redirección llegaría tarde — el enlace viejo
+     * respondería 200 sirviendo el anuncio en la dirección equivocada (contenido
+     * duplicado para los buscadores). Se atiende con sesión o sin ella, para que
+     * el enlace funcione igual para todo el mundo.
+     */
+    if (FORMATO_UUID.test(valor) && resultado.slug) {
+      return NextResponse.redirect(new URL(`/pensiones/${resultado.slug}`, peticion.url), 308);
+    }
     return null;
   }
 
-  const existe = await existePensionPublica(id);
-  if (existe !== false) return null;
+  // No existe. Un visitante con sesión puede ser el anfitrión, y su ficha
+  // retirada tiene que seguir siendo visible para él.
+  if (conSesion) return null;
 
   return new NextResponse(HTML_NO_ENCONTRADA, {
     status: 404,

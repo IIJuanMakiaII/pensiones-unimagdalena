@@ -1,5 +1,11 @@
 import type { Habitacion, PensionConHabitaciones } from "@/types";
 import { HABITACIONES_SEMILLA, PENSIONES_SEMILLA } from "@/lib/datos.semilla";
+import {
+  columnaDeIdentificador,
+  identificadorPlausible,
+  normalizarIdentificador,
+} from "@/lib/identificador";
+import { DEMO_HABILITADA } from "@/lib/sitio";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { filaAHabitacion, filaAPension, type HabitacionFila, type PensionFila } from "@/lib/supabase/mapeo";
 import { crearClienteServidor } from "@/utils/supabase/server";
@@ -9,11 +15,25 @@ import { crearClientePublico } from "@/utils/supabase/publico";
  * Fuente de datos del catálogo.
  *
  * - Con Supabase configurado: consulta la base de datos.
- * - Sin configurar (o ante un error de red): devuelve la semilla local para que
- *   el sitio siga funcionando. La degradación nunca deja el catálogo vacío.
+ * - Sin configurar: devuelve la semilla local, para que el sitio siga en pie.
  *
  * Lecturas públicas → cliente anónimo cacheado (ISR).
  * Datos del anfitrión → cliente con cookies (siempre frescos y privados).
+ *
+ * ## Un anuncio se pide de dos formas (tarea #26)
+ *
+ * Por su **dirección legible** (`/pensiones/residencia-makia`) o por su **UUID**,
+ * que sigue resolviendo para no romper enlaces repartidos antes de que existieran
+ * los slugs. Quien decide cuál usar es `lib/identificador.ts`, y hay una sola
+ * función que resuelve: `resolverPension()`.
+ *
+ * ## «No existe» y «no se pudo comprobar» no son lo mismo
+ *
+ * Es la distinción que sostiene el 404 de las fichas. Antes, cualquier fallo de
+ * red se resolvía devolviendo la semilla de demostración: una caída momentánea
+ * de la base se disfrazaba de ficha válida (o de ficha inexistente), y en ambos
+ * casos el resultado era mentira. Ahora `resolverPension()` dice cuál de las tres
+ * cosas ha pasado —está, no está, no se pudo comprobar— y cada llamador decide.
  */
 
 /** Une pensiones con sus habitaciones (equivalente al JOIN 1-N del modelo ER). */
@@ -29,12 +49,25 @@ function combinar(
   );
 }
 
-/** Catálogo de demostración (semilla local). */
+/**
+ * Catálogo de demostración (semilla local).
+ *
+ * En la semilla el identificador **ya es legible** (`pension-costa-verde`), así
+ * que la dirección pública es el propio id y no se duplica en el dato: si algún
+ * día se escribe un slug distinto en la semilla, se respeta. Gracias a esto las
+ * direcciones de la demo no cambian ni una letra con la Oleada 5.
+ */
 export function catalogoDemo(): PensionConHabitaciones[] {
   return PENSIONES_SEMILLA.map((pension) => ({
     ...pension,
+    slug: pension.id,
     habitaciones: HABITACIONES_SEMILLA.filter((h: Habitacion) => h.pension_id === pension.id),
   }));
+}
+
+/** Busca en la semilla por dirección legible o por id. */
+function demoPorIdentificador(valor: string): PensionConHabitaciones | null {
+  return catalogoDemo().find((pension) => pension.slug === valor || pension.id === valor) ?? null;
 }
 
 /** Catálogo completo: solo pensiones activas, las más recientes primero. */
@@ -61,29 +94,110 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
   }
 }
 
-/** Una pensión concreta con sus habitaciones (página de detalle). */
-export async function obtenerPensionPorId(id: string): Promise<PensionConHabitaciones | null> {
-  if (!esSupabaseConfigurado()) {
-    return catalogoDemo().find((p) => p.id === id) ?? null;
+/**
+ * Fallo al consultar el catálogo.
+ *
+ * Existe para que nadie confunda «no se pudo comprobar» con «no existe»: es el
+ * error que sube a la frontera (`app/error.tsx`) cuando la base no responde, en
+ * lugar de dejar que la ficha se declare inexistente.
+ */
+export class ErrorDeCatalogo extends Error {
+  constructor(
+    readonly identificador: string,
+    readonly causa: string
+  ) {
+    super(`No se pudo consultar el anuncio «${identificador}»: ${causa}`);
+    this.name = "ErrorDeCatalogo";
   }
+}
+
+/** Las tres respuestas posibles al resolver un anuncio, sin ambigüedad. */
+export type ResultadoPension =
+  | { estado: "ok"; pension: PensionConHabitaciones }
+  | { estado: "no-existe" }
+  | { estado: "error" };
+
+/**
+ * Resuelve un anuncio por su dirección legible **o** por su UUID.
+ *
+ * Única fuente de verdad: ningún otro punto del código decide qué columna
+ * consultar ni qué hacer con cada resultado.
+ */
+export async function resolverPension(identificador: string): Promise<ResultadoPension> {
+  const valor = normalizarIdentificador(identificador);
+
+  // Ni UUID ni dirección válida: no puede existir, y no gasta una consulta.
+  if (!identificadorPlausible(valor)) return { estado: "no-existe" };
+
+  if (!esSupabaseConfigurado()) {
+    const demo = demoPorIdentificador(valor);
+    return demo ? { estado: "ok", pension: demo } : { estado: "no-existe" };
+  }
+
+  const columna = columnaDeIdentificador(valor);
 
   try {
     const supabase = crearClientePublico();
-    const [{ data: pension, error }, { data: habitaciones }] = await Promise.all([
-      supabase.from("pensiones").select("*").eq("id", id).maybeSingle(),
-      supabase.from("habitaciones").select("*").eq("pension_id", id),
-    ]);
+    const { data: pension, error } = await supabase
+      .from("pensiones")
+      .select("*")
+      .eq(columna, valor)
+      .maybeSingle();
 
-    if (error || !pension) {
-      // Puede no existir en la base de datos pero sí en la semilla (modo mixto).
-      return catalogoDemo().find((p) => p.id === id) ?? null;
+    if (error) {
+      console.error(`Error buscando el anuncio por ${columna}:`, error.message);
+      return { estado: "error" };
     }
 
-    return filaAPension(pension as PensionFila, ((habitaciones ?? []) as HabitacionFila[]).map(filaAHabitacion));
+    if (!pension) {
+      // La base dice que no está. Con la demo encendida, una ficha de ejemplo
+      // sigue resolviéndose por su dirección: la semilla no vive en la base.
+      if (DEMO_HABILITADA) {
+        const demo = demoPorIdentificador(valor);
+        if (demo) return { estado: "ok", pension: demo };
+      }
+      return { estado: "no-existe" };
+    }
+
+    const fila = pension as PensionFila;
+
+    // Las habitaciones se piden por el UUID real: cuando se resuelve por
+    // dirección legible, lo que venía en la URL no es una clave foránea.
+    const { data: habitaciones, error: errorHabitaciones } = await supabase
+      .from("habitaciones")
+      .select("*")
+      .eq("pension_id", fila.id);
+
+    if (errorHabitaciones) {
+      console.error("Error consultando las habitaciones:", errorHabitaciones.message);
+      return { estado: "error" };
+    }
+
+    return {
+      estado: "ok",
+      pension: filaAPension(fila, ((habitaciones ?? []) as HabitacionFila[]).map(filaAHabitacion)),
+    };
   } catch (error) {
-    console.error("Fallo consultando la pensión:", error);
-    return catalogoDemo().find((p) => p.id === id) ?? null;
+    console.error("Fallo de conexión consultando el anuncio:", error);
+    return { estado: "error" };
   }
+}
+
+/**
+ * Una pensión concreta con sus habitaciones (página de detalle).
+ *
+ * Devuelve `null` **solo** cuando la base ha confirmado que no existe (o que el
+ * público no puede verla). Si no se pudo comprobar, lanza: devolver `null` ahí
+ * convertiría un corte de red en un `notFound()`, y el anuncio desaparecería del
+ * catálogo por un fallo pasajero.
+ */
+export async function obtenerPensionPorId(identificador: string): Promise<PensionConHabitaciones | null> {
+  const resultado = await resolverPension(identificador);
+
+  if (resultado.estado === "ok") return resultado.pension;
+  if (resultado.estado === "no-existe") return null;
+
+  throw new ErrorDeCatalogo(identificador, "la consulta no se pudo completar");
 }
 
 /**
