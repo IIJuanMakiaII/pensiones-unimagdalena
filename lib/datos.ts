@@ -246,7 +246,7 @@ export async function obtenerPensionesDelAnfitrion(
   if (!esSupabaseConfigurado()) return [];
 
   try {
-    const supabase = crearClienteServidor();
+    const supabase = await crearClienteServidor();
     const { data: pensiones, error } = await supabase
       .from("pensiones")
       .select("*")

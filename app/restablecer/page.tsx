@@ -20,7 +20,7 @@ export default async function RestablecerPage() {
 
   if (esSupabaseConfigurado()) {
     try {
-      const supabase = crearClienteServidor();
+      const supabase = await crearClienteServidor();
       const { data } = await supabase.auth.getUser();
       conSesion = Boolean(data.user);
     } catch (error) {

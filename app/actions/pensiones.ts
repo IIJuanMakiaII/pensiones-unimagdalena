@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/utils/supabase/server";
-import { ETIQUETA_PENSIONES } from "@/utils/supabase/publico";
+import { RUTAS_DEL_CATALOGO } from "@/lib/cache-catalogo";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { AYUDA_IMAGENES, hostImagenPermitido, MAXIMO_FOTOS } from "@/lib/imagenes";
 import {
@@ -158,7 +158,7 @@ export async function crearPension(
     };
   }
 
-  const supabase = crearClienteServidor();
+  const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -334,32 +334,34 @@ export async function crearPension(
       );
       // El anuncio existe: se informa de lo que falta en lugar de dar por bueno
       // un guardado incompleto.
-      revalidarCatalogo(pensionId);
+      revalidarCatalogo();
       redirect("/publicar?creada=1&sinNumero=1");
     }
   }
 
-  // Invalida la caché del catálogo al instante (ISR + etiqueta de datos),
-  // para que la pensión nueva aparezca sin esperar los 60 s.
+  // Descarta la caché del catálogo: la pensión nueva se ve sin esperar los 60 s.
   revalidarCatalogo();
   redirect("/publicar?creada=1");
 }
 
 /**
- * Invalida todo lo que muestra disponibilidad: el catálogo, el panel del
- * anfitrión y —cuando se conoce— la ficha pública de la pensión.
+ * Descarta la caché de todo lo que muestra el catálogo.
  *
- * No se exporta: un módulo "use server" solo puede exportar funciones
- * asíncronas, y esto es un detalle interno de las acciones.
+ * La lista de rutas vive en `lib/cache-catalogo.ts` y no aquí por dos razones:
+ * este módulo es `"use server"` —solo puede exportar funciones asíncronas, así
+ * que no puede publicar una constante— y, al estar en un módulo aparte, las
+ * pruebas pueden comprobar que ninguna página que lee el catálogo se queda sin
+ * invalidar (ver pruebas/invalidacion.prueba.ts).
+ *
+ * No se exporta: es un detalle interno de las acciones.
  */
-function revalidarCatalogo(pensionId?: string) {
-  revalidateTag(ETIQUETA_PENSIONES);
-  revalidatePath("/");
-  revalidatePath("/publicar");
-  // Se invalida el segmento entero: la dirección pública de una ficha es su slug,
-  // así que revalidar solo por identificador dejaría la URL compartida con caché
-  // vieja (y las publicaciones nuevas no tendrían ninguna entrada que invalidar).
-  if (pensionId) revalidatePath("/pensiones/[id]", "page");
+function revalidarCatalogo() {
+  for (const { ruta, tipo } of RUTAS_DEL_CATALOGO) {
+    // En las rutas dinámicas el tipo es obligatorio: sin él, `revalidatePath` no
+    // invalida ninguna de sus direcciones.
+    if (tipo) revalidatePath(ruta, tipo);
+    else revalidatePath(ruta);
+  }
 }
 
 /**
@@ -395,7 +397,7 @@ export async function cambiarDisponibilidadHabitacion(
     };
   }
 
-  const supabase = crearClienteServidor();
+  const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -480,8 +482,7 @@ export async function cambiarDisponibilidadHabitacion(
     };
   }
 
-  const pensionId = fila.pension_id;
-  revalidarCatalogo(pensionId);
+  revalidarCatalogo();
 
   return {
     ok: true,
@@ -519,7 +520,7 @@ export async function cambiarEstadoPublicacion(
     };
   }
 
-  const supabase = crearClienteServidor();
+  const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -563,7 +564,7 @@ export async function cambiarEstadoPublicacion(
     };
   }
 
-  revalidarCatalogo(pensionId);
+  revalidarCatalogo();
 
   return {
     ok: true,
@@ -616,7 +617,7 @@ export async function actualizarPension(
     };
   }
 
-  const supabase = crearClienteServidor();
+  const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -858,6 +859,6 @@ export async function actualizarPension(
     }
   }
 
-  revalidarCatalogo(pensionId);
+  revalidarCatalogo();
   redirect("/publicar?editada=1");
 }

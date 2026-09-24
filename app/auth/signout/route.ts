@@ -5,7 +5,7 @@ import { esSupabaseConfigurado } from "@/lib/supabase/config";
 /** Cierre de sesión. Solo POST: evita que un enlace externo cierre la sesión. */
 export async function POST(peticion: NextRequest) {
   if (esSupabaseConfigurado()) {
-    const supabase = crearClienteServidor();
+    const supabase = await crearClienteServidor();
     await supabase.auth.signOut();
   }
   return NextResponse.redirect(new URL("/", peticion.url));

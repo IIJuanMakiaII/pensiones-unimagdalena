@@ -35,7 +35,7 @@ export default async function PublicarPage({ searchParams }: Props) {
   let falloSesion = false;
 
   try {
-    const supabase = crearClienteServidor();
+    const supabase = await crearClienteServidor();
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch (error) {

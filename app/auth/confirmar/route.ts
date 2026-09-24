@@ -24,7 +24,7 @@ export async function GET(peticion: NextRequest) {
 
   if (codigo) {
     try {
-      const supabase = crearClienteServidor();
+      const supabase = await crearClienteServidor();
       const { error } = await supabase.auth.exchangeCodeForSession(codigo);
       if (!error) return NextResponse.redirect(new URL(destinoSeguro, url.origin));
     } catch (error) {

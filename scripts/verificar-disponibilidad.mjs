@@ -208,8 +208,9 @@ async function pedir(ruta) {
 /**
  * Lee una página esperando a que refleje un cambio hecho por SQL.
  *
- * El arnés cambia los datos directamente en la base, así que no dispara
- * `revalidateTag`: el cambio solo se ve cuando caducan las dos cachés de 60 s
+ * El arnés cambia los datos directamente en la base, así que no dispara la
+ * invalidación que sí hace el panel al publicar (ver `lib/cache-catalogo.ts`):
+ * el cambio solo se ve cuando caducan las dos cachés de 60 s
  * (la de la página y la de datos), y pueden hacerlo en cascada. Una segunda
  * lectura a los 4 s no bastaba: medía el estado anterior y producía fallos
  * falsos (llegó a dar 17/23 sin que el código tuviera nada roto).
