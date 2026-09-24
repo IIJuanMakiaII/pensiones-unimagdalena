@@ -8,25 +8,51 @@ import type { GeneroHabitacion, Habitacion, Pension, TipoHabitacion } from "@/ty
  * normalizar sigue siendo inválido se avisa por consola en desarrollo, en lugar
  * de romper el enlace de reserva en silencio.
  */
-const NUMERO_CRUDO = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "573001234567";
+const NUMERO_CRUDO = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+
+/**
+ * «Definida pero vacía» no es lo mismo que «definida».
+ *
+ * `??` solo cubre `null` y `undefined`, así que un
+ * `NEXT_PUBLIC_WHATSAPP_NUMBER=` en el panel del despliegue pasaba por
+ * configurado. Cuando la variable viene del panel y no del `.env.local` de una
+ * máquina, ese caso es el habitual, no una rareza.
+ */
+export const WHATSAPP_CONFIGURADO =
+  typeof NUMERO_CRUDO === "string" && NUMERO_CRUDO.trim() !== "";
+
+/** El valor tal como llegó, para poder decir en el error qué se recibió. */
+export const WHATSAPP_NUMERO_CRUDO = NUMERO_CRUDO ?? "";
+
+/** Número de ejemplo: solo para desarrollo, nunca para una compilación de producción. */
+const NUMERO_DE_EJEMPLO = "573001234567";
 
 export function normalizarNumeroWhatsApp(valor: string): string {
   return valor.replace(/[^\d]/g, "");
 }
 
-export const WHATSAPP_NUMERO = normalizarNumeroWhatsApp(NUMERO_CRUDO);
+export const WHATSAPP_NUMERO = normalizarNumeroWhatsApp(
+  WHATSAPP_CONFIGURADO ? WHATSAPP_NUMERO_CRUDO : NUMERO_DE_EJEMPLO
+);
 
 /** El formato esperado es de 10 a 15 dígitos, con el código de país incluido. */
 export function numeroWhatsAppValido(numero: string = WHATSAPP_NUMERO): boolean {
   return /^\d{10,15}$/.test(numero);
 }
 
-if (process.env.NODE_ENV !== "production" && !numeroWhatsAppValido()) {
-  console.warn(
-    `[WhatsApp] NEXT_PUBLIC_WHATSAPP_NUMBER no es válido: "${NUMERO_CRUDO}". ` +
-      "Debe tener entre 10 y 15 dígitos con el código de país (ej. 573001234567): " +
-      "los botones de reserva no funcionarán hasta corregirlo en .env.local."
-  );
+if (process.env.NODE_ENV !== "production") {
+  if (!WHATSAPP_CONFIGURADO) {
+    console.warn(
+      "[WhatsApp] NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado: los botones de reserva " +
+        `usan el número de ejemplo ${NUMERO_DE_EJEMPLO}. Defínelo en .env.local.`
+    );
+  } else if (!numeroWhatsAppValido()) {
+    console.warn(
+      `[WhatsApp] NEXT_PUBLIC_WHATSAPP_NUMBER no es válido: "${WHATSAPP_NUMERO_CRUDO}". ` +
+        "Debe tener entre 10 y 15 dígitos con el código de país (ej. 573001234567): " +
+        "los botones de reserva no funcionarán hasta corregirlo en .env.local."
+    );
+  }
 }
 
 /** Formatea un valor COP entero como "$1.200.000" (responsabilidad de presentación). */

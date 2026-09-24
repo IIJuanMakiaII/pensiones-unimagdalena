@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Public_Sans } from "next/font/google";
 import "./globals.css";
-import { numeroWhatsAppValido, WHATSAPP_NUMERO } from "@/lib/formato";
+import {
+  numeroWhatsAppValido,
+  WHATSAPP_CONFIGURADO,
+  WHATSAPP_NUMERO,
+  WHATSAPP_NUMERO_CRUDO,
+} from "@/lib/formato";
 import { SITIO_IMAGEN, SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
 import InstalarApp from "@/components/InstalarApp";
@@ -74,12 +79,21 @@ const jsonLdSitio = {
  * apuntando a un número equivocado o inexistente, en silencio. Preferimos que
  * la compilación de producción falle de forma visible y explicada.
  */
-if (process.env.NODE_ENV === "production" && !numeroWhatsAppValido()) {
-  throw new Error(
-    "NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado o no es válido. " +
-      "Define un número de 10 a 15 dígitos con el código de país (por ejemplo 573001234567) " +
-      "en las variables de entorno antes de compilar para producción."
-  );
+if (process.env.NODE_ENV === "production") {
+  if (!WHATSAPP_CONFIGURADO) {
+    throw new Error(
+      "NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado. " +
+        "Defínelo en las variables de entorno del despliegue con el código de país " +
+        "(por ejemplo 573001234567, entre 10 y 15 dígitos) antes de compilar para producción."
+    );
+  }
+  if (!numeroWhatsAppValido()) {
+    throw new Error(
+      `NEXT_PUBLIC_WHATSAPP_NUMBER no es válido: "${WHATSAPP_NUMERO_CRUDO}". ` +
+        "Debe tener entre 10 y 15 dígitos con el código de país (por ejemplo 573001234567) " +
+        "antes de compilar para producción."
+    );
+  }
 }
 
 export const metadata: Metadata = {
