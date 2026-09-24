@@ -82,9 +82,14 @@ const jsonLdSitio = {
 if (process.env.NODE_ENV === "production") {
   if (!WHATSAPP_CONFIGURADO) {
     throw new Error(
-      "NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado. " +
-        "Defínelo en las variables de entorno del despliegue con el código de país " +
-        "(por ejemplo 573001234567, entre 10 y 15 dígitos) antes de compilar para producción."
+      "NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado en el entorno que se está " +
+        "compilando. Comprueba tres cosas, en este orden: " +
+        "(1) que el nombre sea exactamente NEXT_PUBLIC_WHATSAPP_NUMBER, sin espacios ni " +
+        "letras cambiadas; " +
+        "(2) que la variable esté definida para ESTE entorno (Production, no solo Preview o " +
+        "Development: son listas separadas); " +
+        "(3) que su valor no esté vacío y tenga entre 10 y 15 dígitos con el código de país " +
+        "(por ejemplo 573001234567)."
     );
   }
   if (!numeroWhatsAppValido()) {
