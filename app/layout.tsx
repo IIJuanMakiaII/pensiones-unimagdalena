@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Public_Sans } from "next/font/google";
 import "./globals.css";
 import {
   numeroWhatsAppValido,
+  NUMERO_DE_EJEMPLO,
   WHATSAPP_CONFIGURADO,
   WHATSAPP_NUMERO,
   WHATSAPP_NUMERO_CRUDO,
@@ -97,6 +98,21 @@ if (process.env.NODE_ENV === "production") {
       `NEXT_PUBLIC_WHATSAPP_NUMBER no es válido: "${WHATSAPP_NUMERO_CRUDO}". ` +
         "Debe tener entre 10 y 15 dígitos con el código de país (por ejemplo 573001234567) " +
         "antes de compilar para producción."
+    );
+  }
+  /**
+   * El caso que se cuela por el hueco: el número de ejemplo **pasa** la
+   * comprobación de formato. Copiarlo desde `.env.local` a las variables del
+   * despliegue produce el peor fallo posible — todos los botones de reserva
+   * apuntando a un número que no existe, sin ningún síntoma visible y sin que
+   * nadie se entere hasta que un estudiante escribe y no le contesta nadie.
+   */
+  if (WHATSAPP_NUMERO === NUMERO_DE_EJEMPLO) {
+    throw new Error(
+      `NEXT_PUBLIC_WHATSAPP_NUMBER tiene el número de ejemplo (${NUMERO_DE_EJEMPLO}), ` +
+        "que no existe. Es el valor que trae `.env.local` para desarrollo y cumple el formato, " +
+        "así que sin esta comprobación el despliegue saldría adelante con los botones de reserva " +
+        "apuntando a la nada. Define el número real de la plataforma con el código de país."
     );
   }
 }

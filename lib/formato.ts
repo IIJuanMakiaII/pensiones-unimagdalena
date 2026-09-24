@@ -25,7 +25,7 @@ export const WHATSAPP_CONFIGURADO =
 export const WHATSAPP_NUMERO_CRUDO = NUMERO_CRUDO ?? "";
 
 /** Número de ejemplo: solo para desarrollo, nunca para una compilación de producción. */
-const NUMERO_DE_EJEMPLO = "573001234567";
+export const NUMERO_DE_EJEMPLO = "573001234567";
 
 export function normalizarNumeroWhatsApp(valor: string): string {
   return valor.replace(/[^\d]/g, "");
