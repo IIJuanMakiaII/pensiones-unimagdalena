@@ -112,6 +112,20 @@ if (process.env.VERCEL_ENV) {
    * apuntando a un número que no existe, sin ningún síntoma visible y sin que
    * nadie se entere hasta que un estudiante escribe y no le contesta nadie.
    */
+  /**
+   * Un celular colombiano al que le falta el código de país también pasa la
+   * comprobación de formato (10 dígitos) y también rompe el enlace: WhatsApp lee
+   * `wa.me/3026429730` como «código 30», que es otro país, y marca donde no es.
+   * No da ningún error visible; simplemente no llega. Es el error más fácil de
+   * cometer al copiar el número del teléfono, que es como se copia siempre.
+   */
+  if (/^3\d{9}$/.test(WHATSAPP_NUMERO)) {
+    throw new Error(
+      `NEXT_PUBLIC_WHATSAPP_NUMBER parece un celular colombiano sin el código de país ` +
+        `("${WHATSAPP_NUMERO_CRUDO}"). Añade 57 delante: 57${WHATSAPP_NUMERO}. Sin eso, el ` +
+        "enlace de WhatsApp marca a otro país y el mensaje del estudiante no llega a nadie."
+    );
+  }
   if (WHATSAPP_NUMERO === NUMERO_DE_EJEMPLO) {
     throw new Error(
       `NEXT_PUBLIC_WHATSAPP_NUMBER tiene el número de ejemplo (${NUMERO_DE_EJEMPLO}), ` +
