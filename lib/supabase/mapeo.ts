@@ -49,6 +49,57 @@ export interface HabitacionFila {
   disponible: boolean;
 }
 
+/**
+ * Proyección de las consultas de lectura (tarea #38 · M-20).
+ *
+ * Las consultas pedían `select("*")`: traían todas las columnas de todas las
+ * filas, incluidas las que el mapeo ni siquiera lee, y **cualquier columna que
+ * se añada en el futuro viajaría sola** hasta el navegador. Estas listas
+ * enumeran lo que de verdad se usa, y viven aquí, junto a las interfaces que
+ * traducen, para que no puedan desincronizarse sin que se note.
+ *
+ * En `habitaciones` hay un recorte real: `creada_en` existe en la tabla y **no**
+ * está en el mapeo, así que hoy viajaba en cada fila para nada.
+ *
+ * Contrapartida honesta: pedir columnas por su nombre acopla la aplicación al
+ * esquema. Si a esta base le faltara una de estas columnas (una migración sin
+ * aplicar), la consulta **fallaría en voz alta** en lugar de devolver el campo
+ * vacío. Es el comportamiento que se quiere —un esquema incompleto es un error,
+ * no un dato ausente—, pero conviene tenerlo presente al añadir columnas.
+ */
+export const COLUMNAS_PENSION = [
+  "id",
+  "slug",
+  "anfitrion_id",
+  "titulo",
+  "descripcion",
+  "precio_mensual",
+  "direccion",
+  "barrio",
+  "distancia_a_pie_minutos",
+  "servicios",
+  "normas",
+  "calificacion",
+  "verificado",
+  "imagenes",
+  "activa",
+  "creada_en",
+  "latitud",
+  "longitud",
+  "whatsapp",
+  "autorizacion_contacto_en",
+].join(", ");
+
+export const COLUMNAS_HABITACION = [
+  "id",
+  "pension_id",
+  "tipo",
+  "genero",
+  "precio_mensual_cop",
+  "alimentacion_incluida",
+  "disponible",
+].join(", ");
+
 const TIPOS: TipoHabitacion[] = ["individual", "compartida", "matrimonial"];
 const GENEROS: GeneroHabitacion[] = ["mixto", "femenino", "masculino"];
 

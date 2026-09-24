@@ -7,7 +7,15 @@ import {
 } from "@/lib/identificador";
 import { DEMO_HABILITADA } from "@/lib/sitio";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
-import { filaAHabitacion, filaAPension, type HabitacionFila, type PensionFila } from "@/lib/supabase/mapeo";
+import { agruparHabitacionesPorPension } from "@/lib/agrupar";
+import {
+  COLUMNAS_HABITACION,
+  COLUMNAS_PENSION,
+  filaAHabitacion,
+  filaAPension,
+  type HabitacionFila,
+  type PensionFila,
+} from "@/lib/supabase/mapeo";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { crearClientePublico } from "@/utils/supabase/publico";
 
@@ -36,17 +44,44 @@ import { crearClientePublico } from "@/utils/supabase/publico";
  * cosas ha pasado —está, no está, no se pudo comprobar— y cada llamador decide.
  */
 
-/** Une pensiones con sus habitaciones (equivalente al JOIN 1-N del modelo ER). */
+/**
+ * El cliente de Supabase no está tipado contra el esquema (los tipos no se
+ * generan desde la base), así que la conversión de lo que devuelve la consulta a
+ * las filas del mapeo es explícita. Vive aquí, en un solo sitio y con el porqué
+ * escrito, en lugar de repartida en siete conversiones sueltas.
+ *
+ * Hace falta desde la tarea #38: al pedir las columnas por su nombre, el cliente
+ * deduce el tipo de la proyección y, si no puede, devuelve un tipo de error en
+ * vez de `any`. El llamador no tiene que saber nada de eso.
+ */
+function filasDePension(datos: unknown): PensionFila[] {
+  return (datos ?? []) as PensionFila[];
+}
+
+function filasDeHabitacion(datos: unknown): HabitacionFila[] {
+  return (datos ?? []) as HabitacionFila[];
+}
+
+/** Fila ya comprobada como presente: se usa después del `if (!pension)`. */
+function filaDePension(dato: unknown): PensionFila {
+  return dato as PensionFila;
+}
+
+/**
+ * Une pensiones con sus habitaciones (equivalente al JOIN 1-N del modelo ER).
+ *
+ * El índice se construye **una sola vez** (tarea #38 · M-20). Antes esto era un
+ * `filter` dentro de un `map`: un recorrido de *todas* las habitaciones por cada
+ * pensión, con un coste que crecía multiplicando. Con 6 anuncios no se notaba;
+ * con 500 y 5.000 habitaciones serían 2,5 millones de comparaciones por lectura.
+ */
 function combinar(
   pensiones: PensionFila[],
   habitaciones: HabitacionFila[]
 ): PensionConHabitaciones[] {
-  return pensiones.map((fila) =>
-    filaAPension(
-      fila,
-      habitaciones.filter((h) => h.pension_id === fila.id).map(filaAHabitacion)
-    )
-  );
+  const porPension = agruparHabitacionesPorPension(habitaciones.map(filaAHabitacion));
+
+  return pensiones.map((fila) => filaAPension(fila, porPension.get(fila.id) ?? []));
 }
 
 /**
@@ -78,8 +113,12 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
     const supabase = crearClientePublico();
     const [{ data: pensiones, error: errorPensiones }, { data: habitaciones, error: errorHabitaciones }] =
       await Promise.all([
-        supabase.from("pensiones").select("*").eq("activa", true).order("creada_en", { ascending: false }),
-        supabase.from("habitaciones").select("*"),
+        supabase
+          .from("pensiones")
+          .select(COLUMNAS_PENSION)
+          .eq("activa", true)
+          .order("creada_en", { ascending: false }),
+        supabase.from("habitaciones").select(COLUMNAS_HABITACION),
       ]);
 
     if (errorPensiones || errorHabitaciones || !pensiones) {
@@ -87,7 +126,7 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
       return catalogoDemo();
     }
 
-    return combinar(pensiones as PensionFila[], (habitaciones ?? []) as HabitacionFila[]);
+    return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
   } catch (error) {
     console.error("Fallo de conexión con Supabase:", error);
     return catalogoDemo();
@@ -140,7 +179,7 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
     const supabase = crearClientePublico();
     const { data: pension, error } = await supabase
       .from("pensiones")
-      .select("*")
+      .select(COLUMNAS_PENSION)
       .eq(columna, valor)
       .maybeSingle();
 
@@ -159,13 +198,13 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
       return { estado: "no-existe" };
     }
 
-    const fila = pension as PensionFila;
+    const fila = filaDePension(pension);
 
     // Las habitaciones se piden por el UUID real: cuando se resuelve por
     // dirección legible, lo que venía en la URL no es una clave foránea.
     const { data: habitaciones, error: errorHabitaciones } = await supabase
       .from("habitaciones")
-      .select("*")
+      .select(COLUMNAS_HABITACION)
       .eq("pension_id", fila.id);
 
     if (errorHabitaciones) {
@@ -175,7 +214,7 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
 
     return {
       estado: "ok",
-      pension: filaAPension(fila, ((habitaciones ?? []) as HabitacionFila[]).map(filaAHabitacion)),
+      pension: filaAPension(fila, filasDeHabitacion(habitaciones).map(filaAHabitacion)),
     };
   } catch (error) {
     console.error("Fallo de conexión consultando el anuncio:", error);
@@ -218,7 +257,7 @@ export async function obtenerPensionesReales(): Promise<PensionConHabitaciones[]
     const supabase = crearClientePublico();
     const { data: pensiones, error } = await supabase
       .from("pensiones")
-      .select("*")
+      .select(COLUMNAS_PENSION)
       .eq("activa", true)
       .order("creada_en", { ascending: false });
 
@@ -227,12 +266,12 @@ export async function obtenerPensionesReales(): Promise<PensionConHabitaciones[]
       return [];
     }
 
-    const ids = (pensiones as PensionFila[]).map((p) => p.id);
+    const ids = filasDePension(pensiones).map((p) => p.id);
     const { data: habitaciones } = ids.length
-      ? await supabase.from("habitaciones").select("*").in("pension_id", ids)
+      ? await supabase.from("habitaciones").select(COLUMNAS_HABITACION).in("pension_id", ids)
       : { data: [] };
 
-    return combinar(pensiones as PensionFila[], (habitaciones ?? []) as HabitacionFila[]);
+    return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
   } catch (error) {
     console.error("Sitemap: fallo de conexión con Supabase:", error);
     return [];
@@ -249,7 +288,7 @@ export async function obtenerPensionesDelAnfitrion(
     const supabase = await crearClienteServidor();
     const { data: pensiones, error } = await supabase
       .from("pensiones")
-      .select("*")
+      .select(COLUMNAS_PENSION)
       .eq("anfitrion_id", anfitrionId)
       .order("creada_en", { ascending: false });
 
@@ -258,12 +297,12 @@ export async function obtenerPensionesDelAnfitrion(
       return [];
     }
 
-    const ids = pensiones.map((p) => (p as PensionFila).id);
+    const ids = filasDePension(pensiones).map((p) => p.id);
     const { data: habitaciones } = ids.length
-      ? await supabase.from("habitaciones").select("*").in("pension_id", ids)
+      ? await supabase.from("habitaciones").select(COLUMNAS_HABITACION).in("pension_id", ids)
       : { data: [] };
 
-    return combinar(pensiones as PensionFila[], (habitaciones ?? []) as HabitacionFila[]);
+    return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
   } catch (error) {
     console.error("Fallo consultando publicaciones del anfitrión:", error);
     return [];

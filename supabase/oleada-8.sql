@@ -1,0 +1,109 @@
+-- ============================================================================
+-- Oleada 8 — Índices que faltaban para el acceso a datos (M-20, tarea #38)
+-- Ejecutar después de esquema.sql, storage-fotos.sql y oleada-1 … oleada-7.
+-- Es idempotente.
+--
+-- ⚠️ ESTA MIGRACIÓN NO ESTÁ APLICADA, y no se presenta como medida.
+--
+--   Se entrega escrita a propósito: en la sesión en la que se escribió, la
+--   herramienta de base de datos disponible pertenece a otra organización y
+--   responde `ownership_forbidden` al pedirle este proyecto, así que **desde ahí
+--   no se puede aplicar nada**. Los efectos que se describen abajo son el
+--   resultado de leer las consultas y los índices existentes, **no** de una
+--   medición con `EXPLAIN`. Se aplicará junto con la oleada 7 en el editor SQL
+--   del proyecto, y entonces conviene medir antes y después.
+--
+-- ---------------------------------------------------------------------------
+-- Qué se revisó, consulta por consulta
+-- ---------------------------------------------------------------------------
+--
+--   Consulta                              Filtro y orden                    Índice que la sirve hoy
+--   ------------------------------------  --------------------------------  --------------------------
+--   Catálogo público (obtenerPensiones)   activa = true, creada_en DESC      pensiones_catalogo_idx ✓
+--   Sitemap y barrios (…Reales)           activa = true, creada_en DESC      pensiones_catalogo_idx ✓
+--   Ficha por dirección legible           slug = ?                           pensiones_slug_uk ✓
+--   Ficha por UUID                        id = ?                             clave primaria ✓
+--   Habitaciones de una ficha             pension_id = ?                     habitaciones_pension_idx ✓
+--   Habitaciones de varias pensiones      pension_id IN (…)                  habitaciones_pension_idx ✓
+--   Panel: mis publicaciones              anfitrion_id = ?, creada_en DESC   ⚠️ solo la mitad
+--
+-- El catálogo, la ficha y las habitaciones **ya estaban cubiertos**: por eso esta
+-- migración es corta, y no por falta de búsqueda. El hueco real es el panel.
+--
+-- `pensiones_anfitrion_idx` es `(anfitrion_id)`: sirve el filtro, pero el `ORDER
+-- BY creada_en DESC` obliga a PostgreSQL a **ordenar después** de leer las filas.
+-- Con 3 publicaciones es gratis; con 300 por anfitrión es un `Sort` en cada carga
+-- del panel. El índice compuesto pone el orden dentro del índice y el `Sort`
+-- desaparece.
+--
+-- Se **elimina el índice de una sola columna** al añadir el compuesto: un índice
+-- cuyo primer campo es el mismo hace el trabajo del simple, así que mantener los
+-- dos solo añade coste de escritura en cada publicación, edición y retirada. La
+-- reversión está al final.
+--
+-- Lo que NO se hace, y por qué
+--
+--   · **Paginación**: fuera de alcance por decisión del encargado. Los filtros
+--     trabajan sobre el catálogo completo en el cliente; paginar es un cambio de
+--     producto, no un ajuste de rendimiento.
+--   · **Índice parcial `where activa`** para el catálogo: sería más pequeño que
+--     `(activa, creada_en DESC)` porque solo guardaría las publicaciones activas,
+--     y la consulta pública lo aprovecharía igual. Es una mejora legítima, pero
+--     implica **sustituir** un índice que hoy funciona, y sin poder medir el
+--     antes y el después no compensa el riesgo. Queda anotado como candidato para
+--     la primera sesión con acceso a la base.
+--   · **Índice para la lectura sin filtro de `habitaciones`** (el catálogo trae
+--     las habitaciones de todas las publicaciones activas): un índice no acelera
+--     un recorrido completo de la tabla. Aquí lo que ayuda es reducir lo que se
+--     transfiere, y eso ya se hizo en el código (proyección explícita).
+--   · **Búsqueda por texto** (`pg_trgm`): hoy no existe buscador. Añadir el índice
+--     sin la consulta sería peso muerto, exactamente lo que esta oleada combate.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1) El índice que faltaba: filtro por anfitrión **y** orden por fecha
+-- ---------------------------------------------------------------------------
+create index if not exists pensiones_anfitrion_recientes_idx
+  on public.pensiones (anfitrion_id, creada_en desc);
+
+comment on index public.pensiones_anfitrion_recientes_idx is
+  'Panel del anfitrión: filtra por anfitrion_id y ordena por creada_en DESC sin un paso de ordenación aparte (tarea #38).';
+
+-- ---------------------------------------------------------------------------
+-- 2) Fuera el índice redundante de una sola columna
+--
+--    `pensiones_anfitrion_idx (anfitrion_id)` queda cubierto por el primero:
+--    un índice compuesto sirve las consultas que filtran solo por su primer
+--    campo. Mantener los dos solo encarece cada escritura de `pensiones`.
+-- ---------------------------------------------------------------------------
+drop index if exists public.pensiones_anfitrion_idx;
+
+
+-- ============================================================================
+-- Verificación tras aplicar (no escribe nada; no se ha ejecutado todavía):
+--
+--   -- 1. El índice nuevo existe y el redundante ya no:
+--   select indexname from pg_indexes
+--    where schemaname = 'public' and tablename = 'pensiones' order by indexname;
+--   -- esperado: pensiones_anfitrion_recientes_idx, pensiones_catalogo_idx,
+--   --           pensiones_pkey, pensiones_slug_uk
+--
+--   -- 2. Que el plan del panel deja de ordenar (esto sí es una medición, y hay
+--   --    que hacerla con datos: con la tabla casi vacía PostgreSQL preferirá un
+--   --    recorrido secuencial y el índice no aparecerá aunque esté bien).
+--   explain (analyze, buffers)
+--   select id, titulo, activa, creada_en from public.pensiones
+--    where anfitrion_id = '<uuid de un anfitrión con publicaciones>'
+--    order by creada_en desc;
+--   -- esperado: `Index Scan using pensiones_anfitrion_recientes_idx`, sin `Sort`
+--
+--   -- 3. Que el catálogo público no se ha visto afectado:
+--   explain (analyze, buffers)
+--   select id from public.pensiones
+--    where activa = true order by creada_en desc limit 24;
+--   -- esperado: `Index Scan using pensiones_catalogo_idx`, sin `Sort`
+--
+-- Reversión (deja el esquema como estaba; no toca datos):
+--   drop index if exists public.pensiones_anfitrion_recientes_idx;
+--   create index if not exists pensiones_anfitrion_idx on public.pensiones (anfitrion_id);
+-- ============================================================================
