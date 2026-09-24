@@ -65,6 +65,9 @@ jobs:
       - name: SEO sobre el build
         run: npm run verificar:seo
 
+      - name: Service Worker: que ninguna ruta con sesión sea cacheable
+        run: npm run verificar:sw
+
       - name: Publicar el build para los bloques siguientes
         uses: actions/upload-artifact@v4
         with:

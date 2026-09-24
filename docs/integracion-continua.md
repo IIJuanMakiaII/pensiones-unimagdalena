@@ -11,7 +11,7 @@ Cada vez que se sube un cambio (a cualquier rama, y en cada propuesta de cambio)
 
 | Bloque | Qué comprueba | ¿Necesita base de datos? |
 |---|---|---|
-| **1 · Sin base de datos** | tipos (`tsc`), lint, **68 pruebas unitarias**, compilación, guardián de credenciales, contraste WCAG, SEO sobre el build | No |
+| **1 · Sin base de datos** | tipos (`tsc`), lint, **115 pruebas unitarias**, compilación, guardián de credenciales, contraste WCAG, SEO sobre el build y clasificación de rutas del Service Worker | No |
 | **2 · Con servidor** | levanta el build del bloque 1 y comprueba humo de rutas y estructura HTML | No |
 | **3 · Con base de datos** | humo y estructura con datos reales, códigos de estado (404 de ficha retirada), RLS de Supabase | **Sí** — se activa cuando existen los secretos |
 | **4 · Resumen** | deja en una pantalla qué bloque se ejecutó y con qué resultado; **falla si el bloque 1 no se superó** | No |
@@ -24,11 +24,12 @@ Cada vez que se sube un cambio (a cualquier rama, y en cada propuesta de cambio)
 |---|---|---|
 | `npm run tipos` | comprobación de tipos de todo el proyecto | No |
 | `npm run verificar:lint` | lint de ESLint, o **SALTADO con motivo** si no está instalado | No |
-| `npm run probar` | 68 pruebas unitarias de la lógica pura (6 archivos) | No |
+| `npm run probar` | 115 pruebas unitarias de la lógica pura, el motor de filtrado, las regresiones de seguridad y el Service Worker | No |
 | `npm run build` | compilación de producción | Solo las variables públicas |
 | `npm run verificar:secretos` | que no haya credenciales versionadas | No |
 | `npm run verificar:contraste` | 16 combinaciones WCAG AA del sistema de diseño | No |
 | `npm run verificar:seo` | datos estructurados, metadatos, `robots`, `sitemap` sobre el build | No |
+| `npm run verificar:sw` | que ninguna ruta con sesión sea cacheable y que **ninguna ruta quede sin clasificar** (recorre las rutas reales del build) | Solo el build |
 | `npm run verificar:humo` | respuesta de las rutas (necesita el servidor levantado) | Opcional |
 | `npm run verificar:estructura` | HTML válido y sin contenido interactivo anidado | Opcional |
 | `npm run verificar:estados` | 404 real de ficha inexistente o retirada | **Sí** |
@@ -107,7 +108,7 @@ Después, comprometer el `package-lock.json` actualizado. La siguiente subida ya
 
 ---
 
-## 6. Las 68 pruebas unitarias: qué cubren y por qué
+## 6. Las pruebas unitarias: qué cubren y por qué
 
 Antes, las reglas críticas del negocio solo se comprobaban con pruebas extremo a extremo contra la base de datos: si no había credenciales, no se comprobaban. Ahora viven como pruebas unitarias, que **corren siempre y gratis**, sin base de datos y en menos de un segundo.
 
@@ -118,8 +119,22 @@ Antes, las reglas críticas del negocio solo se comprobaban con pruebas extremo 
 | `pruebas/whatsapp.prueba.ts` | Normalización del número (`+57 300 123 4567` → `3001234567`), los 10 dígitos y el respaldo a la plataforma |
 | `pruebas/identificador.prueba.ts` | Por qué columna se busca un anuncio (uuid o dirección legible) — el error de tipos que hacía caer la app a la semilla |
 | `pruebas/seguridad.prueba.ts` | Regresiones de seguridad: el XSS del JSON-LD y la lista blanca de imágenes |
+| `pruebas/service-worker.prueba.ts` | Que el Service Worker **no guarde en el dispositivo** ninguna página con sesión (ejecuta el `sw.js` real con cachés falsas) |
 
 **Requiere Node 22 o superior** (no es una preferencia): las pruebas ejecutan archivos `.ts` directamente aprovechando el «type stripping» de Node. Por eso el flujo fija esa versión.
+
+### Por qué hay además un verificador del Service Worker (y no es redundante)
+
+Son dos garantías distintas, y las dos hacen falta:
+
+| | Qué garantiza | Qué **no** puede ver |
+|---|---|---|
+| `pruebas/service-worker.prueba.ts` (batería unitaria) | Que la **lógica** es correcta: se ejecuta el `sw.js` real y se comprueba, ruta por ruta, que no se guarda nada con sesión | No conoce rutas que aún no existen: si mañana alguien añade `/mi-cuenta`, la prueba no se enterará |
+| `npm run verificar:sw` | Que el **inventario está completo**: recorre las rutas reales del build y exige que cada una esté clasificada en `public/sw.js` | Depende del build: sin compilación no puede ejecutarse (y lo dice, en vez de aprobar en falso) |
+
+La segunda es la que cubre el modo de fallo que ocurrió de verdad: la lista de rutas privadas se quedó atrás **dos veces** porque nada obligaba a revisarla. Un verificador que recorre el build convierte «acuérdate de clasificarla» en «la subida falla hasta que la clasifiques».
+
+Su control negativo está comprobado: sin build → falla indicando que hay que compilar; con una ruta ficticia sin clasificar → falla nombrando exactamente la ruta.
 
 ---
 
@@ -131,11 +146,12 @@ Un flujo que nunca se ha ejecutado es una promesa, no una comprobación. Esto es
 |---|---|
 | `npm run tipos` | limpio |
 | `npm run verificar:lint` | se salta con motivo, código de salida 0, sin colgarse |
-| `npm run probar` | **68/68 en 0,65 s** (con ESLint ausente y sin base de datos) |
+| `npm run probar` | **115 pruebas en menos de un segundo** (con ESLint ausente y sin base de datos) |
 | `npm run verificar:secretos` | sin hallazgos — **y con control negativo**: al plantar una credencial falsa la detectó (2 patrones) y el repositorio volvió a verde tras retirarla |
 | `npm run verificar:contraste` | 16/16 WCAG AA |
 | `npm run build` **sin credenciales**, en una copia aislada | compila y prerrenderiza el catálogo de demostración |
 | `npm run verificar:seo` sobre ese build **sin credenciales** | **23/23**, incluido `sitemap.xml` sin URLs de demostración |
+| `npm run verificar:sw` | 16 rutas del build, **todas clasificadas** y ninguna con sesión cacheable — y **con dos controles negativos**: sin build falla pidiendo compilar, y con una ruta ficticia sin clasificar falla nombrándola |
 | `npm ci` (dependencias frente al `package-lock.json`) | sincronizadas: la instalación del flujo no fallará |
 
 ### Límites declarados

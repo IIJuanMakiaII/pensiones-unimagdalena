@@ -14,6 +14,7 @@
     "verificar:secretos": "node scripts/verificar-secretos.mjs",
     "verificar:contraste": "node scripts/verificar-contraste.mjs",
     "verificar:seo": "node scripts/verificar-seo.mjs",
+    "verificar:sw": "node scripts/verificar-sw.mjs",
     "verificar:humo": "node scripts/prueba-humo.mjs",
     "verificar:estructura": "node scripts/verificar-estructura.mjs",
     "verificar:estados": "node scripts/verificar-estados.mjs",
