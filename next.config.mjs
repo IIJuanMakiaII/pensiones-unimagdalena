@@ -75,3 +75,15 @@ const nextConfig = {
 };
 
 export default nextConfig;
+output: 'export'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'export',
+  basePath: '/pensiones-unimagdalena',
+  images: {
+    unoptimized: true, // Requerido para GitHub Pages
+  },
+};
+
+module.exports = nextConfig;
+
