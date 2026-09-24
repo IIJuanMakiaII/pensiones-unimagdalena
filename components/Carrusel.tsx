@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FotoMarco from "@/components/FotoMarco";
+import { comportamientoScroll } from "@/lib/accesibilidad";
 
 interface Props {
   imagenes: string[];
@@ -54,7 +55,7 @@ export default function Carrusel({
   const mover = useCallback((dir: 1 | -1) => {
     const el = contenedorRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+    el.scrollBy({ left: dir * el.clientWidth, behavior: comportamientoScroll() });
   }, []);
 
   // Activa la foto actual y la siguiente: la que sigue ya está lista al deslizar.
@@ -139,9 +140,13 @@ export default function Carrusel({
         </>
       )}
 
-      {/* Indicador de puntos */}
+      {/* Indicador de puntos.
+          El punto visible mide 8 px, pero lo que se toca es el botón: 44×44 px, el
+          mínimo del contrato Mobile-First. Con más de 6 fotos —el tope son 8— ocho
+          áreas de 44 px no caben en el ancho de un móvil, así que baja a 24×24 px,
+          que es el mínimo exigible por WCAG 2.5.8 y sigue sin solaparse. */}
       {total > 1 && (
-        <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+        <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 justify-center">
           {imagenes.map((src, i) => (
             <button
               key={src + i}
@@ -150,12 +155,16 @@ export default function Carrusel({
               aria-current={i === indice}
               onClick={() => {
                 const el = contenedorRef.current;
-                el?.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+                el?.scrollTo({ left: i * el.clientWidth, behavior: comportamientoScroll() });
               }}
-              className={`h-2 w-2 rounded-full transition ${
-                i === indice ? "bg-white shadow" : "bg-white/50"
-              }`}
-            />
+              className={`flex items-center justify-center ${total > 6 ? "h-6 w-6" : "h-11 w-11"}`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full transition ${
+                  i === indice ? "bg-white shadow" : "bg-white/50"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

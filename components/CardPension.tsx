@@ -187,9 +187,21 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             Consultar por WhatsApp
           </a>
         ) : (
-          <p className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-xl bg-neutro-100 px-4 text-[15px] font-semibold text-neutro-500">
-            Sin habitaciones con estos filtros
-          </p>
+          /* Tiene habitaciones libres, pero ninguna encaja con los filtros activos.
+             Antes esto era un párrafo inerte: el estudiante ya estaba mirando el
+             anuncio —le interesó el barrio o el precio— y no podía hacer nada.
+             Ahora la única salida útil está a un toque. */
+          <div className="mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
+            <p className="text-sm font-bold text-neutro-700">
+              Sin habitaciones que cumplan tus filtros
+            </p>
+            <Link
+              href={`/pensiones/${pension.slug}`}
+              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl border border-primary-600 bg-white px-4 text-[15px] font-bold text-primary-700 transition hover:bg-primary-50"
+            >
+              Ver todas las habitaciones
+            </Link>
+          </div>
         )}
       </div>
     </article>

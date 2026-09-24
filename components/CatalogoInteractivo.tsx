@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { PensionConHabitaciones } from "@/types";
 import {
-  aplicarFiltros,
+  ETIQUETA_ORDEN,
   FILTROS_INICIALES,
+  ORDEN_POR_DEFECTO,
+  aplicarFiltros,
+  contarHabitacionesDisponibles,
+  filtroQueMasBloquea,
   filtrosAParametros,
   limitesDePrecio,
   parametrosAFiltros,
+  quitarFiltro,
   type FiltrosUI,
+  type Orden,
 } from "@/lib/filtros";
 import { useFavoritos } from "@/hooks/useFavoritos";
 import { medirFiltros } from "@/lib/medicion";
@@ -51,6 +57,20 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
   const router = useRouter();
   const yaRestaurado = useRef(false);
 
+  /**
+   * Deja filtros y modo demo igual que la URL actual. La URL es la fuente de
+   * verdad de la búsqueda: es lo que hace que un enlace compartido por WhatsApp
+   * abra exactamente la búsqueda que la otra persona envió.
+   */
+  const sincronizarDesdeUrl = useCallback(() => {
+    const consulta = new URLSearchParams(window.location.search);
+    const pideDemo = consulta.get("demo") === "1" && demoHabilitada;
+    setModoDemo(pideDemo);
+
+    const base = pideDemo ? pensionesDemo : pensiones;
+    setFiltros(parametrosAFiltros(consulta, limitesDePrecio(base).max));
+  }, [demoHabilitada, pensiones, pensionesDemo]);
+
   // 1) Al abrir un enlace compartido, reconstruye filtros y modo demo desde la URL.
   useEffect(() => {
     if (yaRestaurado.current) return;
@@ -65,6 +85,19 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
     const base = pideDemo ? pensionesDemo : pensiones;
     setFiltros(parametrosAFiltros(consulta, limitesDePrecio(base).max));
   }, [demoHabilitada, pensiones, pensionesDemo]);
+
+  /**
+   * 2) Atrás y Adelante del navegador.
+   *
+   * Los cambios de filtro escriben la URL con `replace` (arrastrar el deslizador
+   * no debe llenar el historial de entradas), así que la URL puede cambiar sin
+   * que el estado se entere. Escuchando `popstate` los filtros vuelven a leerse
+   * de la dirección, y lo que se ve coincide siempre con lo que dice la barra.
+   */
+  useEffect(() => {
+    window.addEventListener("popstate", sincronizarDesdeUrl);
+    return () => window.removeEventListener("popstate", sincronizarDesdeUrl);
+  }, [sincronizarDesdeUrl]);
 
   /** Escribe en la URL los filtros activos (y si la demo está encendida). */
   const escribirUrl = (nuevos: FiltrosUI, demo: boolean, maximo: number) => {
@@ -96,6 +129,24 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
     [activas, filtros, favoritos]
   );
 
+  /** Habitaciones reservables con los filtros puestos: el estudiante busca una habitación. */
+  const habitacionesLibres = useMemo(
+    () => contarHabitacionesDisponibles(resultados, filtros),
+    [resultados, filtros]
+  );
+
+  /**
+   * Qué filtro deja el catálogo vacío. Solo se calcula cuando no hay resultados:
+   * es un dato para el mensaje, no para la lista.
+   */
+  const bloqueante = useMemo(
+    () =>
+      resultados.length === 0 && activas.length > 0
+        ? filtroQueMasBloquea(activas, filtros, limitesPrecio.max, favoritos)
+        : null,
+    [resultados.length, activas, filtros, limitesPrecio.max, favoritos]
+  );
+
   /**
    * Medición de filtros, con retardo a propósito: arrastrar el slider emite
    * decenas de cambios y enviar uno por píxel llenaría la medición de ruido sin
@@ -111,6 +162,8 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
         alimentacion: filtros.soloConAlimentacion,
         solo_verificadas: filtros.soloVerificadas,
         solo_favoritas: filtros.soloFavoritas,
+        orden: filtros.orden ?? ORDEN_POR_DEFECTO,
+        habitaciones_libres: habitacionesLibres,
         resultados: resultados.length,
       });
     }, 1500);
@@ -143,7 +196,7 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             <button
               type="button"
               onClick={alternarDemo}
-              className="inline-flex h-10 items-center rounded-xl border border-accent-300 bg-white px-3 text-xs font-bold text-accent-800 transition hover:bg-accent-100"
+              className="inline-flex h-11 items-center rounded-xl border border-accent-300 bg-white px-3 text-xs font-bold text-accent-800 transition hover:bg-accent-100"
             >
               Ver catálogo real
             </button>
@@ -151,10 +204,20 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
         )}
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {/* El recuento nombra habitaciones, no solo pensiones: es lo que el
+              estudiante viene a buscar, y se cuenta con sus filtros puestos para
+              no prometer nada que no pueda alquilar. */}
           <p aria-live="polite" className="text-sm font-semibold text-neutro-600">
-            {resultados.length === 1
-              ? "1 pensión cerca de Unimagdalena"
-              : `${resultados.length} pensiones cerca de Unimagdalena`}
+            {resultados.length === 1 ? "1 pensión" : `${resultados.length} pensiones`}
+            {habitacionesLibres > 0 && (
+              <>
+                {" · "}
+                {habitacionesLibres === 1
+                  ? "1 habitación disponible"
+                  : `${habitacionesLibres} habitaciones disponibles`}
+              </>
+            )}{" "}
+            cerca de Unimagdalena
             {totalFavoritos > 0 && (
               <span className="ml-2 font-normal text-neutro-500">
                 · {totalFavoritos === 1 ? "1 guardada" : `${totalFavoritos} guardadas`} en tus favoritas
@@ -180,6 +243,35 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             </Link>
           </div>
         </div>
+
+        {/* Ordenar. Va con los resultados —no en la barra de filtros— porque es
+            donde se busca al mirar una lista y querer reordenarla. El color lo
+            separa de los filtros (verde = ordenar, naranja = filtrar): así una
+            palabra por significado, que es lo que permite aprender la interfaz
+            en dos pantallas. */}
+        {resultados.length > 1 && (
+          <div role="group" aria-label="Ordenar resultados" className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="shrink-0 text-sm font-semibold text-neutro-700">Ordenar</span>
+            {(Object.keys(ETIQUETA_ORDEN) as Orden[]).map((opcion) => {
+              const activo = (filtros.orden ?? ORDEN_POR_DEFECTO) === opcion;
+              return (
+                <button
+                  key={opcion}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => cambiarFiltros({ ...filtros, orden: opcion })}
+                  className={`h-11 rounded-full px-4 text-sm font-semibold transition ${
+                    activo
+                      ? "bg-primary-600 text-white shadow-sm"
+                      : "border border-neutro-300 bg-white text-neutro-700 hover:border-primary-400"
+                  }`}
+                >
+                  {ETIQUETA_ORDEN[opcion]}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {activas.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutro-300 bg-white p-8 text-center">
@@ -209,7 +301,15 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             </div>
           </div>
         ) : resultados.length === 0 ? (
-          <EstadoVacio onLimpiar={limpiar} />
+          <EstadoVacio
+            onLimpiar={limpiar}
+            bloqueante={bloqueante}
+            onQuitarBloqueante={
+              bloqueante
+                ? () => cambiarFiltros(quitarFiltro(filtros, bloqueante.clave, limitesPrecio.max))
+                : undefined
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {resultados.map((pension, i) => (

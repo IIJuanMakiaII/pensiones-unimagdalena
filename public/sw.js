@@ -6,8 +6,32 @@
  * colgada hasta recargar con Ctrl+Shift+R. El registro está condicionado en
  * `components/InstalarApp.tsx`.
  *
+ * REGLA DE ORO (tarea #32 · M-17): en este dispositivo no se guarda **ninguna**
+ * página que dependa de una sesión. En un equipo compartido —una sala de
+ * sistemas, un computador prestado— servir el HTML de otra persona significa
+ * ver su panel, o su pantalla de restablecer contraseña.
+ *
+ * Antes esto se resolvía con una lista de rutas privadas escrita a mano, y esa
+ * lista se quedó atrás dos veces (la última: `/recuperar` y `/restablecer`
+ * existían sin estar declaradas). Por eso el criterio está invertido:
+ *
+ *   1. `RUTAS_CACHEABLES` es una lista BLANCA. Lo que no está aquí no se
+ *      guarda nunca: olvidarse de añadir una ruta privada es inofensivo.
+ *      Olvidarse de una pública solo cuesta funcionalidad sin conexión.
+ *   2. `RUTAS_CON_SESION` documenta las rutas de cuenta. Se declaran para que
+ *      la comprobación automática pueda exigir que **toda** ruta esté
+ *      clasificada, y que ninguna de estas sea cacheable.
+ *   3. Además, y como red de seguridad independiente de las listas: si la
+ *      petición trae cookie de sesión, no se guarda nada, ni siquiera en una
+ *      ruta pública.
+ *
+ * `scripts/verificar-sw.mjs` recorre las rutas reales del build y **falla** si
+ * alguna no está clasificada; `pruebas/service-worker.prueba.ts` ejecuta este
+ * archivo con cachés falsas y comprueba que una página con sesión nunca se
+ * guarda. Ninguna de las dos cosas es un comentario pidiendo cuidado.
+ *
  * Estrategias:
- *  - Rutas privadas (/publicar, /login, /registro, /auth): SOLO red, sin caché.
+ *  - Rutas con sesión: SOLO red. Ni lectura ni escritura de caché.
  *  - Navegaciones públicas: red primero → caché → página /offline.
  *  - Estáticos propios (/_next/static, /iconos, /marca): caché primero.
  *  - Imágenes: stale-while-revalidate.
@@ -16,7 +40,7 @@
  * Todas las escrituras en caché verifican `respuesta.ok` para no guardar
  * páginas de error.
  */
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE_APP = `pensiones-app-${VERSION}`;
 const CACHE_ESTATICOS = `pensiones-estaticos-${VERSION}`;
 const CACHE_IMAGENES = `pensiones-imagenes-${VERSION}`;
@@ -31,8 +55,35 @@ const PRECACHE = [
   "/iconos/favicon-48.png",
 ];
 
-/** Rutas con datos de sesión: nunca se guardan en el dispositivo. */
-const RUTAS_PRIVADAS = ["/publicar", "/login", "/registro", "/auth"];
+/**
+ * Lista BLANCA: lo único que puede guardarse en el dispositivo. Son páginas
+ * idénticas para todo el mundo (catálogo, barrios, guías y textos legales).
+ *
+ * Esta lista y `RUTAS_CON_SESION` las verifica `scripts/verificar-sw.mjs`
+ * contra las rutas reales del build: si aparece una ruta que no esté en
+ * ninguna de las dos, la comprobación falla.
+ */
+const RUTAS_CACHEABLES = ["/", "/pensiones", "/barrios", "/guias", "/legal", "/offline"];
+
+/**
+ * Rutas de cuenta: nunca entran en ninguna caché, ni como respaldo sin
+ * conexión. `/auth` cubre los manejadores de confirmación y cierre de sesión.
+ */
+const RUTAS_CON_SESION = [
+  "/publicar",
+  "/login",
+  "/registro",
+  "/recuperar",
+  "/restablecer",
+  "/auth",
+];
+
+/**
+ * Cookie de sesión de Supabase (`@supabase/ssr`). Puede venir troceada
+ * (`…-auth-token.0`, `.1`), por eso se comprueba el prefijo y no el nombre
+ * exacto: el nombre depende del identificador del proyecto.
+ */
+const COOKIE_SESION = /(^|;\s*)sb-[^=;]*auth-token/i;
 
 self.addEventListener("install", (evento) => {
   evento.waitUntil(
@@ -63,8 +114,34 @@ const esEstaticoPropio = (url) =>
     url.pathname.startsWith("/iconos/") ||
     url.pathname.startsWith("/marca/"));
 
-const esRutaPrivada = (pathname) =>
-  RUTAS_PRIVADAS.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`));
+/**
+ * Coincidencia por segmento: `/pensiones` cubre `/pensiones/lo-que-sea` pero no
+ * `/pensiones-x`… y `/` cubre **solo** `/`, nunca el resto del sitio. Esa
+ * distinción es la que evita que la portada convierta en cacheable todo lo que
+ * cuelga de la raíz.
+ */
+const coincideRuta = (pathname, ruta) =>
+  pathname === ruta || (ruta !== "/" && pathname.startsWith(`${ruta}/`));
+
+const esRutaConSesion = (pathname) =>
+  RUTAS_CON_SESION.some((ruta) => coincideRuta(pathname, ruta));
+
+const esRutaCacheable = (pathname) =>
+  RUTAS_CACHEABLES.some((ruta) => coincideRuta(pathname, ruta));
+
+/**
+ * ¿Esta petición puede dejar su respuesta en el dispositivo?
+ *
+ * Dos condiciones, y las dos son necesarias: la ruta tiene que estar en la
+ * lista blanca, y la petición no puede traer sesión. Lo segundo no depende de
+ * ninguna lista, así que sigue protegiendo aunque alguien añada una página
+ * personalizada y se olvide de declararla.
+ */
+function puedeGuardarse(solicitud, pathname) {
+  if (!esRutaCacheable(pathname)) return false;
+  const cookie = solicitud.headers.get("cookie");
+  return !(cookie && COOKIE_SESION.test(cookie));
+}
 
 /** Guarda en caché solo respuestas correctas. */
 function guardarSiEsValida(nombreCache, solicitud, respuesta) {
@@ -80,14 +157,18 @@ self.addEventListener("fetch", (evento) => {
 
   const url = new URL(solicitud.url);
 
+  // 0) Rutas de cuenta: ni se leen ni se escriben en caché.
+  if (esRutaConSesion(url.pathname)) return;
+
   // 1) Navegaciones.
   if (solicitud.mode === "navigate") {
-    // Las rutas con sesión no pasan por la caché: siempre red.
-    if (esRutaPrivada(url.pathname)) return;
-
     evento.respondWith(
       fetch(solicitud)
-        .then((respuesta) => guardarSiEsValida(CACHE_APP, solicitud, respuesta))
+        .then((respuesta) =>
+          puedeGuardarse(solicitud, url.pathname)
+            ? guardarSiEsValida(CACHE_APP, solicitud, respuesta)
+            : respuesta
+        )
         .catch(() =>
           caches
             .match(solicitud)
@@ -99,6 +180,7 @@ self.addEventListener("fetch", (evento) => {
   }
 
   // 2) Estáticos propios: caché primero (en producción los nombres llevan hash).
+  // No son páginas ni llevan datos de nadie: no necesitan la guarda de sesión.
   if (esEstaticoPropio(url)) {
     evento.respondWith(
       caches.match(solicitud).then(
@@ -128,11 +210,17 @@ self.addEventListener("fetch", (evento) => {
     return;
   }
 
-  // 4) Otros recursos del mismo origen (sin tocar rutas privadas).
-  if (url.origin === self.location.origin && !esRutaPrivada(url.pathname)) {
+  // 4) Otros recursos del mismo origen. Pasa por la misma guarda que las
+  // navegaciones: aquí viajan los datos que el navegador pide al cambiar de
+  // ruta, y también pueden depender de la sesión.
+  if (url.origin === self.location.origin) {
     evento.respondWith(
       fetch(solicitud)
-        .then((respuesta) => guardarSiEsValida(CACHE_ESTATICOS, solicitud, respuesta))
+        .then((respuesta) =>
+          puedeGuardarse(solicitud, url.pathname)
+            ? guardarSiEsValida(CACHE_ESTATICOS, solicitud, respuesta)
+            : respuesta
+        )
         .catch(() => caches.match(solicitud).then((respuesta) => respuesta || Response.error()))
     );
   }

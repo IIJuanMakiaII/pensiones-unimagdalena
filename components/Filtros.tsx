@@ -37,24 +37,37 @@ export default function Filtros({ filtros, onChange, limitesPrecio, totalFavorit
     <div className="sticky top-0 z-30 border-b border-neutro-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:px-6">
         {/* Precio */}
-        <div className="flex items-center gap-3">
-          <label htmlFor="filtro-precio" className="shrink-0 text-sm font-semibold text-neutro-700">
-            Precio
-          </label>
-          <input
-            id="filtro-precio"
-            type="range"
-            min={limitesPrecio.min}
-            max={limitesPrecio.max}
-            step={PASO_PRECIO}
-            value={filtros.precioMaximoCop}
-            onChange={(e) => actualizar({ precioMaximoCop: Number(e.target.value) })}
-            className="h-2 w-full accent-accent-500"
-            aria-label="Precio máximo mensual en pesos colombianos"
-          />
-          <output className="precio shrink-0 rounded-lg bg-accent-700 px-2.5 py-1 text-sm font-extrabold text-white" htmlFor="filtro-precio">
-            Hasta {formatearCOP(filtros.precioMaximoCop)}
-          </output>
+        <div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="filtro-precio" className="shrink-0 text-sm font-semibold text-neutro-700">
+              Precio
+            </label>
+            <input
+              id="filtro-precio"
+              type="range"
+              min={limitesPrecio.min}
+              max={limitesPrecio.max}
+              step={PASO_PRECIO}
+              value={filtros.precioMaximoCop}
+              onChange={(e) => actualizar({ precioMaximoCop: Number(e.target.value) })}
+              className="h-2 w-full accent-accent-500"
+              aria-label="Precio máximo mensual"
+              /* Sin `aria-valuetext` un lector de pantalla lee "1200000": un número
+                 suelto, sin moneda ni periodicidad. Con él se oye la oferta entera. */
+              aria-valuetext={`Hasta ${formatearCOP(filtros.precioMaximoCop)} al mes`}
+              aria-describedby="ayuda-precio"
+            />
+            <output className="precio shrink-0 rounded-lg bg-accent-700 px-2.5 py-1 text-sm font-extrabold text-white" htmlFor="filtro-precio">
+              Hasta {formatearCOP(filtros.precioMaximoCop)}
+            </output>
+          </div>
+          {/* El rango del catálogo y el paso, que antes no se veían en ninguna parte:
+              sin ellos se arrastra a ciegas sin saber cuánto queda por explorar. */}
+          <p id="ayuda-precio" className="mt-1 text-xs text-neutro-600">
+            Del catálogo: <span className="precio">{formatearCOP(limitesPrecio.min)}</span> a{" "}
+            <span className="precio">{formatearCOP(limitesPrecio.max)}</span> · cada paso son{" "}
+            <span className="precio">{formatearCOP(PASO_PRECIO)}</span>
+          </p>
         </div>
 
         {/* Género */}

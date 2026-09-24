@@ -56,3 +56,23 @@ h3 {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* Accesibilidad (WCAG 2.3.3): quien pide menos movimiento en su sistema no debe
+   recibir desplazamiento animado ni animaciones de entrada.
+   Los desplazamientos que dispara JavaScript (carrusel) se ajustan en
+   lib/accesibilidad.ts, porque esta media query no los alcanza. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animar-aparecer {
+    animation: none;
+  }
+  /* Las transiciones de estado (hover, foco) se acortan a lo imperceptible en vez
+     de eliminarse: siguen comunicando el cambio sin mover nada en pantalla. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

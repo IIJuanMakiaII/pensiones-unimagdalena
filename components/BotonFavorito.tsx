@@ -74,7 +74,9 @@ export default function BotonFavorito({
       onClick={alPulsar}
       aria-pressed={activo}
       aria-label={etiqueta}
-      className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur transition hover:bg-white ${
+      /* 44×44 px: estaba en 40 y era el control más pequeño de la tarjeta, en la
+         esquina de la foto, donde fallar el toque es más probable. */
+      className={`flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur transition hover:bg-white ${
         activo ? "text-accent-500" : "text-neutro-600"
       } ${className}`}
     >

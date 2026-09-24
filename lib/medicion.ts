@@ -34,6 +34,10 @@ export function medirFiltros(datos: {
   alimentacion: boolean;
   solo_verificadas: boolean;
   solo_favoritas: boolean;
+  /** Criterio de orden elegido (M-24). Saber si se usa dice si el control sirve. */
+  orden?: string;
+  /** Habitaciones reservables con los filtros puestos: la oferta real que vio. */
+  habitaciones_libres?: number;
   resultados: number;
 }) {
   enviar("filtros_aplicados", datos);

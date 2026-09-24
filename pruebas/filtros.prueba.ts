@@ -10,20 +10,25 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  ORDEN_POR_DEFECTO,
   PASO_PRECIO,
   PRECIO_MAX_DEFECTO,
   PRECIO_MIN_DEFECTO,
   aplicarFiltros,
   coincideRangoDistancia,
+  contarHabitacionesDisponibles,
+  filtroQueMasBloquea,
   filtrosAParametros,
   habitacionCumpleFiltros,
   habitacionDestacada,
   limitesDePrecio,
   parametrosAFiltros,
   pensionCumpleFiltros,
+  quitarFiltro,
   type FiltrosUI,
 } from "@/lib/filtros";
 import type { Habitacion, Pension, PensionConHabitaciones } from "@/types";
+import { comportamientoScroll, prefiereMenosMovimiento } from "@/lib/accesibilidad";
 
 const MAXIMO_REAL = 1000000;
 
@@ -74,6 +79,7 @@ function filtros(extra: Partial<FiltrosUI> = {}): FiltrosUI {
     soloConAlimentacion: false,
     soloVerificadas: false,
     soloFavoritas: false,
+    orden: ORDEN_POR_DEFECTO,
     ...extra,
   };
 }
@@ -298,5 +304,178 @@ describe("filtros en la URL", () => {
   it("recorta un tope de precio mayor que el catálogo real", () => {
     const parametros = new URLSearchParams({ precio: "99999999" });
     assert.equal(parametrosAFiltros(parametros, MAXIMO_REAL).precioMaximoCop, MAXIMO_REAL);
+  });
+});
+
+describe("ordenar resultados (M-24)", () => {
+  const catalogo = [
+    pension({
+      id: "caro-cerca",
+      distancia_a_pie_minutos: 3,
+      calificacion: 4.2,
+      habitaciones: [habitacion({ pension_id: "caro-cerca", precio_mensual_cop: 800000 })],
+    }),
+    pension({
+      id: "barato-lejos",
+      distancia_a_pie_minutos: 14,
+      calificacion: 4.9,
+      habitaciones: [habitacion({ pension_id: "barato-lejos", precio_mensual_cop: 350000 })],
+    }),
+    pension({
+      id: "sin-nada-reservable",
+      distancia_a_pie_minutos: 5,
+      calificacion: 5,
+      precioMensual: 200000,
+      habitaciones: [
+        habitacion({ pension_id: "sin-nada-reservable", precio_mensual_cop: 200000, disponible: false }),
+      ],
+    }),
+  ];
+
+  const ids = (extra: Partial<FiltrosUI>) =>
+    aplicarFiltros(catalogo, filtros(extra), MAXIMO_REAL).map((p) => p.id);
+
+  it("por defecto ordena por cercanía: el comportamiento anterior queda intacto", () => {
+    assert.deepEqual(ids({}), ["caro-cerca", "sin-nada-reservable", "barato-lejos"]);
+  });
+
+  it("«menor precio» usa el precio reservable y manda al final lo que no tiene nada libre", () => {
+    // El precio conservado de un anuncio ocupado ($200.000) no puede encabezar la
+    // lista: sería ofrecer como lo más barato algo que no se puede alquilar.
+    assert.deepEqual(ids({ orden: "precio" }), [
+      "barato-lejos",
+      "caro-cerca",
+      "sin-nada-reservable",
+    ]);
+  });
+
+  it("«mejor puntaje» ordena por calificación", () => {
+    assert.deepEqual(ids({ orden: "puntaje" }), [
+      "sin-nada-reservable",
+      "barato-lejos",
+      "caro-cerca",
+    ]);
+  });
+
+  it("a igualdad de precio y de puntaje desempata la cercanía", () => {
+    const empate = [
+      pension({
+        id: "lejos",
+        distancia_a_pie_minutos: 12,
+        habitaciones: [habitacion({ pension_id: "lejos", precio_mensual_cop: 400000 })],
+      }),
+      pension({
+        id: "cerca",
+        distancia_a_pie_minutos: 6,
+        habitaciones: [habitacion({ pension_id: "cerca", precio_mensual_cop: 400000 })],
+      }),
+    ];
+    const resultado = aplicarFiltros(empate, filtros({ orden: "precio" }), MAXIMO_REAL).map((p) => p.id);
+    assert.deepEqual(resultado, ["cerca", "lejos"]);
+  });
+
+  it("el orden viaja en el enlace compartido y no ensucia la URL por defecto", () => {
+    const parametros = filtrosAParametros(filtros({ orden: "precio" }), MAXIMO_REAL);
+    assert.equal(parametros.get("orden"), "precio");
+    assert.equal(parametrosAFiltros(parametros, MAXIMO_REAL).orden, "precio");
+
+    assert.equal(filtrosAParametros(filtros(), MAXIMO_REAL).get("orden"), null);
+  });
+
+  it("un orden inválido en la URL no rompe el catálogo", () => {
+    const sucios = new URLSearchParams({ orden: "por-lo-que-sea" });
+    assert.equal(parametrosAFiltros(sucios, MAXIMO_REAL).orden, ORDEN_POR_DEFECTO);
+  });
+});
+
+describe("filtroQueMasBloquea · qué decir cuando no hay nada (M-24)", () => {
+  const catalogo = [
+    pension({
+      id: "fem-cara",
+      habitaciones: [habitacion({ pension_id: "fem-cara", genero: "femenino", precio_mensual_cop: 900000 })],
+    }),
+    pension({
+      id: "fem-carísima",
+      habitaciones: [habitacion({ pension_id: "fem-carísima", genero: "femenino", precio_mensual_cop: 950000 })],
+    }),
+    pension({
+      id: "masc-barata",
+      habitaciones: [habitacion({ pension_id: "masc-barata", genero: "masculino", precio_mensual_cop: 400000 })],
+    }),
+  ];
+
+  it("señala el filtro que más resultados libera, no el primero que encuentra", () => {
+    const f = filtros({ genero: "femenino", precioMaximoCop: 500000 });
+    assert.equal(aplicarFiltros(catalogo, f, MAXIMO_REAL).length, 0);
+
+    const bloqueante = filtroQueMasBloquea(catalogo, f, MAXIMO_REAL);
+    // Quitar el tope libera 2 (las dos femeninas); quitar el género solo 1.
+    assert.equal(bloqueante?.clave, "precioMaximoCop");
+    assert.equal(bloqueante?.resultadosAlQuitar, 2);
+  });
+
+  it("sin filtros activos no hay culpable que señalar", () => {
+    assert.equal(filtroQueMasBloquea(catalogo, filtros(), MAXIMO_REAL), null);
+  });
+
+  it("quitar el filtro señalado deja intacto el resto de la búsqueda", () => {
+    const f = filtros({ genero: "femenino", soloConAlimentacion: true, orden: "precio" });
+    const sinGenero = quitarFiltro(f, "genero", MAXIMO_REAL);
+    assert.equal(sinGenero.genero, "todos");
+    assert.equal(sinGenero.soloConAlimentacion, true);
+    assert.equal(sinGenero.orden, "precio");
+  });
+
+  it("quitar el tope de precio lo abre hasta el máximo del catálogo, no a cero", () => {
+    const sinPrecio = quitarFiltro(filtros({ precioMaximoCop: 300000 }), "precioMaximoCop", MAXIMO_REAL);
+    assert.equal(sinPrecio.precioMaximoCop, MAXIMO_REAL);
+  });
+});
+
+describe("contarHabitacionesDisponibles · el recuento del catálogo (M-24)", () => {
+  const catalogo = [
+    pension({
+      id: "a",
+      habitaciones: [
+        habitacion({ pension_id: "a", id: "a1", precio_mensual_cop: 400000, genero: "femenino" }),
+        habitacion({ pension_id: "a", id: "a2", precio_mensual_cop: 900000, genero: "femenino" }),
+      ],
+    }),
+  ];
+
+  it("cuenta solo las que se pueden reservar con los filtros puestos", () => {
+    assert.equal(contarHabitacionesDisponibles(catalogo, filtros()), 2);
+    assert.equal(contarHabitacionesDisponibles(catalogo, filtros({ precioMaximoCop: 500000 })), 1);
+    assert.equal(contarHabitacionesDisponibles(catalogo, filtros({ genero: "masculino" })), 0);
+  });
+
+  it("no promete habitaciones en anuncios que no publicaron ninguna", () => {
+    assert.equal(contarHabitacionesDisponibles([pension({ id: "vacia" })], filtros()), 0);
+  });
+});
+
+describe("preferencias del sistema · reducir movimiento (M-24)", () => {
+  const ambito = globalThis as unknown as {
+    window?: { matchMedia: (consulta: string) => { matches: boolean } };
+  };
+
+  it("sin `window` (renderizado en el servidor) no revienta", () => {
+    delete ambito.window;
+    assert.equal(prefiereMenosMovimiento(), false);
+    assert.equal(comportamientoScroll(), "smooth");
+  });
+
+  it("si el sistema pide menos movimiento, el carrusel se mueve sin animar", () => {
+    try {
+      ambito.window = { matchMedia: () => ({ matches: true }) };
+      assert.equal(prefiereMenosMovimiento(), true);
+      assert.equal(comportamientoScroll(), "auto");
+
+      ambito.window = { matchMedia: () => ({ matches: false }) };
+      assert.equal(prefiereMenosMovimiento(), false);
+      assert.equal(comportamientoScroll(), "smooth");
+    } finally {
+      delete ambito.window;
+    }
   });
 });
