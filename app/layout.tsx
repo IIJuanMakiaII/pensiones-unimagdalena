@@ -74,17 +74,22 @@ const jsonLdSitio = {
 };
 
 /**
- * Verificación de configuración en producción (Oleada 0).
+ * Verificación del número de reserva antes de un despliegue (Oleada 0).
  *
  * Sin un número de WhatsApp válido, todos los botones de reserva quedarían
- * apuntando a un número equivocado o inexistente, en silencio. Preferimos que
- * la compilación de producción falle de forma visible y explicada.
+ * apuntando a un número equivocado o inexistente, en silencio.
+ *
+ * La exigencia se aplica **solo a un despliegue de verdad**, que es lo que marca
+ * `VERCEL_ENV`. Un `next build` en local o el de la integración continua no
+ * despliegan nada: bloquearlos no protegería a nadie y dejaría el proyecto sin
+ * poder compilarse ni comprobarse. Fuera de un despliegue se avisa por consola,
+ * que es distinto de callarse.
  */
-if (process.env.NODE_ENV === "production") {
+if (process.env.VERCEL_ENV) {
   if (!WHATSAPP_CONFIGURADO) {
     throw new Error(
       "NEXT_PUBLIC_WHATSAPP_NUMBER no está configurado en el entorno que se está " +
-        "compilando. Comprueba tres cosas, en este orden: " +
+        "desplegando. Comprueba tres cosas, en este orden: " +
         "(1) que el nombre sea exactamente NEXT_PUBLIC_WHATSAPP_NUMBER, sin espacios ni " +
         "letras cambiadas; " +
         "(2) que la variable esté definida para ESTE entorno (Production, no solo Preview o " +
@@ -97,7 +102,7 @@ if (process.env.NODE_ENV === "production") {
     throw new Error(
       `NEXT_PUBLIC_WHATSAPP_NUMBER no es válido: "${WHATSAPP_NUMERO_CRUDO}". ` +
         "Debe tener entre 10 y 15 dígitos con el código de país (por ejemplo 573001234567) " +
-        "antes de compilar para producción."
+        "antes de desplegar."
     );
   }
   /**
@@ -113,6 +118,17 @@ if (process.env.NODE_ENV === "production") {
         "que no existe. Es el valor que trae `.env.local` para desarrollo y cumple el formato, " +
         "así que sin esta comprobación el despliegue saldría adelante con los botones de reserva " +
         "apuntando a la nada. Define el número real de la plataforma con el código de país."
+    );
+  }
+} else if (process.env.NODE_ENV === "production") {
+  // Compilación en modo producción que no es un despliegue: no se detiene, pero
+  // no puede pasar en silencio.
+  if (!WHATSAPP_CONFIGURADO || WHATSAPP_NUMERO === NUMERO_DE_EJEMPLO) {
+    console.warn(
+      "[WhatsApp] Esta compilación no es un despliegue, así que no se detiene. PERO el " +
+        "número de reserva que lleva dentro no existe: si esto llegara a publicarse, ningún " +
+        "botón de reserva funcionaría. Define NEXT_PUBLIC_WHATSAPP_NUMBER con el número real " +
+        "antes de desplegar."
     );
   }
 }
