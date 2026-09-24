@@ -74,16 +74,21 @@ const nextConfig = {
   },
 };
 
+/**
+ * Por qué NO se usa `output: 'export'` (exportación estática para GitHub Pages).
+ *
+ * Se intentó, y no es viable para este proyecto. La exportación estática apaga:
+ *
+ *   - el middleware, que redirige las direcciones antiguas (UUID -> slug) y es lo
+ *     que hace que una dirección inexistente responda 404 de verdad;
+ *   - el inicio de sesión, el registro, la recuperación de contraseña y la
+ *     publicación, que usan cookies en el servidor (habría que añadir además
+ *     `basePath`, con lo que cambiarían todas las direcciones del sitio);
+ *   - las cabeceras de seguridad declaradas en `headers()` más arriba;
+ *   - la optimización de `next/image`.
+ *
+ * El resultado sería una vitrina en la que nadie puede registrarse ni publicar.
+ * El destino de este proyecto es Vercel: ver `docs/despliegue.md`.
+ */
 export default nextConfig;
-output: 'export'
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',
-  basePath: '/pensiones-unimagdalena',
-  images: {
-    unoptimized: true, // Requerido para GitHub Pages
-  },
-};
-
-module.exports = nextConfig;
 
