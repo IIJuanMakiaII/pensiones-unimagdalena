@@ -93,7 +93,18 @@ node scripts/generar-iconos.mjs   # solo si cambia el logo
 
 ## Despliegue
 
-Build estático compatible con Vercel/Netlify (`npm run build`). Las imágenes se sirven desde Unsplash vía `next/image` (dominio configurado en `next.config.mjs`).
+**Necesita servidor.** El destino es Vercel (la analítica integrada y las comprobaciones
+automáticas ya lo asumen).
+
+No es un sitio estático y no puede servirse como tal: el middleware, el inicio de sesión,
+las cabeceras de seguridad de `next.config.mjs` y la optimización de imágenes de
+`next/image` dejan de funcionar en un alojamiento estático. En GitHub Pages, además,
+verías el `README.md` como portada — Pages publica el `README.md` cuando la raíz del
+repositorio no tiene `index.html` — y el resultado sería una vitrina en la que **nadie
+puede registrarse ni publicar**.
+
+Guía paso a paso, con las variables de entorno y la comprobación posterior:
+[`docs/despliegue.md`](docs/despliegue.md).
 
 ## Modo dinámico (Supabase): autenticación y publicación
 
