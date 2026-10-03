@@ -31,12 +31,18 @@ export interface PensionFila {
   imagenes: string[] | null;
   activa: boolean;
   creada_en: string;
-  latitud?: number | null;
-  longitud?: number | null;
-  /** WhatsApp propio del anuncio (10 dígitos); `null` si no lo ha fijado. */
-  whatsapp?: string | null;
-  /** Constancia de la autorización para publicar el contacto (tarea #30). */
-  autorizacion_contacto_en?: string | null;
+   latitud?: number | null;
+   longitud?: number | null;
+   /*
+    * Aquí estaban `whatsapp` y `autorizacion_contacto_en`. Se retiraron del
+    * mapeo el 2026-10-02: el contacto lo maneja la plataforma y el número del
+    * dueño dejó de ser un dato del producto.
+    *
+    * El corte se hace **aquí**, en la frontera, y no en cada pantalla: la fila
+    * de la base todavía puede traerlo (hay anuncios antiguos con número), y la
+    * única forma de que no acabe publicado es que no sobreviva al mapeo. Todo lo
+    * que se pase a un componente de cliente viaja en el HTML de la página.
+    */
 }
 
 export interface HabitacionFila {
@@ -84,10 +90,10 @@ export const COLUMNAS_PENSION = [
   "imagenes",
   "activa",
   "creada_en",
-  "latitud",
-  "longitud",
-  "whatsapp",
-  "autorizacion_contacto_en",
+   "latitud",
+   "longitud",
+   // Ni `whatsapp` ni `autorizacion_contacto_en`: el contacto lo maneja la
+   // plataforma, así que el número del dueño no se pide ni se trae.
 ].join(", ");
 
 export const COLUMNAS_HABITACION = [
@@ -140,8 +146,6 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
     verificado: Boolean(fila.verificado),
     latitud: typeof fila.latitud === "number" ? fila.latitud : null,
     longitud: typeof fila.longitud === "number" ? fila.longitud : null,
-    whatsapp: fila.whatsapp ?? null,
-    autorizacion_contacto_en: fila.autorizacion_contacto_en ?? null,
     habitaciones,
   };
 }

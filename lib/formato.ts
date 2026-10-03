@@ -108,51 +108,27 @@ export function mensajeWhatsApp(pension: Pension, habitacion?: Habitacion): stri
   );
 }
 
-/** Longitud exacta del número propio de una pensión (sin código de país). */
-export const DIGITOS_WHATSAPP = 10;
-
-export const MENSAJE_WHATSAPP_INVALIDO =
-  "Escribe el número de WhatsApp de 10 dígitos, por ejemplo 300 123 4567";
-
 /**
- * Deja la entrada del anfitrión como la guarda la base: **10 dígitos**.
+ * Número que abre el botón de reserva: **el de la plataforma**.
  *
- * Quita espacios, guiones, paréntesis y el `+`; y si el número viene con el
- * código de país (57 + 10 dígitos = 12), lo retira. Sin esto, pegar
- * «+57 300 123 4567» sería el error más frecuente: la base lo rechazaría porque
- * su restricción exige exactamente 10 dígitos.
- */
-export function normalizarWhatsappPropio(valor: string): string {
-  const digitos = normalizarNumeroWhatsApp(valor);
-  if (digitos.length === DIGITOS_WHATSAPP + 2 && digitos.startsWith("57")) {
-    return digitos.slice(2);
-  }
-  return digitos;
-}
-
-/** Un número propio es válido solo si tiene exactamente 10 dígitos. */
-export function whatsappPropioValido(valor: string): boolean {
-  return new RegExp(`^\\d{${DIGITOS_WHATSAPP}}$`).test(valor);
-}
-
-/**
- * Número que abre el botón de reserva de una pensión.
+ * Antes cada anuncio podía llevar el número de su dueño y el enlace lo prefería.
+ * Desde el cambio de modelo del 2026-10-02 la plataforma maneja el contacto y la
+ * reserva del primer mes, así que el número del anfitrión **no se publica en
+ * ninguna parte**: ni en el enlace, ni en la ficha, ni en los metadatos, ni en
+ * los datos estructurados.
  *
- *  1. Su **número propio** (10 dígitos) → se le antepone `57`, porque el
- *     estudiante puede escribir desde fuera de Colombia.
- *  2. **Respaldo de la plataforma** (`NEXT_PUBLIC_WHATSAPP_NUMBER`) cuando el
- *     anuncio aún no tiene número propio: los que se publicaron antes de que
- *     existiera el campo. No es un olvido — es la red que evita dejar un botón
- *     de reserva roto —, y desaparece en cuanto el anfitrión fija el suyo.
+ * No recibe la pensión a propósito: no hay nada que decidir. Y los anuncios
+ * antiguos que todavía tienen un número guardado en la base no pueden desviar el
+ * contacto, porque ese dato ya no forma parte de lo que la aplicación conoce
+ * (ver `lib/supabase/mapeo.ts`).
  */
-export function numeroDeReserva(pension: Pension): string {
-  const propio = normalizarWhatsappPropio(pension.whatsapp ?? "");
-  return whatsappPropioValido(propio) ? `57${propio}` : WHATSAPP_NUMERO;
+export function numeroDeReserva(): string {
+  return WHATSAPP_NUMERO;
 }
 
 /** Enlace wa.me con el mensaje prellenado, listo para abrir en pestaña nueva. */
 export function enlaceWhatsApp(pension: Pension, habitacion?: Habitacion): string {
-  return `https://wa.me/${numeroDeReserva(pension)}?text=${encodeURIComponent(
+  return `https://wa.me/${numeroDeReserva()}?text=${encodeURIComponent(
     mensajeWhatsApp(pension, habitacion)
   )}`;
 }

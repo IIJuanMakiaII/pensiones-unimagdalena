@@ -23,7 +23,7 @@ interface Props {
 }
 
 export default async function PublicarPage({ searchParams }: Props) {
-  const { creada, editada, sinNumero } = await searchParams;
+  const { creada, editada } = await searchParams;
 
   if (!esSupabaseConfigurado()) return <ConfiguracionPendiente />;
 
@@ -75,17 +75,6 @@ export default async function PublicarPage({ searchParams }: Props) {
             className="mt-5 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-800"
           >
             ✓ Cambios guardados. El catálogo y la ficha ya los muestran.
-          </p>
-        )}
-
-        {sinNumero === "1" && (
-          <p
-            role="alert"
-            className="mt-5 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-4 py-3 text-sm font-semibold text-neutro-700"
-          >
-            Tu anuncio se publicó, pero no pudimos guardar tu número de WhatsApp: pulsa «Editar
-            anuncio» para intentarlo de nuevo. Mientras tanto, las reservas llegan al WhatsApp de la
-            plataforma.
           </p>
         )}
 

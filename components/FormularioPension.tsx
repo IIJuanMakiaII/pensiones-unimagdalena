@@ -17,7 +17,6 @@ import {
   claseEtiqueta,
   claseInput,
 } from "@/lib/formulario-pension";
-import CampoWhatsApp from "@/components/CampoWhatsApp";
 
 /**
  * Estado inicial del formulario. Vive aquí (no en el módulo de acciones) porque
@@ -129,8 +128,6 @@ export default function FormularioPension() {
             Los estudiantes filtran por distancia: este dato decide si apareces.
           </p>
         </div>
-
-        <CampoWhatsApp />
 
         <div>
           <span className={claseEtiqueta}>Habitaciones que ofreces</span>

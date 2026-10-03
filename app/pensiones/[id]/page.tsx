@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { obtenerPensionPorId, obtenerPensiones, obtenerPensionesReales } from "@/lib/datos";
+import { obtenerPensionPorId, obtenerPensionesReales } from "@/lib/datos";
 import { galeriaDe, imagenPrincipal, precioReservable } from "@/lib/pension";
 import Carrusel from "@/components/Carrusel";
 import SelloVerificado from "@/components/SelloVerificado";
@@ -36,7 +36,21 @@ export const revalidate = 60;
  * dirección que ahora redirige, y la dirección buena quedaría sin prerenderizar.
  */
 export async function generateStaticParams() {
-  const pensiones = await obtenerPensiones();
+  /**
+   * Solo anuncios **reales**, nunca la semilla de demostración.
+   *
+   * `obtenerPensiones()` cae al catálogo de ejemplo cuando Supabase no responde,
+   * y aquí eso tenía dos consecuencias: el build intentaba prerenderizar seis
+   * fichas de mentira (y fallaba, porque la ficha de ejemplo no vive en la base),
+   * y con la base caída una compilación podía hornear contenido de demostración
+   * en el HTML y en la caché de la ruta — justo lo que hay que poder apagar sin
+   * dejar rastros.
+   *
+   * Es el mismo criterio que el `sitemap.xml` y las páginas de barrio: ante
+   * cualquier duda, poco antes que mentira. Si no hay nada que prerenderizar, la
+   * ficha se sirve bajo demanda.
+   */
+  const pensiones = await obtenerPensionesReales();
   return pensiones.map((pension) => ({ id: pension.slug }));
 }
 
@@ -304,7 +318,7 @@ export default async function DetallePensionPage({ params }: Props) {
             <p className="mt-1 text-xs leading-relaxed text-neutro-500">
               {pension.latitud != null && pension.longitud != null
                 ? "Pin exacto indicado por el anfitrión, con la línea de referencia al campus."
-                : `El círculo marca la zona a unos ${pension.distancia_a_pie_minutos} minutos a pie del campus (≈ ${pension.distancia_a_pie_minutos * 75} m). La ubicación es aproximada a nivel de barrio: confirma la dirección exacta con el anfitrión por WhatsApp.`}
+                : `El círculo marca la zona a unos ${pension.distancia_a_pie_minutos} minutos a pie del campus (≈ ${pension.distancia_a_pie_minutos * 75} m). La ubicación es aproximada a nivel de barrio: escríbenos por WhatsApp y te confirmamos la dirección exacta.`}
             </p>
             <div className="mt-3">
               <MapaUbicacion

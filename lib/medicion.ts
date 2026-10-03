@@ -51,17 +51,18 @@ export function medirVerFicha(datos: { pension: string; tiene_libres: boolean })
 /**
  * Contacto generado: el clic que abre WhatsApp.
  *
- * `propio` distingue si el mensaje iba al dueño del anuncio o al respaldo de la
- * plataforma (anuncios antiguos sin número): es la diferencia entre un contacto
- * real para el anfitrión y uno que hay que redirigir a mano.
+ * El evento se llamaba `contacto_whatsapp` y llevaba un campo `propio` que
+ * distinguía si el mensaje iba al dueño del anuncio o al respaldo de la
+ * plataforma. Desde el cambio de modelo del 2026-10-02 **todos los contactos los
+ * atiende la plataforma**, así que esa distinción ya no existe: el embudo se
+ * conserva con los mismos pasos, sin el campo que dejó de significar algo.
  */
 export function medirContacto(datos: {
   pension: string;
   origen: "tarjeta" | "ficha" | "barra_movil";
-  propio: boolean;
   con_habitacion: boolean;
 }) {
-  enviar("contacto_whatsapp", datos);
+  enviar("contacto_plataforma", datos);
 }
 
 /** Un anfitrión publicó un anuncio nuevo. */

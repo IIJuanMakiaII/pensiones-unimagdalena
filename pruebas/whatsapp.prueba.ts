@@ -1,10 +1,18 @@
 /**
- * Número de WhatsApp de reserva (`lib/formato.ts`).
+ * A quién le llega la reserva (`lib/formato.ts`).
  *
- * Es el único canal de conversión del producto. La regla tiene dos partes que se
- * rompen con facilidad: el número propio del anfitrión (10 dígitos, con el 57
- * antepuesto al armar el enlace) y el respaldo a la plataforma para los anuncios
- * publicados antes de que existiera el campo.
+ * Es el único canal de conversión del producto y, desde el cambio de modelo del
+ * 2026-10-02, tiene una sola respuesta: **la plataforma**. El anfitrión ya no
+ * publica su número, así que aquí se defienden dos cosas:
+ *
+ *  1. El enlace apunta al número de la plataforma, con su código de país.
+ *  2. Un anuncio antiguo que todavía tenga el número del dueño guardado en la
+ *     base **no** puede desviar el contacto.
+ *
+ * El segundo caso se prueba con un objeto al que se le añade el campo a la fuerza
+ * (`comoHeredada`), porque el tipo del producto ya no lo admite — y eso es
+ * precisamente lo que se quiere: si lo admitiera, el número del dueño volvería a
+ * viajar al navegador dentro del HTML de la página.
  *
  * El número de la plataforma se inyecta ANTES de importar el módulo porque se
  * lee al cargarlo, y así la prueba no depende del `.env.local` de cada máquina.
@@ -25,9 +33,7 @@ const {
   etiquetaTipo,
   numeroDeReserva,
   normalizarNumeroWhatsApp,
-  normalizarWhatsappPropio,
   numeroWhatsAppValido,
-  whatsappPropioValido,
 } = await import("@/lib/formato");
 
 const PENSION: Pension = {
@@ -47,10 +53,19 @@ const PENSION: Pension = {
   normas: [],
   calificacion: 0,
   verificado: false,
-  whatsapp: null,
   latitud: null,
   longitud: null,
 };
+
+/**
+ * Un anuncio como los que quedaron de antes: con el número del dueño guardado.
+ *
+ * El molde es necesario porque `Pension` ya no declara ese campo. Lo que se
+ * comprueba con él no es el tipo, sino el comportamiento: aunque el dato llegue,
+ * el contacto sigue siendo de la plataforma.
+ */
+const comoHeredada = (whatsapp: string | null): Pension =>
+  ({ ...PENSION, whatsapp }) as Pension;
 
 const HABITACION: Habitacion = {
   id: "h1",
@@ -70,56 +85,22 @@ describe("número de la plataforma", () => {
   });
 });
 
-describe("normalizarWhatsappPropio · lo que el anfitrión escribe", () => {
-  it("acepta los formatos en que se pega un número real", () => {
-    assert.equal(normalizarWhatsappPropio("+57 300 123 4567"), "3001234567");
-    assert.equal(normalizarWhatsappPropio("300-123-4567"), "3001234567");
-    assert.equal(normalizarWhatsappPropio("(300) 123 4567"), "3001234567");
-    assert.equal(normalizarWhatsappPropio("300 123 4567"), "3001234567");
+describe("numeroDeReserva · siempre la plataforma", () => {
+  it("devuelve el número de la plataforma", () => {
+    assert.equal(numeroDeReserva(), PLATAFORMA);
   });
 
-  it("retira el código de país cuando viene incluido (12 dígitos empezando por 57)", () => {
-    assert.equal(normalizarWhatsappPropio("573001234567"), "3001234567");
-    assert.equal(normalizarWhatsappPropio("+57 300 123 4567"), "3001234567");
-  });
-
-  it("no confunde un número que empieza por 57 y ya es de 10 dígitos", () => {
-    assert.equal(normalizarWhatsappPropio("573001234"), "573001234");
-  });
-});
-
-describe("whatsappPropioValido · exactamente 10 dígitos", () => {
-  it("acepta 10 y rechaza cualquier otra cosa", () => {
-    assert.equal(whatsappPropioValido("3001234567"), true);
-    assert.equal(whatsappPropioValido("300123456"), false);
-    assert.equal(whatsappPropioValido("30012345678"), false);
-    assert.equal(whatsappPropioValido("300123456a"), false);
-    assert.equal(whatsappPropioValido(""), false);
-  });
-});
-
-describe("numeroDeReserva · a quién le llega la reserva", () => {
-  it("usa el número propio con el 57 antepuesto (el estudiante puede estar fuera del país)", () => {
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: "3001234567" }), "573001234567");
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: "+57 300 123 4567" }), "573001234567");
-  });
-
-  it("cae al respaldo de la plataforma cuando el anuncio no tiene número propio", () => {
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: null }), PLATAFORMA);
-    assert.equal(numeroDeReserva({ ...PENSION }), PLATAFORMA);
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: "" }), PLATAFORMA);
-  });
-
-  it("cae al respaldo si el número propio guardado no es válido (nunca deja el botón roto)", () => {
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: "300 123" }), PLATAFORMA);
-    assert.equal(numeroDeReserva({ ...PENSION, whatsapp: "1234567890123" }), PLATAFORMA);
+  it("no usa el número del dueño aunque el anuncio lo traiga guardado", () => {
+    const enlace = enlaceWhatsApp(comoHeredada("3001234567"));
+    assert.ok(enlace.startsWith(`https://wa.me/${PLATAFORMA}?text=`));
+    assert.ok(!enlace.includes("3001234567"));
   });
 });
 
 describe("enlaceWhatsApp", () => {
-  it("apunta al número del dueño y lleva el mensaje codificado", () => {
-    const enlace = enlaceWhatsApp({ ...PENSION, whatsapp: "3001234567" }, HABITACION);
-    assert.ok(enlace.startsWith("https://wa.me/573001234567?text="));
+  it("apunta a la plataforma y lleva el mensaje codificado", () => {
+    const enlace = enlaceWhatsApp(PENSION, HABITACION);
+    assert.ok(enlace.startsWith(`https://wa.me/${PLATAFORMA}?text=`));
 
     const mensaje = decodeURIComponent(enlace.split("?text=")[1] ?? "");
     assert.ok(mensaje.includes("Residencia Makia"));
@@ -130,23 +111,27 @@ describe("enlaceWhatsApp", () => {
   });
 
   it("incluye el barrio cuando el anuncio lo tiene", () => {
-    const enlace = enlaceWhatsApp({ ...PENSION, whatsapp: "3001234567" }, HABITACION);
+    const enlace = enlaceWhatsApp(PENSION, HABITACION);
     assert.ok(decodeURIComponent(enlace).includes("(Mamatoco)"));
   });
 
   it("con alimentación incluida lo dice en el mensaje (el estudiante necesita saberlo)", () => {
-    const enlace = enlaceWhatsApp(
-      { ...PENSION, whatsapp: "3001234567" },
-      { ...HABITACION, alimentacion_incluida: true }
-    );
+    const enlace = enlaceWhatsApp(PENSION, { ...HABITACION, alimentacion_incluida: true });
     assert.ok(decodeURIComponent(enlace).includes("con alimentación incluida"));
   });
 
   it("sin habitación (publicación heredada) usa el mensaje general con su precio de referencia", () => {
-    const enlace = enlaceWhatsApp({ ...PENSION, whatsapp: "3001234567" });
+    const enlace = enlaceWhatsApp(PENSION);
     const mensaje = decodeURIComponent(enlace.split("?text=")[1] ?? "");
     assert.ok(mensaje.includes("me interesa el alquiler"));
     assert.ok(mensaje.includes(formatearCOP(600000)));
+  });
+
+  it("ni el enlace ni el mensaje dejan rastro del número del dueño", () => {
+    const enlace = enlaceWhatsApp(comoHeredada("3001234567"), HABITACION);
+    const completo = decodeURIComponent(enlace);
+    assert.ok(!completo.includes("3001234567"));
+    assert.ok(!completo.includes("573001234567"));
   });
 });
 

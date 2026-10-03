@@ -34,7 +34,6 @@ const BASE: Pension = {
   normas: [],
   calificacion: 0,
   verificado: false,
-  whatsapp: null,
   latitud: null,
   longitud: null,
 };

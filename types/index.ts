@@ -59,24 +59,20 @@ export interface Pension {
    */
   calificacion: number;
   verificado: boolean;
-  /**
-   * WhatsApp del anfitrión para esta pensión: **exactamente 10 dígitos**, sin
-   * código de país (se añade el 57 al construir el enlace).
+  /*
+   * Aquí vivían `whatsapp` (el número del dueño) y `autorizacion_contacto_en`
+   * (la fecha en que autorizó publicarlo). Se retiraron el 2026-10-02, cuando el
+   * contacto pasó a la plataforma: el número del anfitrión ya no se publica y
+   * **no debe existir en el modelo de la aplicación**.
    *
-   * Opcional a propósito: los anuncios publicados antes de que existiera este
-   * campo usan el número de la plataforma como respaldo. Nunca se publica en
-   * datos estructurados ni metadatos, solo viaja en el enlace de reserva.
-   */
-  whatsapp?: string | null;
-  /**
-   * Fecha (ISO) en que el anfitrión autorizó publicar su número de WhatsApp.
+   * Retirarlos del tipo no es cosmética: es lo que impide que el número vuelva a
+   * viajar al navegador. Todo anuncio que se pase a un componente de cliente se
+   * serializa en el HTML de la página, así que un campo que existe acaba
+   * publicado aunque nadie lo pinte. Sin campo, no hay nada que serializar.
    *
-   * `null` o ausente = **no consta autorización**: los anuncios publicados antes
-   * de que existiera la casilla. No se rellena de forma retroactiva (fabricar un
-   * consentimiento sería peor que no tenerlo): el editor lo pide de nuevo. La base
-   * no permite publicar un número sin esta fecha (ver supabase/oleada-6.sql).
+   * La columna sigue en la base —hay anuncios antiguos con número—, pero la
+   * aplicación ya no la lee ni la escribe.
    */
-  autorizacion_contacto_en?: string | null;
 
   // --- Ubicación exacta (opcional): si existe, el mapa muestra el pin real ---
   latitud?: number | null;

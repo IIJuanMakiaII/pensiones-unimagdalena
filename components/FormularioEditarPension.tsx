@@ -22,7 +22,6 @@ import {
   claseInput,
   conOpcionesActuales,
 } from "@/lib/formulario-pension";
-import CampoWhatsApp from "@/components/CampoWhatsApp";
 
 const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
 
@@ -176,12 +175,6 @@ export default function FormularioEditarPension({ pension }: { pension: PensionC
             Los estudiantes filtran por distancia: este dato decide si apareces.
           </p>
         </div>
-
-        <CampoWhatsApp
-          valorInicial={pension.whatsapp}
-          avisaSiFalta
-          conAutorizacionPrevia={Boolean(pension.autorizacion_contacto_en)}
-        />
 
         <div>
           <span className={claseEtiqueta}>Habitaciones que ofreces</span>

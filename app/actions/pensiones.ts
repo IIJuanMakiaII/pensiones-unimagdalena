@@ -6,12 +6,7 @@ import { crearClienteServidor } from "@/utils/supabase/server";
 import { RUTAS_DEL_CATALOGO } from "@/lib/cache-catalogo";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { AYUDA_IMAGENES, hostImagenPermitido, MAXIMO_FOTOS } from "@/lib/imagenes";
-import {
-  MENSAJE_WHATSAPP_INVALIDO,
-  formatearCOP,
-  normalizarWhatsappPropio,
-  whatsappPropioValido,
-} from "@/lib/formato";
+import { formatearCOP } from "@/lib/formato";
 import type {
   EntradaHabitacion,
   EntradaHabitacionEditada,
@@ -222,20 +217,12 @@ export async function crearPension(
 
   const imagenesNoPermitidas = imagenes.filter((url) => !hostImagenPermitido(url));
 
-  /**
-   * WhatsApp propio de la pensión, obligatorio al publicar: es la única forma de
-   * que el estudiante llegue al dueño desde el primer día. Se guarda con 10
-   * dígitos exactos (la restricción de la base los exige) y el código de país se
-   * añade al construir el enlace.
+  /*
+   * Aquí se leía el WhatsApp del anfitrión y su casilla de autorización. Desde el
+   * cambio de modelo del 2026-10-02 no se piden: el contacto y la reserva del
+   * primer mes los maneja la plataforma, y el número del dueño no se publica (ver
+   * `lib/formato.ts`).
    */
-  const whatsapp = normalizarWhatsappPropio(texto("whatsapp"));
-
-  /**
-   * Autorización expresa para publicar el contacto (tarea #30). Obligatoria: el
-   * número de una persona no se publica sin constancia de que lo autorizó, y la
-   * base rechaza el envío si falta (restricción `pensiones_autorizacion_para_whatsapp`).
-   */
-  const autorizaContacto = String(formData.get("autorizaContacto") ?? "") === "si";
 
   const { habitaciones, errores: erroresHabitaciones } = leerHabitaciones(texto("habitaciones"));
 
@@ -257,14 +244,6 @@ export async function crearPension(
         .join(", ")}. ${AYUDA_IMAGENES}`
     );
   }
-  if (!whatsappPropioValido(whatsapp)) {
-    errores.push(`${MENSAJE_WHATSAPP_INVALIDO}.`);
-  }
-  if (!autorizaContacto) {
-    errores.push(
-      "Marca la casilla de autorización para publicar tu número de WhatsApp: sin ella no podemos mostrarlo en el anuncio."
-    );
-  }
   errores.push(...erroresHabitaciones);
 
   if (errores.length > 0) {
@@ -278,7 +257,7 @@ export async function crearPension(
   // si algo falla no queda un anuncio a medias. El precio lo fija la base de datos
   // a partir de la habitación disponible más barata, de modo que la tarjeta, el
   // filtro de precio y el mensaje de WhatsApp siempre dicen lo mismo.
-  const { data: pensionCreada, error } = await supabase.rpc("crear_pension_con_habitaciones", {
+  const { error } = await supabase.rpc("crear_pension_con_habitaciones", {
     p_pension: {
       titulo,
       descripcion,
@@ -304,39 +283,6 @@ export async function crearPension(
         ? error.message
         : "No pudimos guardar la publicación. Verifica que las tablas, las políticas y la función crear_pension_con_habitaciones estén creadas (supabase/oleada-1.sql).",
     };
-  }
-
-  /**
-   * El número de WhatsApp se guarda en un segundo paso porque la función
-   * `crear_pension_con_habitaciones` no acepta esa columna, y la carpeta SQL es
-   * del Arquitecto de Datos: no se añade una migración por aquí.
-   *
-   * La función **devuelve el id** de la pensión creada, así que el `UPDATE` va
-   * dirigido a ese id y con predicado de propiedad. No se localiza «la última
-   * creada» por título ni por fecha: eso fallaría con dos publicaciones a la vez.
-   */
-  const pensionId = typeof pensionCreada === "string" ? pensionCreada : null;
-
-  if (pensionId) {
-    const { data: conNumero, error: errorNumero } = await supabase
-      .from("pensiones")
-      // El número y su autorización se guardan juntos: la base no acepta uno sin
-      // la otra (ver supabase/oleada-6.sql).
-      .update({ whatsapp, autorizacion_contacto_en: new Date().toISOString() })
-      .eq("id", pensionId)
-      .eq("anfitrion_id", user.id)
-      .select("id");
-
-    if (errorNumero || (conNumero ?? []).length === 0) {
-      console.error(
-        "La pensión se creó, pero no se pudo guardar su WhatsApp:",
-        errorNumero?.message ?? "no se modificó ninguna fila"
-      );
-      // El anuncio existe: se informa de lo que falta en lugar de dar por bueno
-      // un guardado incompleto.
-      revalidarCatalogo();
-      redirect("/publicar?creada=1&sinNumero=1");
-    }
   }
 
   // Descarta la caché del catálogo: la pensión nueva se ve sin esperar los 60 s.
@@ -649,7 +595,7 @@ export async function actualizarPension(
     .from("pensiones")
     // Se trae también la autorización registrada: sirve para no volver a pedirla
     // y para saber si este anuncio viene de antes de que existiera la casilla.
-    .select("id, autorizacion_contacto_en")
+    .select("id")
     .eq("id", pensionId)
     .eq("anfitrion_id", user.id);
 
@@ -668,16 +614,11 @@ export async function actualizarPension(
     };
   }
 
-  /** Autorización que ya constaba para este anuncio (puede no haber ninguna). */
-  const autorizacionPrevia = propias[0]?.autorizacion_contacto_en ?? null;
-
-  /**
-   * Casilla de autorización (tarea #30). Nunca viene premarcada: si el anfitrión
-   * la marca ahora, se registra la fecha de este consentimiento; si no la marca y
-   * ya constaba una autorización anterior, esa se conserva — editar la descripción
-   * no debe borrar una autorización ya dada.
+  /*
+   * Aquí se leían la autorización previa y la casilla del formulario para publicar
+   * el número del anfitrión. Ya no se piden: el contacto lo maneja la plataforma
+   * (ver `lib/formato.ts`).
    */
-  const autorizaContacto = String(formData.get("autorizaContacto") ?? "") === "si";
 
   const titulo = texto("titulo");
   const descripcion = texto("descripcion");
@@ -704,9 +645,6 @@ export async function actualizarPension(
     .slice(0, MAX_IMAGENES);
 
   const imagenesNoPermitidas = imagenes.filter((url) => !hostImagenPermitido(url));
-
-  /** Igual que al publicar: 10 dígitos exactos, normalizados desde el formulario. */
-  const whatsapp = normalizarWhatsappPropio(texto("whatsapp"));
 
   const { habitaciones, errores: erroresHabitaciones } = leerHabitaciones(texto("habitaciones"));
 
@@ -735,16 +673,6 @@ export async function actualizarPension(
         .join(", ")}. ${AYUDA_IMAGENES}`
     );
   }
-  if (!whatsappPropioValido(whatsapp)) {
-    errores.push(`${MENSAJE_WHATSAPP_INVALIDO}.`);
-  }
-  // Sin autorización —ni la de ahora ni una registrada antes— no se publica el
-  // número. Es la comprobación que la base también exige (oleada-6.sql).
-  if (!autorizaContacto && !autorizacionPrevia) {
-    errores.push(
-      "Marca la casilla de autorización para publicar tu número de WhatsApp: sin ella no podemos mostrarlo en el anuncio."
-    );
-  }
   errores.push(...erroresHabitaciones);
 
   if (errores.length > 0) {
@@ -767,10 +695,6 @@ export async function actualizarPension(
       servicios,
       normas,
       imagenes,
-      whatsapp,
-      // Solo se escribe la fecha cuando el anfitrión acaba de autorizar. Si ya
-      // constaba, se deja intacta: esa fecha es la prueba que buscábamos.
-      ...(autorizaContacto ? { autorizacion_contacto_en: new Date().toISOString() } : {}),
     })
     .eq("id", pensionId)
     .eq("anfitrion_id", user.id)

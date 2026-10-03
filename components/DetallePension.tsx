@@ -43,6 +43,13 @@ export default function DetallePension({ pension }: Props) {
         Habitaciones disponibles
       </h2>
 
+      {/* Quién responde. El botón de reserva abre el WhatsApp de la plataforma, no
+          el del anfitrión: el estudiante tiene que saber con quién va a hablar. */}
+      <p className="mt-3 rounded-xl bg-primary-50 px-3.5 py-2.5 text-sm font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
+        Tu reserva la gestionamos nosotros: al pulsar «Reservar» nos escribes por WhatsApp y
+        cerramos contigo el primer mes.
+      </p>
+
       <div role="radiogroup" aria-label="Elige una habitación" className="mt-4 space-y-3">
         {disponibles.map((h) => {
           const activa = h.id === seleccionadaId;
@@ -97,7 +104,6 @@ export default function DetallePension({ pension }: Props) {
                   medirContacto({
                     pension: pension.id,
                     origen: "ficha",
-                    propio: Boolean(pension.whatsapp),
                     con_habitacion: true,
                   });
                 }}
@@ -140,7 +146,6 @@ export default function DetallePension({ pension }: Props) {
               medirContacto({
                 pension: pension.id,
                 origen: "ficha",
-                propio: Boolean(pension.whatsapp),
                 con_habitacion: false,
               })
             }
@@ -196,7 +201,6 @@ export default function DetallePension({ pension }: Props) {
                 medirContacto({
                   pension: pension.id,
                   origen: "barra_movil",
-                  propio: Boolean(pension.whatsapp),
                   con_habitacion: true,
                 })
               }

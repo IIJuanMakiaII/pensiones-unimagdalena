@@ -133,7 +133,6 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
               medirContacto({
                 pension: pension.id,
                 origen: "tarjeta",
-                propio: Boolean(pension.whatsapp),
                 con_habitacion: true,
               })
             }
@@ -158,7 +157,6 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 medirContacto({
                   pension: pension.id,
                   origen: "tarjeta",
-                  propio: Boolean(pension.whatsapp),
                   con_habitacion: false,
                 })
               }
@@ -177,7 +175,6 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
               medirContacto({
                 pension: pension.id,
                 origen: "tarjeta",
-                propio: Boolean(pension.whatsapp),
                 con_habitacion: false,
               })
             }

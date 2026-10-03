@@ -28,18 +28,28 @@ if (!URL_BASE || !CLAVE) {
   process.exit(1);
 }
 
-/** [tabla, comportamiento esperado, descripción] */
+/**
+ * [tabla, comportamiento esperado, descripción, columnas que se piden]
+ *
+ * Se enumeran las columnas en lugar de `select=*` por dos razones. La primera es
+ * de coherencia: una auditoría debe pedir solo lo que comprueba. La segunda es
+ * que desde la oleada 9 `whatsapp` y `autorizacion_contacto_en` **ya no son
+ * legibles** por `anon` ni por `authenticated` —el contacto lo maneja la
+ * plataforma—, así que un comodín no fallaría la auditoría de RLS: fallaría con
+ * `42501` antes de llegar a ella, y este verificador diría que todo está mal
+ * cuando en realidad estaría midiendo otra cosa.
+ */
 const CASOS = [
-  ["pensiones", "legible", "catálogo público (solo anuncios activos)"],
-  ["habitaciones", "legible", "habitaciones de anuncios activos"],
-  ["usuarios", "bloqueado", "perfiles: un visitante anónimo no debe ver NINGUNA fila"],
+  ["pensiones", "legible", "catálogo público (solo anuncios activos)", "id,titulo,activa,slug"],
+  ["habitaciones", "legible", "habitaciones de anuncios activos", "id,pension_id,disponible"],
+  ["usuarios", "bloqueado", "perfiles: un visitante anónimo no debe ver NINGUNA fila", "id,rol"],
 ];
 
 let fallos = 0;
 console.log(`Proyecto: ${URL_BASE}\n`);
 
-for (const [tabla, esperado, nota] of CASOS) {
-  const url = `${URL_BASE}/rest/v1/${tabla}?select=*&limit=1`;
+for (const [tabla, esperado, nota, columnas] of CASOS) {
+  const url = `${URL_BASE}/rest/v1/${tabla}?select=${columnas}&limit=1`;
   try {
     const respuesta = await fetch(url, {
       headers: { apikey: CLAVE, Authorization: `Bearer ${CLAVE}` },

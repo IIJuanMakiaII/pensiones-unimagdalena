@@ -41,9 +41,9 @@ const SELLOS: Sello[] = [
     icono: iconos.verificacion,
   },
   {
-    titulo: "Reserva directa, sin intermediarios",
+    titulo: "Reserva acompañada, de principio a fin",
     descripcion:
-      "Hablas directo con el anfitrión por WhatsApp. Sin comisiones ocultas ni terceros en el camino.",
+      "Nos escribes por WhatsApp y nos ocupamos del primer mes: hablamos con el dueño, confirmamos la habitación y te acompañamos hasta que estés dentro.",
     icono: iconos.directo,
   },
   {
