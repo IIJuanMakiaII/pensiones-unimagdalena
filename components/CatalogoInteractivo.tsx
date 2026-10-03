@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import ChipsFiltros from "@/components/ChipsFiltros";
 import type { PensionConHabitaciones } from "@/types";
 import {
   ETIQUETA_ORDEN,
@@ -181,6 +182,7 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
         onChange={cambiarFiltros}
         limitesPrecio={limitesPrecio}
         totalFavoritos={totalFavoritos}
+        resultados={resultados.length}
       />
 
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 md:px-6">
@@ -202,6 +204,15 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             </button>
           </div>
         )}
+
+        {/* Quitar filtros, siempre a la vista. Antes solo se ofrecía cuando la
+            búsqueda no devolvía nada: con resultados en pantalla el estudiante
+            no tenía forma de deshacer, que es lo que reportó el fundador. */}
+        <ChipsFiltros
+          filtros={filtros}
+          precioMaximoReal={limitesPrecio.max}
+          onChange={cambiarFiltros}
+        />
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           {/* El recuento nombra habitaciones, no solo pensiones: es lo que el
@@ -243,6 +254,14 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             </Link>
           </div>
         </div>
+
+        {/* Quién atiende el contacto. Va aquí, con los resultados, porque el botón
+            de reserva de cada tarjeta abre el WhatsApp de la plataforma y no el
+            del anfitrión: quien escribe tiene que saber con quién habla. */}
+        <p className="mb-4 rounded-xl bg-primary-50 px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
+          Los contactos los atiende el equipo de Pensiones Unimagdalena: escríbenos por WhatsApp y
+          cerramos contigo la reserva del primer mes.
+        </p>
 
         {/* Ordenar. Va con los resultados —no en la barra de filtros— porque es
             donde se busca al mirar una lista y querer reordenarla. El color lo

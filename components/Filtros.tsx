@@ -1,8 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
 import type { GeneroHabitacion, RangoDistancia } from "@/types";
 import type { FiltrosUI } from "@/lib/filtros";
-import { PASO_PRECIO } from "@/lib/filtros";
+import { FILTROS_INICIALES, PASO_PRECIO, filtrosActivos } from "@/lib/filtros";
 import { formatearCOP } from "@/lib/formato";
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
   limitesPrecio: { min: number; max: number };
   /** Cuántas pensiones tiene guardadas el estudiante (localStorage). */
   totalFavoritos?: number;
+  /** Cuántas pensiones quedan con los filtros puestos (para el cierre del panel). */
+  resultados: number;
 }
 
 const OPCIONES_GENERO: { valor: FiltrosUI["genero"]; etiqueta: string }[] = [
@@ -28,14 +31,70 @@ const OPCIONES_DISTANCIA: { valor: RangoDistancia; etiqueta: string }[] = [
   { valor: "10-15", etiqueta: "10–15 min" },
 ];
 
-/** Barra de filtros sticky: precio (slider), género, distancia y alimentación (§4.4). */
-export default function Filtros({ filtros, onChange, limitesPrecio, totalFavoritos = 0 }: Props) {
-  const actualizar = (parcial: Partial<FiltrosUI>) =>
-    onChange({ ...filtros, ...parcial });
+/**
+ * Filtros del catálogo.
+ *
+ * En escritorio son los cuatro controles desplegados, como siempre. En móvil la
+ * barra se recoge en una sola fila de 60 px —medido a 375 px: 8 % del alto— y los
+ * controles se abren a petición. Antes iban siempre desplegados y, como la barra
+ * es `sticky`, se quedaban fijos comiéndose media pantalla mientras el catálogo
+ * pasaba por debajo: el problema que reportó el fundador.
+ */
+export default function Filtros({
+  filtros,
+  onChange,
+  limitesPrecio,
+  totalFavoritos = 0,
+  resultados,
+}: Props) {
+  const [abierto, setAbierto] = useState(false);
+  const botonRef = useRef<HTMLButtonElement>(null);
+
+  const actualizar = (parcial: Partial<FiltrosUI>) => onChange({ ...filtros, ...parcial });
+
+  const activos = filtrosActivos(filtros, limitesPrecio.max);
+
+  /** Quitar todos conserva el orden elegido: no es un filtro, es cómo se mira la lista. */
+  const quitarTodos = () =>
+    onChange({ ...FILTROS_INICIALES, precioMaximoCop: limitesPrecio.max, orden: filtros.orden });
+
+  /** Cerrar y devolver el foco al botón: si no, en el móvil el foco se queda perdido. */
+  const cerrar = () => {
+    setAbierto(false);
+    botonRef.current?.focus();
+  };
 
   return (
-    <div className="sticky top-0 z-30 border-b border-neutro-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:px-6">
+    <div className="sticky top-0 z-30 border-b border-neutro-200 bg-white/95 backdrop-blur">
+      {/* Fila compacta: es todo lo que la barra ocupa mientras se recorre el catálogo.
+          Solo existe en móvil y tablet; en escritorio la barra queda como estaba. */}
+      <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 md:px-6 lg:hidden">
+        <button
+          ref={botonRef}
+          type="button"
+          onClick={() => setAbierto((v) => !v)}
+          aria-expanded={abierto}
+          aria-controls="panel-filtros"
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-primary-600 bg-white px-4 text-sm font-bold text-primary-700 transition hover:bg-primary-50"
+        >
+          <IconoFiltro />
+          {activos.length > 0 ? `Filtros (${activos.length})` : "Filtros"}
+          <IconoFlecha abierto={abierto} />
+        </button>
+
+        {activos.length > 0 && (
+          <button
+            type="button"
+            onClick={quitarTodos}
+            className="inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-bold text-accent-700 underline underline-offset-2 transition hover:text-accent-800"
+          >
+            Quitar
+          </button>
+        )}
+      </div>
+
+      <div id="panel-filtros" className={`${abierto ? "block" : "hidden"} lg:block`}>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pb-3 md:px-6 lg:py-3">
         {/* Precio */}
         <div>
           <div className="flex items-center gap-3">
@@ -155,8 +214,55 @@ export default function Filtros({ filtros, onChange, limitesPrecio, totalFavorit
           >
             ♥ Mis favoritas{totalFavoritos > 0 ? ` (${totalFavoritos})` : ""}
           </button>
+          </div>
+
+          {/* Cerrar el panel, con el recuento delante: es el paso que confirma que
+              los filtros sirvieron de algo antes de volver al catálogo. */}
+          <button
+            type="button"
+            onClick={cerrar}
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700 lg:hidden"
+          >
+            {resultados === 1 ? "Ver 1 pensión" : `Ver ${resultados} pensiones`}
+          </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function IconoFiltro() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 shrink-0"
+      aria-hidden="true"
+    >
+      <path d="M3 5h18" />
+      <path d="M6 12h12" />
+      <path d="M10 19h4" />
+    </svg>
+  );
+}
+
+function IconoFlecha({ abierto }: { abierto: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 shrink-0 transition ${abierto ? "rotate-180" : ""}`}
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   );
 }
