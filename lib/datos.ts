@@ -1,5 +1,10 @@
-import type { Habitacion, PensionConHabitaciones } from "@/types";
-import { HABITACIONES_SEMILLA, PENSIONES_SEMILLA } from "@/lib/datos.semilla";
+import type { PensionConHabitaciones } from "@/types";
+import { catalogoSinBase, fichaDemo } from "@/lib/catalogo-respaldo";
+
+// El catálogo de demostración sigue publicándose desde aquí para no cambiar la
+// ruta de quien ya lo importaba; su definición vive en `lib/catalogo-respaldo.ts`,
+// junto a la regla que decide cuándo se puede servir (tarea #42).
+export { catalogoDemo } from "@/lib/catalogo-respaldo";
 import {
   columnaDeIdentificador,
   identificadorPlausible,
@@ -84,30 +89,9 @@ function combinar(
   return pensiones.map((fila) => filaAPension(fila, porPension.get(fila.id) ?? []));
 }
 
-/**
- * Catálogo de demostración (semilla local).
- *
- * En la semilla el identificador **ya es legible** (`pension-costa-verde`), así
- * que la dirección pública es el propio id y no se duplica en el dato: si algún
- * día se escribe un slug distinto en la semilla, se respeta. Gracias a esto las
- * direcciones de la demo no cambian ni una letra con la Oleada 5.
- */
-export function catalogoDemo(): PensionConHabitaciones[] {
-  return PENSIONES_SEMILLA.map((pension) => ({
-    ...pension,
-    slug: pension.id,
-    habitaciones: HABITACIONES_SEMILLA.filter((h: Habitacion) => h.pension_id === pension.id),
-  }));
-}
-
-/** Busca en la semilla por dirección legible o por id. */
-function demoPorIdentificador(valor: string): PensionConHabitaciones | null {
-  return catalogoDemo().find((pension) => pension.slug === valor || pension.id === valor) ?? null;
-}
-
 /** Catálogo completo: solo pensiones activas, las más recientes primero. */
 export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
-  if (!esSupabaseConfigurado()) return catalogoDemo();
+  if (!esSupabaseConfigurado()) return catalogoSinBase("sin-configurar", DEMO_HABILITADA);
 
   try {
     const supabase = crearClientePublico();
@@ -123,13 +107,15 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
 
     if (errorPensiones || errorHabitaciones || !pensiones) {
       console.error("Error consultando Supabase:", errorPensiones?.message ?? errorHabitaciones?.message);
-      return catalogoDemo();
+      // Un fallo NUNCA sirve la semilla: un catálogo vacío es honesto, seis
+      // anuncios inventados con su botón de reserva no (tarea #42).
+      return catalogoSinBase("error", DEMO_HABILITADA);
     }
 
     return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
   } catch (error) {
     console.error("Fallo de conexión con Supabase:", error);
-    return catalogoDemo();
+    return catalogoSinBase("error", DEMO_HABILITADA);
   }
 }
 
@@ -169,7 +155,7 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
   if (!identificadorPlausible(valor)) return { estado: "no-existe" };
 
   if (!esSupabaseConfigurado()) {
-    const demo = demoPorIdentificador(valor);
+    const demo = fichaDemo(valor, DEMO_HABILITADA);
     return demo ? { estado: "ok", pension: demo } : { estado: "no-existe" };
   }
 
@@ -189,12 +175,11 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
     }
 
     if (!pension) {
-      // La base dice que no está. Con la demo encendida, una ficha de ejemplo
-      // sigue resolviéndose por su dirección: la semilla no vive en la base.
-      if (DEMO_HABILITADA) {
-        const demo = demoPorIdentificador(valor);
-        if (demo) return { estado: "ok", pension: demo };
-      }
+      // La base dice que no está. Con la demo encendida **a propósito**, una ficha
+      // de ejemplo sigue resolviéndose por su dirección: la semilla no vive en la
+      // base. Sin la demo encendida, no existe (tarea #42).
+      const demo = fichaDemo(valor, DEMO_HABILITADA);
+      if (demo) return { estado: "ok", pension: demo };
       return { estado: "no-existe" };
     }
 

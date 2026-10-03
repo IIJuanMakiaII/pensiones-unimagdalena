@@ -33,6 +33,16 @@ interface Props {
 }
 
 /**
+ * Cuánto se espera antes de escribir la dirección, en milisegundos.
+ *
+ * Un arrastre del deslizador emite decenas de cambios y solo interesa la dirección
+ * en la que el estudiante se queda. Corto a propósito: lo justo para no escribir
+ * en cada paso, e imperceptible al copiar el enlace. La medición usa 1,5 s porque
+ * ahí sí interesa el estado asentado, no la inmediatez.
+ */
+const RETARDO_URL = 250;
+
+/**
  * ÚNICO bloque interactivo de la landing (panel de filtros + resultados).
  *
  * Todo lo demás —hero, sellos y footer— se renderiza en el servidor.
@@ -57,6 +67,17 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
   const rutaActual = usePathname();
   const router = useRouter();
   const yaRestaurado = useRef(false);
+
+  /** Temporizador de la escritura de la dirección (ver `escribirUrl`). */
+  const escrituraPendiente = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Cancela la escritura de la dirección que esté esperando su turno. */
+  const cancelarEscrituraPendiente = useCallback(() => {
+    if (escrituraPendiente.current !== null) {
+      clearTimeout(escrituraPendiente.current);
+      escrituraPendiente.current = null;
+    }
+  }, []);
 
   /**
    * Deja filtros y modo demo igual que la URL actual. La URL es la fuente de
@@ -90,22 +111,72 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
   /**
    * 2) Atrás y Adelante del navegador.
    *
-   * Los cambios de filtro escriben la URL con `replace` (arrastrar el deslizador
-   * no debe llenar el historial de entradas), así que la URL puede cambiar sin
-   * que el estado se entere. Escuchando `popstate` los filtros vuelven a leerse
-   * de la dirección, y lo que se ve coincide siempre con lo que dice la barra.
+   * Los cambios de filtro **sustituyen** la entrada actual del historial (arrastrar
+   * el deslizador no debe llenarlo de pasos intermedios), así que la dirección
+   * puede cambiar sin que el estado se entere. Escuchando `popstate` los filtros
+   * vuelven a leerse de la dirección, y lo que se ve coincide siempre con lo que
+   * dice la barra.
+   *
+   * Antes de releerla se cancela la escritura que estuviera pendiente: si no, el
+   * temporizador volvería a escribir después de que el navegador haya restaurado
+   * otra dirección, y el viaje de vuelta se perdería.
    */
   useEffect(() => {
-    window.addEventListener("popstate", sincronizarDesdeUrl);
-    return () => window.removeEventListener("popstate", sincronizarDesdeUrl);
-  }, [sincronizarDesdeUrl]);
+    const alVolver = () => {
+      cancelarEscrituraPendiente();
+      sincronizarDesdeUrl();
+    };
+    window.addEventListener("popstate", alVolver);
+    return () => window.removeEventListener("popstate", alVolver);
+  }, [cancelarEscrituraPendiente, sincronizarDesdeUrl]);
 
-  /** Escribe en la URL los filtros activos (y si la demo está encendida). */
+  // Al desmontar, que no quede un temporizador escribiendo en una página que ya no está.
+  useEffect(() => cancelarEscrituraPendiente, [cancelarEscrituraPendiente]);
+
+  /**
+   * Escribe la dirección con los filtros activos, **sin pedirle nada al servidor**.
+   *
+   * Antes se usaba `router.replace(...)`, que en el App Router es una navegación:
+   * el servidor devuelve el árbol de la página otra vez. Pero al filtrar no hay
+   * nada que traer —el catálogo llega completo y los filtros se aplican en el
+   * navegador—, así que ese viaje solo servía para reescribir la barra de
+   * direcciones: **una petición por paso del deslizador**. Medido: 15 pasos, 15
+   * peticiones, y en el móvil se paga en cada gesto.
+   *
+   * `window.history.replaceState` escribe la misma dirección, en la misma entrada
+   * del historial (el botón Atrás se comporta igual que antes) y no hace ninguna
+   * petición. Es la API que Next documenta para cambiar la dirección sin navegar.
+   *
+   * Se escribe con retardo, por el mismo motivo por el que la medición también lo
+   * lleva: un arrastre emite decenas de cambios y solo interesa la dirección en la
+   * que el estudiante se queda. El estado de React se actualiza al instante, así
+   * que el catálogo responde sin esperar a este temporizador; lo único que llega
+   * con retardo es la barra de direcciones.
+   *
+   * Consecuencia asumida: el router de Next no se entera, así que `useSearchParams`
+   * quedaría desfasado. Por eso la dirección se sigue leyendo de
+   * `window.location.search` —al abrir un enlace compartido y al oír `popstate`—,
+   * que es lo que mantiene el enlace compartible y el Atrás exacto.
+   */
   const escribirUrl = (nuevos: FiltrosUI, demo: boolean, maximo: number) => {
+    cancelarEscrituraPendiente();
+
     const parametros = filtrosAParametros(nuevos, maximo);
     if (demo) parametros.set("demo", "1");
     const consulta = parametros.toString();
-    router.replace(consulta ? `${rutaActual}?${consulta}` : rutaActual, { scroll: false });
+    const destino = consulta ? `${rutaActual}?${consulta}` : rutaActual;
+
+    escrituraPendiente.current = setTimeout(() => {
+      escrituraPendiente.current = null;
+      try {
+        window.history.replaceState(null, "", destino);
+      } catch {
+        // Algunos navegadores limitan cuántas veces se puede reescribir el
+        // historial. Si lo rechaza, se cae a la navegación de Next: se pierde la
+        // optimización, no la funcionalidad.
+        router.replace(destino, { scroll: false });
+      }
+    }, RETARDO_URL);
   };
 
   const cambiarFiltros = (nuevos: FiltrosUI) => {
