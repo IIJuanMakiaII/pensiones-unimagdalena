@@ -18,6 +18,8 @@
     "verificar:humo": "node scripts/prueba-humo.mjs",
     "verificar:estructura": "node scripts/verificar-estructura.mjs",
     "verificar:filtros-movil": "node scripts/verificar-filtros-movil.mjs",
+    "verificar:filtros-movil-navegador": "node scripts/verificar-filtros-movil-navegador.mjs",
+    "verificar:deslizador-navegador": "node scripts/verificar-deslizador-navegador.mjs",
     "verificar:estados": "node scripts/verificar-estados.mjs",
     "verificar:supabase": "node scripts/verificar-supabase.mjs",
     "verificar:disponibilidad": "node scripts/verificar-disponibilidad.mjs",
