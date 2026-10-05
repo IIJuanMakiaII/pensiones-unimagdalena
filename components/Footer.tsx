@@ -27,7 +27,7 @@ export default function Footer() {
                 <Dot /> Verificación presencial de cada pensión
               </li>
               <li className="flex items-center gap-2">
-                <Dot /> Reserva directa, sin intermediarios
+                <Dot /> Cerramos contigo la reserva del primer mes
               </li>
               <li className="flex items-center gap-2">
                 <Dot /> Precios mensuales claros en COP

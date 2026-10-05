@@ -44,7 +44,7 @@ export default function Hero() {
             <CheckBadge /> Verificación presencial
           </li>
           <li className="flex items-center gap-2">
-            <CheckBadge /> Sin intermediarios
+            <CheckBadge /> Gestionamos tu reserva
           </li>
           <li className="flex items-center gap-2">
             <CheckBadge /> Precios mensuales claros

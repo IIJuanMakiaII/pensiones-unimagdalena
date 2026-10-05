@@ -37,7 +37,7 @@ const PREGUNTAS: PreguntaFrecuente[] = [
   {
     pregunta: "¿La reserva y el pago se hacen en este sitio?",
     respuesta:
-      "No. Este sitio es una vitrina: muestra las publicaciones y le pone en contacto con el anfitrión por WhatsApp. La reserva, el contrato y el pago los acuerda directamente con él, fuera de la plataforma.",
+      "La reserva del primer mes la cerramos nosotros contigo: te acompañamos desde el primer contacto con el anfitrión hasta dejarla confirmada. Las condiciones del pago te las confirmamos en ese momento, antes de que pagues nada.",
   },
   {
     pregunta: "¿Cómo se calcula el precio que aparece en una publicación?",

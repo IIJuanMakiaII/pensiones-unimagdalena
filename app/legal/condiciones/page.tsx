@@ -7,7 +7,7 @@ import { SITIO_URL } from "@/lib/sitio";
 export const metadata: Metadata = {
   title: "Condiciones de uso",
   description:
-    "Cómo funciona Pensiones Unimagdalena: es una vitrina de contacto directo, el arriendo y el pago ocurren fuera de la plataforma.",
+    "Cómo funciona Pensiones Unimagdalena: llevamos el contacto con los anfitriones y cerramos contigo la reserva del primer mes.",
   alternates: { canonical: `${SITIO_URL}/legal/condiciones` },
   /** Sin indexar mientras esté en revisión jurídica (ver /legal/privacidad). */
   robots: { index: false, follow: true },
