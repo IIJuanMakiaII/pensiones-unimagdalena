@@ -10,6 +10,7 @@ import {
 } from "@/lib/formato";
 import { medirContacto, medirVerFicha } from "@/lib/medicion";
 import { WhatsAppIcon } from "@/components/CardPension";
+import DesgloseReserva from "@/components/DesgloseReserva";
 
 interface Props {
   pension: PensionConHabitaciones;
@@ -49,6 +50,17 @@ export default function DetallePension({ pension }: Props) {
         Tu reserva la gestionamos nosotros: al pulsar «Reservar» nos escribes por WhatsApp y
         cerramos contigo el primer mes.
       </p>
+
+      {/* Qué paga al reservar, con las cifras de la habitación elegida. Va **antes
+          del paso de reserva** —de la lista y de los botones—, y las cifras siguen
+          a la selección: el 20 % de una habitación no es el de otra. Por eso el
+          bloque dice a qué habitación corresponden los importes. */}
+      {seleccionada && (
+        <DesgloseReserva
+          precioMensual={seleccionada.precio_mensual_cop}
+          etiquetaHabitacion={`${etiquetaTipo(seleccionada.tipo)} · ${etiquetaGenero(seleccionada.genero)}`}
+        />
+      )}
 
       <div role="radiogroup" aria-label="Elige una habitación" className="mt-4 space-y-3">
         {disponibles.map((h) => {
