@@ -75,7 +75,7 @@ export default function Filtros({
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
           aria-controls="panel-filtros"
-          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-primary-600 bg-white px-4 text-sm font-bold text-primary-700 transition hover:bg-primary-50"
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-neutro-200 bg-white px-4 text-sm font-semibold text-neutro-800 transition hover:border-neutro-800"
         >
           <IconoFiltro />
           {activos.length > 0 ? `Filtros (${activos.length})` : "Filtros"}
@@ -221,7 +221,7 @@ export default function Filtros({
           <button
             type="button"
             onClick={cerrar}
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700 lg:hidden"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover lg:hidden"
           >
             {resultados === 1 ? "Ver 1 pensión" : `Ver ${resultados} pensiones`}
           </button>

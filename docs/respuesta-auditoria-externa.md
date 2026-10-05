@@ -1,6 +1,6 @@
 # Respuesta a la auditoría externa
 
-**Pensiones Unimagdalena** · verificación e implementación de 6 sugerencias
+**Nido** · verificación e implementación de 6 sugerencias
 Fecha: 2026-09-17 · Responsable: Especialista en QA, SEO (Agente 3)
 
 ---

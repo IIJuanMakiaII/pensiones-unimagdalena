@@ -1,4 +1,4 @@
-# Pensiones Unimagdalena
+# Nido
 
 Marketplace de pensiones y habitaciones para estudiantes de la **Universidad del Magdalena** (Santa Marta, Colombia). Mobile-First, Next.js App Router + TypeScript + Tailwind CSS.
 
@@ -80,7 +80,7 @@ La web es instalable desde el navegador: ícono propio, pantalla completa
 | `public/sw.js` | Service worker: red→caché en navegaciones, caché primero en estáticos, stale-while-revalidate en imágenes |
 | `app/offline/page.tsx` | Página de respaldo cuando no hay conexión |
 | `components/InstalarApp.tsx` | Registro del service worker + aviso de instalación (prompt nativo en Android, instrucciones en iOS) |
-| `scripts/generar-iconos.mjs` | Regenera los íconos (`icon-192`, `icon-512`, `icon-maskable-512`, `apple-touch-icon`, `favicon-32/48`) desde el logo de marca `public/marca/roomieya-logo.jpg` |
+| `scripts/generar-iconos.mjs` | Regenera los íconos de Nido desde `nido.png` |
 
 ```bash
 node scripts/generar-iconos.mjs   # solo si cambia el logo

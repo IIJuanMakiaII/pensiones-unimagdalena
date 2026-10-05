@@ -50,7 +50,7 @@ Verificado en la documentación oficial de Resend para su integración con Supab
 | **Username** | `resend` |
 | **Password** | tu **API key** de Resend (empieza por `re_`) |
 | **Sender email** | un correo de **tu dominio verificado**, por ejemplo `no-reply@tudominio.com` |
-| **Sender name** | `Pensiones Unimagdalena` |
+| **Sender name** | `Nido` |
 
 Dónde se pega: **Supabase → Authentication → Emails → SMTP Settings → Enable Custom SMTP**.
 

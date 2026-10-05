@@ -4,7 +4,7 @@
  */
 import sharp from "sharp";
 
-const origen = process.argv[2] ?? "public/marca/roomieya-logo.jpg";
+const origen = process.argv[2] ?? "nido.png";
 
 const meta = await sharp(origen).metadata();
 console.log(`Imagen: ${meta.width}x${meta.height} · formato ${meta.format}`);

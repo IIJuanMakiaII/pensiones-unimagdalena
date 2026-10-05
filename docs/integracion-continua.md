@@ -57,7 +57,7 @@ El flujo **no contiene ninguna credencial**. Los valores se guardan como *secret
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Panel de Supabase → tu proyecto → *Project Settings* → *API* → **Project URL** | Sí, para el bloque 3 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Misma pantalla → **`anon` `public`** (la clave que ya va al navegador) | Sí, para el bloque 3 |
-| `NEXT_PUBLIC_SITE_URL` | Tu dominio real, tal como quedó en `lib/sitio.ts` (por ejemplo `https://roomieya.com`). Sin barra final | No, pero recomendable |
+| `NEXT_PUBLIC_SITE_URL` | Tu dominio real, tal como quedó en `lib/sitio.ts` (por ejemplo `https://tu-dominio.com`). Sin barra final | No, pero recomendable |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | El número de la plataforma, **solo dígitos** con el 57 delante (por ejemplo `573001234567`) | No |
 
 > **Nunca añadas `SUPABASE_SERVICE_ROLE_KEY` al repositorio.** Es la clave que salta todas las políticas de la base: en un sistema de integración continua no hace falta para nada de lo que se comprueba aquí (todo se verifica con la clave pública, que es la que ya viaja al navegador) y su filtración sería el peor escenario posible. Si alguna vez ves que una comprobación la pide, la comprobación es la que está mal.

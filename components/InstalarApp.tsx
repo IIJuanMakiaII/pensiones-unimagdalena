@@ -143,7 +143,7 @@ export default function InstalarApp() {
         />
         <div className="min-w-0 flex-1">
           <p className="font-display text-sm font-extrabold text-neutro-900">
-            Instala Pensiones Unimagdalena
+            Instala Nido
           </p>
           <p className="mt-1 text-xs leading-relaxed text-neutro-600">
             {mostrarIOS

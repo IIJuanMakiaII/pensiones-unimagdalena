@@ -58,7 +58,7 @@ export default function BotonFavorito({
         aria-label={etiqueta}
         className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition ${
           activo
-            ? "border-accent-500 bg-accent-50 text-accent-700"
+          ? "border-airbnb-rausch bg-airbnb-pink-badge text-airbnb-rausch-hover"
             : "border-neutro-300 bg-white text-neutro-700 hover:bg-neutro-100"
         } ${className}`}
       >
@@ -77,7 +77,7 @@ export default function BotonFavorito({
       /* 44×44 px: estaba en 40 y era el control más pequeño de la tarjeta, en la
          esquina de la foto, donde fallar el toque es más probable. */
       className={`flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur transition hover:bg-white ${
-        activo ? "text-accent-500" : "text-neutro-600"
+        activo ? "bg-airbnb-pink-badge text-airbnb-rausch" : "text-neutro-600"
       } ${className}`}
     >
       {icono}

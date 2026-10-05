@@ -330,7 +330,7 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             de reserva de cada tarjeta abre el WhatsApp de la plataforma y no el
             del anfitrión: quien escribe tiene que saber con quién habla. */}
         <p className="mb-4 rounded-xl bg-primary-50 px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
-          Los contactos los atiende el equipo de Pensiones Unimagdalena: escríbenos por WhatsApp y
+          Los contactos los atiende el equipo de Nido: escríbenos por WhatsApp y
           cerramos contigo la reserva del primer mes.
         </p>
 

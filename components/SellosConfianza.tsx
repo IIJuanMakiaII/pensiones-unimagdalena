@@ -73,7 +73,7 @@ export default function SellosConfianza() {
           id="confianza-titulo"
           className="text-center font-display text-xl font-extrabold text-neutro-800 md:text-2xl"
         >
-          Por qué familias y estudiantes eligen Pensiones Unimagdalena
+          Por qué familias y estudiantes eligen Nido
         </h2>
         <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {SELLOS.map((s) => (

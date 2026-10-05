@@ -91,7 +91,7 @@ export function mensajeWhatsApp(pension: Pension, habitacion?: Habitacion): stri
   if (!habitacion) {
     const precio = pension.precioMensual > 0 ? ` a ${formatearCOP(pension.precioMensual)}/mes` : "";
     return (
-      `Hola 👋, vi en el Marketplace de Pensiones Unimagdalena la ${pension.titulo}` +
+      `Hola 👋, vi en Nido la ${pension.titulo}` +
       `${ubicacion} y me interesa el alquiler${precio}. ¿Está disponible?`
     );
   }
@@ -100,7 +100,7 @@ export function mensajeWhatsApp(pension: Pension, habitacion?: Habitacion): stri
     ? " con alimentación incluida"
     : " sin alimentación";
   return (
-    `Hola 👋, vi en el Marketplace de Pensiones Unimagdalena la ${pension.titulo}` +
+    `Hola 👋, vi en Nido la ${pension.titulo}` +
     `${ubicacion} y me interesa la habitación ${etiquetaTipo(habitacion.tipo)} · ` +
     `${etiquetaGenero(habitacion.genero)} a ${formatearCOP(
       habitacion.precio_mensual_cop

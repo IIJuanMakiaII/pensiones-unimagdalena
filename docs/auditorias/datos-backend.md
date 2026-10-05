@@ -1,6 +1,6 @@
 # Auditoría del modelo de datos y plan de migración a datos reales
 
-**Proyecto:** Pensiones Unimagdalena — marketplace de pensiones y habitaciones (Santa Marta)
+**Proyecto:** Nido — marketplace de pensiones y habitaciones (Santa Marta)
 **Auditor:** Arquitecto Datos/Backend (tarea #5 del tablero)
 **Fecha:** 2026-09-17
 **Alcance:** contrato de tipos (`types/index.ts`), capa de acceso a datos (`lib/`), esquema y políticas de Supabase (`supabase/`), flujo de publicación (`app/actions/`, `app/publicar/`, `components/FormularioPension.tsx`).

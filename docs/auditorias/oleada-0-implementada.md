@@ -1,6 +1,6 @@
 # Oleada 0 implementada — bloqueantes antes de lanzar
 
-**Pensiones Unimagdalena** · 2026-09-17
+**Nido** · 2026-09-17
 Origen: [INFORME-MAESTRO.md](INFORME-MAESTRO.md) §3 (Oleada 0)
 
 ---

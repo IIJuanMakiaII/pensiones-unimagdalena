@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import EntradaCuenta from "@/components/EntradaCuenta";
+import LogoNido from "@/components/LogoNido";
 
 /**
  * Cabecera del sitio (tarea #17): marca + entrada de cuenta.
@@ -21,20 +21,10 @@ export default function Cabecera() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:h-16 md:px-6">
         <Link
           href="/"
+          aria-label="Nido, ir al inicio"
           className="flex min-w-0 shrink-0 items-center gap-2 rounded-xl py-1 pr-1 transition hover:opacity-90"
         >
-          <Image
-            src="/iconos/icon-192.png"
-            alt=""
-            width={32}
-            height={32}
-            className="h-8 w-8 shrink-0 rounded-lg"
-          />
-          {/* En móvil se ahorra el texto para no comerse el ancho de los botones. */}
-          <span className="hidden font-display text-[15px] font-extrabold leading-tight text-neutro-900 sm:block">
-            Pensiones <span className="text-primary-700">Unimagdalena</span>
-          </span>
-          <span className="sr-only sm:hidden">Pensiones Unimagdalena — ir al inicio</span>
+          <LogoNido className="h-8" />
         </Link>
 
         <div className="ml-auto flex min-w-0 items-center">

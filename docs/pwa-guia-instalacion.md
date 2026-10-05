@@ -1,6 +1,6 @@
 # Guía PWA — Instalar y probar la app
 
-**Pensiones Unimagdalena** · Next.js 14 App Router
+**Nido** · Next.js 14 App Router
 
 ---
 
@@ -30,7 +30,7 @@ npm start          # → http://localhost:3000
 
 1. Abre **Chrome** en `http://localhost:3000`.
 2. `Ctrl + Shift + I` → pestaña **Application**:
-   - **Manifest**: debe mostrar *Pensiones UniMag*, los 4 íconos y `display: standalone`.
+   - **Manifest**: debe mostrar *Nido*, los 4 íconos y `display: standalone`.
    - **Service Workers**: debe aparecer `sw.js` en estado **activated**.
    - **Cache Storage**: verás `pensiones-app-v1`, `pensiones-estaticos-v1`, `pensiones-imagenes-v1`.
 3. En la barra de direcciones aparece el ícono de instalar (⊕ / monitor con flecha) → clic en **Instalar**.
@@ -44,7 +44,7 @@ npm start          # → http://localhost:3000
 ## 3. Instalar en Android
 
 1. Abre la URL HTTPS en **Chrome**.
-2. Aparece el aviso **"Instala Pensiones Unimagdalena"** (o menú ⋮ → **Instalar aplicación**).
+2. Aparece el aviso **"Instala Nido"** (o menú ⋮ → **Instalar aplicación**).
 3. Toca **Instalar app** → se agrega a la pantalla de inicio y abre sin barra del navegador.
 4. El aviso no vuelve a aparecer 14 días si tocas *Ahora no* (se guarda en `localStorage`).
 

@@ -7,8 +7,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Pensiones Unimagdalena — Habitaciones para estudiantes en Santa Marta",
-    short_name: "Pensiones UniMag",
+    name: "Nido — Habitaciones para estudiantes en Santa Marta",
+    short_name: "Nido",
     description:
       "Pensiones y habitaciones verificadas a minutos caminando de la Universidad del Magdalena, Santa Marta. Precios mensuales claros y reserva directa por WhatsApp.",
     lang: "es-CO",
@@ -18,7 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "portrait",
     background_color: "#ffffff",
-    theme_color: "#325334",
+    theme_color: "#FF385C",
     categories: ["education", "travel", "lifestyle"],
     icons: [
       { src: "/iconos/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

@@ -1,6 +1,6 @@
 # Integración con Supabase — del catálogo estático al sistema dinámico
 
-**Pensiones Unimagdalena** · Next.js 14 (App Router) + TypeScript + Tailwind + Supabase
+**Nido** · Next.js 14 (App Router) + TypeScript + Tailwind + Supabase
 
 ---
 

@@ -7,7 +7,7 @@ import { SITIO_URL } from "@/lib/sitio";
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
   description:
-    "Qué datos guarda Pensiones Unimagdalena, de quién son, dónde quedan y qué es visible sin haber iniciado sesión.",
+    "Qué datos guarda Nido, de quién son, dónde quedan y qué es visible sin haber iniciado sesión.",
   alternates: { canonical: `${SITIO_URL}/legal/privacidad` },
   /**
    * Sin indexar mientras el documento esté en revisión jurídica: contiene los

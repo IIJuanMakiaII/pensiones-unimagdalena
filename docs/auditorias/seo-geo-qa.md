@@ -1,6 +1,6 @@
 # Auditoría SEO local, GEO y calidad QA
 
-**Pensiones Unimagdalena** · Tarea #8 · 2026-09-17
+**Nido** · Tarea #8 · 2026-09-17
 Responsable: Especialista en QA, SEO (Team Lead)
 
 ---

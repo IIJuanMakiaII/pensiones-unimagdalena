@@ -161,12 +161,12 @@ const HTML_NO_ENCONTRADA = `<!DOCTYPE html>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>Pensión no encontrada · Pensiones Unimagdalena</title>
+    <title>Pensión no encontrada · Nido</title>
     <style>
-      body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center; background: #FAFAF9; color: #292524; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center; background: #FFFFFF; color: #222222; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
       h1 { margin: 0; font-size: 1.5rem; }
-      p { margin: 0; max-width: 34rem; line-height: 1.6; color: #57534E; }
-      a { display: inline-flex; min-height: 3rem; align-items: center; padding: 0 1.5rem; border-radius: 0.75rem; background: #E16118; color: #fff; font-weight: 700; text-decoration: none; }
+      p { margin: 0; max-width: 34rem; line-height: 1.6; color: #717171; }
+      a { display: inline-flex; min-height: 3rem; align-items: center; padding: 0 1.5rem; border-radius: 0.75rem; background: #FF385C; color: #fff; font-weight: 700; text-decoration: none; }
     </style>
   </head>
   <body>

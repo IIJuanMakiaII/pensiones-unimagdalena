@@ -44,7 +44,7 @@ const fuenteCuerpo = Public_Sans({
 const jsonLdSitio = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Pensiones Unimagdalena",
+  name: "Nido",
   description:
     "Marketplace de pensiones y habitaciones verificadas para estudiantes de la Universidad del Magdalena en Santa Marta, Magdalena, Colombia.",
   url: SITIO_URL,
@@ -61,7 +61,7 @@ const jsonLdSitio = {
   },
   publisher: {
     "@type": "Organization",
-    name: "Pensiones Unimagdalena",
+    name: "Nido",
     url: SITIO_URL,
     telephone: `+${WHATSAPP_NUMERO}`,
     areaServed: "Santa Marta, Magdalena, Colombia",
@@ -151,8 +151,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITIO_URL),
   title: {
     default:
-      "Pensiones en Santa Marta cerca de Unimagdalena | Habitaciones para estudiantes",
-    template: "%s · Pensiones Unimagdalena",
+      "Nido | Pensiones y habitaciones cerca de Unimagdalena",
+    template: "%s · Nido",
   },
   description:
     "Marketplace de pensiones y habitaciones para estudiantes de la Universidad del Magdalena en Santa Marta. Habitaciones verificadas a minutos caminando del campus, con precios mensuales claros y reserva directa por WhatsApp.",
@@ -164,11 +164,11 @@ export const metadata: Metadata = {
     "pensión para estudiantes foráneos",
     "cuartos en arriendo Unimagdalena",
   ],
-  authors: [{ name: "Pensiones Unimagdalena" }],
-  applicationName: "Pensiones Unimagdalena",
+  authors: [{ name: "Nido" }],
+  applicationName: "Nido",
   appleWebApp: {
     capable: true,
-    title: "Pensiones UniMag",
+    title: "Nido",
     statusBarStyle: "default",
   },
   icons: {
@@ -198,15 +198,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_CO",
     url: SITIO_URL,
-    siteName: "Pensiones Unimagdalena",
-    title: "Pensiones en Santa Marta cerca de Unimagdalena",
+    siteName: "Nido",
+    title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
     description:
       "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva directa por WhatsApp.",
     images: [{ url: SITIO_IMAGEN, width: 1200, height: 630, alt: "Habitación de pensión estudiantil en Santa Marta" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pensiones en Santa Marta cerca de Unimagdalena",
+    title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
     description:
       "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva directa por WhatsApp.",
     images: [SITIO_IMAGEN],
@@ -216,7 +216,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#325334",
+  themeColor: "#FF385C",
 };
 
 export default function RootLayout({

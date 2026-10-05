@@ -1,6 +1,6 @@
 # INFORME MAESTRO — Auditoría integral del proyecto
 
-**Pensiones Unimagdalena** · Marketplace de pensiones para estudiantes de la Universidad del Magdalena
+**Nido** · Marketplace de pensiones para estudiantes de la Universidad del Magdalena
 Fecha: 2026-09-17 · Coordinación: Especialista en QA, SEO (Team Lead)
 
 Cinco auditorías independientes, 84 hallazgos, 0 líneas de código modificadas.

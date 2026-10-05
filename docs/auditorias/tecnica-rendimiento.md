@@ -1,6 +1,6 @@
 # Auditoría técnica, rendimiento y hoja de ruta — Tarea #7
 
-**Proyecto:** Pensiones Unimagdalena (`pensiones-unimagdalena/`)
+**Proyecto:** Nido (`pensiones-unimagdalena/`)
 **Autor:** Ingeniero de Software (Agente 2)
 **Fecha:** 2026-09-17
 **Alcance:** calidad técnica, rendimiento, mantenibilidad, plan de migración a Next 16, pruebas automatizadas y deuda técnica.

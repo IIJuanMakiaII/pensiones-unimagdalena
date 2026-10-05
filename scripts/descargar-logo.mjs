@@ -6,7 +6,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const url = process.argv[2];
-const destino = process.argv[3] ?? "public/marca/roomieya-logo.jpg";
+const destino = process.argv[3] ?? "nido.png";
 if (!url) {
   console.error("Falta la URL");
   process.exit(1);

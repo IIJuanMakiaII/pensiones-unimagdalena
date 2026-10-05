@@ -150,7 +150,7 @@ falsa.)*
 
 ## G. Uso del nombre de la universidad
 
-**Contexto:** el sitio se llama «Pensiones Unimagdalena», usa «Unimagdalena» y
+**Contexto:** el sitio se llama «Nido», usa «Unimagdalena» y
 «Universidad del Magdalena» en la portada, y el proyecto nace en ese entorno académico.
 
 31. ¿Se puede **usar el nombre de la universidad** en el nombre del sitio y en los

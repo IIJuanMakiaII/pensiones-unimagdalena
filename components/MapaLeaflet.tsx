@@ -23,13 +23,13 @@ interface Props {
   longitud?: number | null;
 }
 
-/** Pin propio con estilos en línea: evita el problema clásico del icono roto de Leaflet. */
-function pin(color: string, texto: string) {
+/** Marcador en píldora con estilos globales para mantener el diseño de Leaflet. */
+function pin(texto: string) {
   return L.divIcon({
-    className: "",
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:${color};color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)">${texto}</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    className: "airbnb-map-icon",
+    html: `<span class="airbnb-map-marker">${texto}</span>`,
+    iconSize: [88, 32],
+    iconAnchor: [44, 16],
   });
 }
 
@@ -58,27 +58,27 @@ export default function MapaLeaflet({ titulo, barrio, minutos, latitud, longitud
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <Marker position={CAMPUS} icon={pin("#325334", "U")}>
+      <Marker position={CAMPUS} icon={pin("Campus")}>
         <Popup>Universidad del Magdalena — campus principal</Popup>
       </Marker>
 
       {tieneCoordenadas ? (
         <>
-          <Marker position={puntoPension} icon={pin("#E16118", "P")}>
+          <Marker position={puntoPension} icon={pin("Pensión")}>
             <Popup>
               {titulo} — {barrio}
             </Popup>
           </Marker>
           <Polyline
             positions={[CAMPUS, puntoPension]}
-            pathOptions={{ color: "#325334", weight: 3, dashArray: "6 8" }}
+            pathOptions={{ color: "#FF385C", weight: 3, dashArray: "6 8" }}
           />
         </>
       ) : (
         <Circle
           center={CAMPUS}
           radius={radioMetros}
-          pathOptions={{ color: "#E16118", weight: 2, fillColor: "#E16118", fillOpacity: 0.12 }}
+          pathOptions={{ color: "#FF385C", weight: 2, fillColor: "#FF385C", fillOpacity: 0.12 }}
         >
           <Popup>
             Zona a ~{minutos} minutos a pie del campus (≈ {radioMetros} m). La dirección

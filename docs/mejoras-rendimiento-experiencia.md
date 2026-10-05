@@ -1,6 +1,6 @@
 # Mejoras de infraestructura, rendimiento y experiencia
 
-**Pensiones Unimagdalena** · implementación del plan de escalado en 3 niveles
+**Nido** · implementación del plan de escalado en 3 niveles
 Fecha: 2026-09-13 · Responsable: Especialista en QA, SEO (Agente 3)
 
 ---

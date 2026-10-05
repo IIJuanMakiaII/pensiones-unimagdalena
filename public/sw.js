@@ -1,4 +1,4 @@
-/* Service Worker — Pensiones Unimagdalena (PWA)
+/* Service Worker — Nido (PWA)
  *
  * IMPORTANTE: este archivo solo debe registrarse en PRODUCCIÓN. En desarrollo
  * los archivos de `/_next/static/` no llevan hash de contenido, así que la

@@ -1,18 +1,6 @@
 import type { Config } from "tailwindcss";
 
-/**
- * Paleta de marca (actualizada por el Agente 3 a partir de la identidad
- * entregada por el cliente: verde bosque #325334 + naranja quemado #E16118).
- *
- * Reglas de uso (verificadas con scripts/verificar-contraste.mjs):
- *  - primary-600 (#325334): botones principales, sellos, superficies oscuras.
- *  - accent-700 (#A4440D): relleno de CTA con texto blanco y textos naranjas
- *    pequeños sobre blanco (AA 4.5:1 en cualquier tamaño).
- *  - accent-500 (#E16118): color de marca para uso decorativo, precios grandes
- *    (>= 20 px negrita), slider y bordes de hover.
- *  - whatsapp-deep (#075E54): relleno de los botones de WhatsApp con texto
- *    blanco (el verde oficial #25D366 con blanco solo alcanza 1.98:1).
- */
+/** Paleta Rausch con alias de compatibilidad para las clases Tailwind existentes. */
 const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",
@@ -22,62 +10,71 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        airbnb: {
+          rausch: "#FF385C",
+          "rausch-hover": "#E00B41",
+          charcoal: "#222222",
+          foggy: "#717171",
+          "light-gray": "#F7F7F7",
+          border: "#DDDDDD",
+          "pink-badge": "#FFF0F3",
+        },
         primary: {
-          50: "#F1F5F1",
-          100: "#DEE8DE",
-          200: "#BFD1C0",
-          300: "#96B397",
-          400: "#6A8D6C",
-          500: "#4A6E4C",
-          600: "#325334",
-          700: "#2A4529",
-          800: "#223A22",
-          900: "#1B2E1B",
+          50: "#FFF0F3",
+          100: "#FFE1E7",
+          200: "#FFC2CF",
+          300: "#FF9AAF",
+          400: "#FF718E",
+          500: "#FF385C",
+          600: "#E00B41",
+          700: "#C30036",
+          800: "#99002A",
+          900: "#70001E",
         },
         secondary: {
-          50: "#F5F7F5",
-          100: "#E6EAE6",
-          200: "#CBD4CC",
-          300: "#A6B3A7",
-          400: "#7B8A7C",
-          500: "#566356",
-          600: "#3E4A3F",
-          700: "#2B3529",
-          800: "#202820",
-          900: "#171D17",
+          50: "#FFFFFF",
+          100: "#F7F7F7",
+          200: "#DDDDDD",
+          300: "#B0B0B0",
+          400: "#949494",
+          500: "#717171",
+          600: "#575757",
+          700: "#484848",
+          800: "#222222",
+          900: "#222222",
         },
         accent: {
-          50: "#FDF4EE",
-          100: "#FBE4D5",
-          200: "#F6C7A8",
-          300: "#F0A277",
-          400: "#EB8248",
-          500: "#E16118",
-          600: "#C45512",
-          700: "#A4440D",
-          800: "#863709",
-          900: "#6B2C07",
+          50: "#FFF0F3",
+          100: "#FFE1E7",
+          200: "#FFC2CF",
+          300: "#FF9AAF",
+          400: "#FF718E",
+          500: "#FF385C",
+          600: "#E00B41",
+          700: "#E00B41",
+          800: "#B0002A",
+          900: "#70001E",
         },
         whatsapp: {
-          DEFAULT: "#25D366",
-          dark: "#128C7E",
-          deep: "#075E54",
+          DEFAULT: "#FF385C",
+          dark: "#E00B41",
+          deep: "#E00B41",
         },
         neutro: {
-          50: "#FAFAF9",
-          100: "#F5F5F4",
-          200: "#E7E5E4",
-          300: "#D6D3D1",
-          400: "#A8A29E",
-          500: "#78716C",
-          600: "#57534E",
-          700: "#44403C",
-          800: "#292524",
-          900: "#1C1917",
+          50: "#FFFFFF",
+          100: "#F7F7F7",
+          200: "#DDDDDD",
+          300: "#B0B0B0",
+          400: "#B0B0B0",
+          500: "#717171",
+          600: "#717171",
+          700: "#484848",
+          800: "#222222",
+          900: "#222222",
         },
         confianza: {
           gold: "#D4A017",
-          success: "#16A34A",
+          success: "#FF385C",
           danger: "#DC2626",
           info: "#0284C7",
         },
@@ -89,8 +86,8 @@ const config: Config = {
         sans: ["var(--fuente-cuerpo)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 1px 3px rgba(28, 25, 23, 0.08)",
-        "card-hover": "0 12px 28px -8px rgba(28, 25, 23, 0.18)",
+        card: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "card-hover": "0 4px 12px rgba(0, 0, 0, 0.08)",
       },
     },
   },

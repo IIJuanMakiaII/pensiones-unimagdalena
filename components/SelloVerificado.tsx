@@ -11,7 +11,7 @@ export default function SelloVerificado({ tamano = "sm", className = "" }: Props
     <span
       title="Verificada por el equipo"
       aria-label="Pensión verificada por el equipo"
-      className={`inline-flex items-center justify-center rounded-full bg-primary-500 shadow-sm ${medida} ${className}`}
+      className={`inline-flex items-center justify-center rounded-full bg-confianza-success shadow-sm ${medida} ${className}`}
     >
       <svg
         viewBox="0 0 24 24"

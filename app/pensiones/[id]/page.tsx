@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       locale: "es_CO",
       url: `${SITIO_URL}/pensiones/${pension.slug}`,
-      siteName: "Pensiones Unimagdalena",
+      siteName: "Nido",
       title: titulo,
       description: descripcion,
       images: [{ url: principal, width: 900, height: 600, alt: pension.titulo }],

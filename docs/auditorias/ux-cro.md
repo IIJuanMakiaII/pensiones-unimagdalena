@@ -1,4 +1,4 @@
-# Auditoría UX/CRO y Accesibilidad — Marketplace Pensiones Unimagdalena
+# Auditoría UX/CRO y Accesibilidad — Marketplace Nido
 
 **Agente 1 · Product Architect & UX/UI (UX/UI Senior)**
 **Modalidad:** solo lectura y verificación. No se modificó código ni se ejecutó `npm run build` / `npm start` (`.next` compartido entre agentes).

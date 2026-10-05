@@ -25,7 +25,7 @@ const RUTAS = [
   ["/registro", "anfitri"],
   ["/publicar", null],
   ["/offline", "Sin conexión"],
-  ["/manifest.webmanifest", "Pensiones UniMag"],
+  ["/manifest.webmanifest", "Nido"],
   ["/sw.js", "CACHE_APP"],
   ["/iconos/icon-192.png", null],
 ];

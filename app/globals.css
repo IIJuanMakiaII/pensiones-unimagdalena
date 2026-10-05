@@ -11,7 +11,7 @@ html {
 }
 
 body {
-  @apply bg-neutro-50 text-neutro-800 font-body antialiased;
+  @apply bg-white text-neutro-800 font-body antialiased;
   text-rendering: optimizeLegibility;
 }
 
@@ -50,11 +50,38 @@ h3 {
   animation: aparecer 0.15s ease-out both;
 }
 
-/* Accesibilidad: foco visible consistente (verde de marca #325334) */
+/* Accesibilidad: foco visible consistente con el carbón de la interfaz. */
 :focus-visible {
-  outline: 3px solid #325334;
+  outline: 3px solid #222222;
   outline-offset: 2px;
   border-radius: 6px;
+}
+
+.airbnb-map-icon {
+  background: transparent;
+  border: 0;
+}
+
+.airbnb-map-marker {
+  display: inline-flex;
+  width: 88px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16);
+  color: #222222;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.airbnb-map-marker:hover {
+  transform: scale(1.1);
+  background: #222222;
+  color: #ffffff;
 }
 
 /* Accesibilidad (WCAG 2.3.3): quien pide menos movimiento en su sistema no debe

@@ -54,10 +54,10 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
       : 0;
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-neutro-200 transition duration-150 hover:shadow-card-hover hover:ring-primary-200">
+    <article className="relative flex flex-col overflow-hidden rounded-2xl border border-neutro-200 bg-white transition duration-150 hover:border-neutro-300 hover:shadow-card">
       {/* El enlace al detalle vive dentro de cada foto del carrusel, no
           envolviendo el carrusel: sus botones ya no quedan dentro de un <a>. */}
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
         <Carrusel
           imagenes={galeriaDe(pension)}
           altBase={pension.titulo}
@@ -74,7 +74,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutro-500">
+        <p className="text-sm font-normal text-neutro-600">
           {sinHabitacionesPublicadas
             ? "Publicación nueva"
             : sinLibres
@@ -83,7 +83,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           · {pension.barrio || "Santa Marta"}
         </p>
 
-        <h3 className="font-display text-lg font-bold leading-snug text-neutro-800">
+        <h3 className="font-display text-base font-semibold leading-snug text-neutro-800">
           <Link href={`/pensiones/${pension.slug}`} className="hover:text-primary-700">
             {pension.titulo}
           </Link>
@@ -98,8 +98,8 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           <span className="text-xs text-neutro-500">Puntaje del equipo</span>
         </div>
 
-        <p className="flex items-center gap-1.5 text-sm text-neutro-600">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4 shrink-0 text-primary-600" aria-hidden="true">
+        <p className="flex items-center gap-1.5 text-sm font-normal text-neutro-600">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4 shrink-0 text-neutro-500" aria-hidden="true">
             <circle cx="10" cy="10" r="7.25" />
             <path d="M10 5.5V10l3 1.75" strokeLinecap="round" />
           </svg>
@@ -115,9 +115,9 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-neutro-500">
                   {destacada ? `Desde · ${etiquetaTipo(destacada.tipo)}` : "Mensual"}
                 </p>
-                <p className="precio font-display text-xl font-extrabold leading-none text-accent-500">
+                <p className="precio font-display text-xl font-semibold leading-none text-neutro-800">
                   {formatearCOP(precioMostrado)}
-                  <span className="text-sm font-bold text-neutro-500"> /mes</span>
+                  <span className="text-sm font-normal text-neutro-800"> /mes</span>
                 </p>
               </>
             )}
@@ -136,7 +136,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: true,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white shadow-sm transition hover:bg-whatsapp-dark"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
           >
             <WhatsAppIcon />
             Reservar por WhatsApp
@@ -160,7 +160,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                   con_habitacion: false,
                 })
               }
-              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white transition hover:bg-whatsapp-dark"
+              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
             >
               <WhatsAppIcon />
               Consultar por WhatsApp
@@ -178,7 +178,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-deep px-4 text-[15px] font-bold text-white shadow-sm transition hover:bg-whatsapp-dark"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp
