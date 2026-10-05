@@ -70,22 +70,21 @@ formalización del contrato de arriendo.
 *Ejemplo sobre un canon pactado de $1.000.000 mensuales: la reserva equivale al 20 %
 (la mitad, tarifa de servicio; la mitad, seña) y el saldo al 80 % restante.*
 
-> **⚠️ Comprobación de aritmética — decisión del fundador pendiente.** Con estos
-> números, el estudiante paga **el canon completo** ($200.000 + $800.000 =
-> $1.000.000) y el propietario **recibe el 90 %** ($100.000 de seña + $800.000 =
-> $900.000). Es decir: la tarifa de servicio se **recauda** del estudiante, pero se
-> **financia** con el primer mes del propietario. Hay que elegir una de las dos vías y
-> dejarla dicha sin ambigüedad, porque el propietario lo va a notar:
+> **Modelo confirmado por el fundador el 2026-10-04.** El estudiante paga **el canon
+> completo** ($200.000 + $800.000 = $1.000.000) y el propietario **recibe el 90 %**
+> ($100.000 de seña + $800.000 = $900.000). Es decir: la tarifa de servicio se
+> **recauda** del estudiante, pero se **financia con el primer mes del propietario**.
 >
-> | Vía | Saldo al llegar | El propietario recibe | El estudiante paga |
-> |---|---|---|---|
-> | **A. La tarifa sale del primer mes** (los números de arriba) | $800.000 | **90 %** del canon | 100 % del canon |
-> | **B. La tarifa se suma al primer mes** | $1.000.000 | **100 %** del canon | 120 % del canon |
+> | Quién | Sobre un canon de $1.000.000 |
+> |---|---|
+> | El estudiante paga | **$1.000.000** — el 100 % del primer mes |
+> | El propietario recibe | **$900.000** — el 90 % |
+> | La plataforma retiene | **$100.000** — su tarifa de servicio, el 10 % |
 >
-> Si la intención es la **A**, hay que **decirle al propietario con estas palabras**
-> que recibirá el 90 % del primer mes, y hacerlo constar en su autorización
-> ([autorizacion-anfitrion.md](autorizacion-anfitrion.md)). Si es la **B**, el saldo
-> de la tabla de arriba está mal.
+> Como el propietario **no recibe el canon completo**, tiene que **saberlo antes de
+> aceptar el mandato**. Así queda redactado en su autorización
+> ([autorizacion-anfitrion.md](autorizacion-anfitrion.md) §2): descubrirlo al cobrar no
+> sería un malentendido, sería una reclamación con razón.
 
 ## 4. Naturaleza del servicio y límites del recaudo
 

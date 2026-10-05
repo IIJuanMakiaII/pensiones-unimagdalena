@@ -36,9 +36,12 @@ le dice antes:
 > seña por la plataforma y $800.000 directamente del estudiante.
 
 Es decir: **el propietario recibe el 90 % del primer mes.** La tarifa de servicio se
-**recauda** del estudiante, pero el 10 % sale del primer mes del propietario.
-**[PENDIENTE: confirmar la vía elegida — ver la comprobación de aritmética en
-[condiciones-de-uso.md](condiciones-de-uso.md) §3.1.]**
+**recauda** del estudiante, pero se financia con el primer mes del propietario. Es el
+modelo confirmado por el fundador el 2026-10-04 (ver
+[condiciones-de-uso.md](condiciones-de-uso.md) §3.1).
+
+**El propietario recibe el 90 % del primer mes, no el canon completo, y tiene que
+enterarse aquí y no el día del cobro.**
 
 **Y que el número ya no se publica.** El propietario debe saber que su teléfono **no
 va a aparecer** en el anuncio, para que no lo espere ni lo reclame después.

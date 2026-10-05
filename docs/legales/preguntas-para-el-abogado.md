@@ -70,9 +70,10 @@ reembolsable** al estudiante y **la seña a favor del propietario** como indemni
     que la tarifa se recauda del estudiante pero se financia con el primer mes del
     propietario. Queremos saber **cómo hay que decirlo** para que no sea engañoso ni
     frente al consumidor ni frente al propietario.
-    *(Nota nuestra: si la intención fuera que el propietario reciba el 100 %, el saldo
-    que paga el estudiante tendría que ser el 90 % del canon y el total el 120 %. Está
-    pendiente de decisión del fundador.)*
+    *(Confirmado por el fundador el 2026-10-04: el estudiante paga el 100 % del canon y
+    el propietario recibe el 90 %. La pregunta no es si el reparto es correcto —es la
+    decisión del negocio—, sino **cómo hay que decirlo** para que no sea engañoso ni
+    frente al consumidor ni frente al propietario.)*
 12. ¿Hace falta que el propietario firme **algo aparte** además de la casilla
     electrónica para el mandato de cobro?
 
