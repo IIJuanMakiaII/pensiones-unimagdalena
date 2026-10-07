@@ -87,16 +87,22 @@ function BloqueVisitante() {
         Registra tu pensión
       </Link>
 
+      {/* A 375 px el ancho útil es de 328 px y el bloque no podía encogerse
+          (`shrink-0`), así que los botones se salían 21 px y «Inicia sesión»
+          quedaba cortado. El arreglo es estructural: en móvil el rótulo y la
+          densidad son más compactos (250 px en total, 78 px de margen), y desde
+          `sm` se recuperan los rótulos completos. */}
       <Link
         href="/registro"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-3 text-sm font-bold text-primary-700 transition hover:bg-primary-50"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-2.5 text-[13px] font-bold text-primary-700 transition hover:bg-primary-50 sm:px-3 sm:text-sm"
       >
-        Hazte una cuenta
+        <span className="sm:hidden">Crear cuenta</span>
+        <span className="hidden sm:inline">Hazte una cuenta</span>
       </Link>
 
       <Link
         href="/login"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-3.5 text-sm font-bold text-white transition hover:bg-primary-700"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-3 text-[13px] font-bold text-white transition hover:bg-primary-700 sm:px-3.5 sm:text-sm"
       >
         Inicia sesión
       </Link>

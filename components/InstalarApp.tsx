@@ -131,7 +131,11 @@ export default function InstalarApp() {
     <aside
       role="region"
       aria-label="Instalar la aplicación"
-      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-neutro-200 bg-white p-4 shadow-2xl sm:inset-x-auto sm:right-4 sm:w-96"
+      /* Flotante en móvil, donde es el patrón correcto y no compite con nada;
+         en escritorio pasa a tener sitio propio al final del flujo, porque
+         flotando se superponía a la cuarta tarjeta de beneficios y le cortaba
+         el texto. La PWA no cambia: es el mismo aviso, con el mismo botón. */
+      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-neutro-200 bg-white p-4 shadow-2xl sm:static sm:inset-x-auto sm:mx-auto sm:my-6 sm:w-full sm:max-w-3xl sm:shadow-md"
     >
       <div className="flex items-start gap-3">
         <Image
@@ -148,7 +152,7 @@ export default function InstalarApp() {
           <p className="mt-1 text-xs leading-relaxed text-neutro-600">
             {mostrarIOS
               ? "Toca el botón Compartir y elige «Agregar a pantalla de inicio» para abrirla como app."
-              : "Accede en un toque desde tu pantalla de inicio, incluso sin datos."}
+              : "Ábrela desde tu pantalla de inicio, como una app."}
           </p>
           {mostrarIOS ? (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-neutro-100 px-2 py-1 text-xs font-semibold text-neutro-700">
