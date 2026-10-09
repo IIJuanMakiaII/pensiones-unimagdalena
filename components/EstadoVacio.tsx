@@ -6,7 +6,7 @@ interface Props {
    * filtros", y quien filtró por género recibe un consejo sobre el precio que no
    * le sirve.
    */
-  bloqueante?: { etiqueta: string; resultadosAlQuitar: number } | null;
+  bloqueante?: { etiqueta: string; frase: string; resultadosAlQuitar: number } | null;
   /** Quitar solo el filtro señalado, sin perder el resto de la búsqueda. */
   onQuitarBloqueante?: () => void;
 }
@@ -29,8 +29,8 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
         </h2>
         {bloqueante ? (
           <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-neutro-600">
-            Con <strong className="font-semibold text-neutro-800">{bloqueante.etiqueta}</strong> no
-            hay coincidencias ahora mismo.{" "}
+            <strong className="font-semibold text-neutro-800">{bloqueante.frase}</strong> no hay
+            coincidencias ahora mismo.{" "}
             {bloqueante.resultadosAlQuitar > 0
               ? `Sin ese filtro verías ${
                   bloqueante.resultadosAlQuitar === 1

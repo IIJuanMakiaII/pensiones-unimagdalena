@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WHATSAPP_NUMERO } from "@/lib/formato";
+import { DEMO_HABILITADA } from "@/lib/sitio";
 import LogoNido from "@/components/LogoNido";
 
 /** Footer de confianza: sellos, contacto WhatsApp y aviso legal (§4.1.5). */
@@ -50,7 +51,7 @@ export default function Footer() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-sm font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-sm font-semibold text-white transition hover:bg-primary-700"
             >
               Escríbenos por WhatsApp
             </a>
@@ -74,9 +75,13 @@ export default function Footer() {
           </Link>
         </nav>
 
+        {/* El aviso de demostración solo tiene sentido mientras la demostración
+            está disponible. Con el catálogo real contradecía lo que el visitante
+            veía. La variable se decide al compilar, así que esto es correcto sin
+            depender de qué haya configurado en el despliegue. */}
         <p className="mt-4 text-xs text-neutro-600">
-          © {new Date().getFullYear()} Nido · Santa Marta,
-          Magdalena, Colombia. Datos de demostración para el proyecto académico.
+          © {new Date().getFullYear()} Nido · Santa Marta, Magdalena, Colombia.
+          {DEMO_HABILITADA && " Datos de demostración para el proyecto académico."}
         </p>
       </div>
     </footer>

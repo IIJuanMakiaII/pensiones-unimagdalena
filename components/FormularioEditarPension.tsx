@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { actualizarPension } from "@/app/actions/pensiones";
-import type { EstadoFormulario } from "@/app/actions/pensiones";
+import type { EstadoFormulario } from "@/lib/pension-escritura";
 import type { PensionConHabitaciones } from "@/types";
 import { formatearCOP } from "@/lib/formato";
 import { IMAGEN_RESPALDO, imagenesDe } from "@/lib/pension";
@@ -29,6 +29,36 @@ const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
 const TITULO_MAX = 120;
 const DESCRIPCION_MAX = 2000;
 
+/** Firma de la acción que guarda el formulario (anfitrión o maestro). */
+export type AccionDeFormulario = (
+  estado: EstadoFormulario,
+  formData: FormData
+) => Promise<EstadoFormulario>;
+
+interface Props {
+  pension: PensionConHabitaciones;
+  /**
+   * Acción que guarda los cambios. Por defecto la del anfitrión, que es el camino
+   * de siempre: el maestro pasa la suya desde `/maestro/[id]/editar`.
+   *
+   * Se recibe como prop en lugar de decidirse dentro a propósito. Este
+   * componente no debe saber si quien edita es el dueño o el maestro —esa
+   * pregunta la resuelve el servidor—, y así los dos formularios comparten un
+   * único editor en vez de mantener dos que se separan con el tiempo.
+   */
+  accion?: AccionDeFormulario;
+  /** A dónde vuelve «Cancelar». Cada panel vuelve al suyo. */
+  volverA?: string;
+  /**
+   * Aviso mostrado cuando el anuncio está retirado (cambia según quién edita).
+   *
+   * Es un nodo y no una cadena porque cada panel lo redacta a su manera —el
+   * anfitrión habla de «volver a publicarlo desde tu panel» y el maestro, del
+   * panel maestro— y las dos versiones llevan énfasis en medio de la frase.
+   */
+  avisoRetirada?: ReactNode;
+}
+
 /**
  * Edición de un anuncio ya publicado.
  *
@@ -37,8 +67,13 @@ const DESCRIPCION_MAX = 2000;
  * habitaciones viajan con su `id`, que es lo que permite actualizarlas en el
  * servidor en lugar de recrearlas y perder su disponibilidad.
  */
-export default function FormularioEditarPension({ pension }: { pension: PensionConHabitaciones }) {
-  const [estado, accion] = useFormState(actualizarPension, ESTADO_INICIAL);
+export default function FormularioEditarPension({
+  pension,
+  accion: accionRecibida,
+  volverA = "/publicar",
+  avisoRetirada,
+}: Props) {
+  const [estado, accion] = useFormState(accionRecibida ?? actualizarPension, ESTADO_INICIAL);
 
   /**
    * Fotos actuales. Se descarta la de respaldo: es un marcador de posición del
@@ -90,8 +125,12 @@ export default function FormularioEditarPension({ pension }: { pension: PensionC
 
       {!pension.activa && (
         <p className="mt-4 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-3 py-2 text-sm font-semibold text-neutro-700">
-          Este anuncio está <strong>retirado</strong>: no aparece en el catálogo. Puedes editarlo
-          igualmente y volver a publicarlo desde tu panel.
+          {avisoRetirada ?? (
+            <>
+              Este anuncio está <strong>retirado</strong>: no aparece en el catálogo. Puedes editarlo
+              igualmente y volver a publicarlo desde tu panel.
+            </>
+          )}
         </p>
       )}
 
@@ -275,7 +314,7 @@ export default function FormularioEditarPension({ pension }: { pension: PensionC
       <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
         <BotonGuardar />
         <Link
-          href="/publicar"
+          href={volverA}
           className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-5 text-[15px] font-bold text-neutro-700 transition hover:bg-neutro-100"
         >
           Cancelar

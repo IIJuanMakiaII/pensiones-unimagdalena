@@ -56,6 +56,11 @@ export const PRECIO_MAX_DEFECTO = 1500000;
  * publicaron habitaciones, su precio declarado. Un anuncio con habitaciones pero
  * todas ocupadas queda fuera: su `precioMensual` es el que conserva la base y no
  * una oferta vigente, así que no debe ensanchar el rango de búsqueda.
+ *
+ * El rango es **exactamente** el del catálogo: no se redondea ni se rellena para
+ * darle recorrido al deslizador. Con un solo precio, `min` y `max` coinciden y el
+ * control no anuncia un abanico que no existe (antes el tope subía un paso
+ * —$600.000 → $650.000— y el sitio sugería oferta donde no la había).
  */
 export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: number; max: number } {
   const precios = pensiones.flatMap((p) => {
@@ -69,7 +74,7 @@ export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: num
 
   const min = Math.min(...precios);
   const max = Math.max(...precios);
-  return { min, max: max === min ? min + PASO_PRECIO : max };
+  return { min, max };
 }
 
 export function coincideRangoDistancia(minutos: number, rango: RangoDistancia): boolean {
@@ -240,7 +245,7 @@ export type ClaveFiltro =
   | "soloVerificadas"
   | "soloFavoritas";
 
-/** Cómo nombrar cada filtro en un mensaje dirigido al estudiante. */
+/** Cómo nombrar cada filtro en un mensaje dirigido al estudiante (etiqueta corta). */
 export const ETIQUETA_FILTRO: Record<ClaveFiltro, string> = {
   precioMaximoCop: "el precio máximo",
   genero: "el género",
@@ -248,6 +253,24 @@ export const ETIQUETA_FILTRO: Record<ClaveFiltro, string> = {
   soloConAlimentacion: "con alimentación",
   soloVerificadas: "solo verificadas",
   soloFavoritas: "mis favoritas",
+};
+
+/**
+ * El mismo filtro, como **frase completa y con su conector**, para el estado vacío.
+ *
+ * El mensaje se componía pegando «Con » + la etiqueta corta, y con la
+ * alimentación salía «Con **con alimentación** no hay coincidencias». Guardar la
+ * frase entera por filtro —conector incluido— elimina esa clase de error: no hay
+ * piezas que encajar, así que no hay forma de que la gramática dependa del filtro
+ * que resulte culpable. Quien escriba el mensaje ya no añade nada por delante.
+ */
+export const FRASE_FILTRO: Record<ClaveFiltro, string> = {
+  precioMaximoCop: "Con ese precio máximo",
+  genero: "Con ese género",
+  rangoDistancia: "Con esa distancia",
+  soloConAlimentacion: "Con la alimentación incluida",
+  soloVerificadas: "Con el filtro de verificadas",
+  soloFavoritas: "Con el filtro de tus favoritas",
 };
 
 /** De mayor a menor capacidad de dejar el catálogo vacío (solo para desempatar). */
@@ -291,7 +314,10 @@ export function quitarFiltro(f: FiltrosUI, clave: ClaveFiltro, precioMaximoReal:
 
 export interface FiltroBloqueante {
   clave: ClaveFiltro;
+  /** Etiqueta corta del filtro (chips, listas). */
   etiqueta: string;
+  /** Frase completa con su conector, para el mensaje del estado vacío. */
+  frase: string;
   /** Cuántos anuncios aparecerían si se quitara solo este filtro. */
   resultadosAlQuitar: number;
 }
@@ -319,7 +345,12 @@ export function filtroQueMasBloquea(
     const sinEse = quitarFiltro(f, clave, precioMaximoReal);
     const resultadosAlQuitar = aplicarFiltros(pensiones, sinEse, precioMaximoReal, favoritos).length;
     if (!mejor || resultadosAlQuitar > mejor.resultadosAlQuitar) {
-      mejor = { clave, etiqueta: ETIQUETA_FILTRO[clave], resultadosAlQuitar };
+      mejor = {
+        clave,
+        etiqueta: ETIQUETA_FILTRO[clave],
+        frase: FRASE_FILTRO[clave],
+        resultadosAlQuitar,
+      };
     }
   }
 

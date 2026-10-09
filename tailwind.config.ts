@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-/** Paleta Rausch con alias de compatibilidad para las clases Tailwind existentes. */
+/** Paleta Rausch de Nido con alias de compatibilidad para las clases existentes. */
 const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",

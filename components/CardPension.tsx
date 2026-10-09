@@ -89,14 +89,18 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           </Link>
         </h3>
 
-        <div className="flex items-center gap-2">
-          <Estrellas calificacion={pension.calificacion} />
-          <span className="text-sm font-semibold text-neutro-700">
-            {pension.calificacion.toFixed(1)}
-          </span>
-          {/* Puntaje interno verificable: no se muestran "reseñas" inventadas. */}
-          <span className="text-xs text-neutro-500">Puntaje del equipo</span>
-        </div>
+        {/* Sin puntaje no se muestra el bloque: ni el «0.0» ni las estrellas. Un
+            cero no es una nota mala, es que no hay nota. */}
+        {pension.calificacion > 0 && (
+          <div className="flex items-center gap-2">
+            <Estrellas calificacion={pension.calificacion} />
+            <span className="text-sm font-semibold text-neutro-700">
+              {pension.calificacion.toFixed(1)}
+            </span>
+            {/* Puntaje interno verificable: no se muestran "reseñas" inventadas. */}
+            <span className="text-xs text-neutro-500">Puntaje del equipo</span>
+          </div>
+        )}
 
         <p className="flex items-center gap-1.5 text-sm font-normal text-neutro-600">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4 shrink-0 text-neutro-500" aria-hidden="true">
@@ -136,7 +140,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: true,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Reservar por WhatsApp
@@ -160,7 +164,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                   con_habitacion: false,
                 })
               }
-              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
             >
               <WhatsAppIcon />
               Consultar por WhatsApp
@@ -178,7 +182,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp

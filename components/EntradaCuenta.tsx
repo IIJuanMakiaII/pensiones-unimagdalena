@@ -27,6 +27,18 @@ import { useEffect, useState } from "react";
 interface Identidad {
   nombre: string;
   correo: string;
+  /**
+   * Si esta cuenta tiene el perfil maestro (tarea #34).
+   *
+   * Se pregunta a la base con `es_maestro()` —la misma función que usa el panel
+   * para autorizar— y **nunca** se lee de `user_metadata`: esos metadatos los
+   * escribe el propio usuario, así que cualquiera podría ponerse
+   * `rol: "maestro"` sin tocar la base y vería el enlace. Ver el enlace no da
+   * acceso (el panel vuelve a preguntar), pero enseñar una puerta que no existe
+   * es engañoso y enseñarla a quien no le corresponde filtra que hay un rol
+   * superior.
+   */
+  esMaestro: boolean;
 }
 
 /**
@@ -50,14 +62,31 @@ export default function EntradaCuenta() {
     void (async () => {
       try {
         const { crearClienteNavegador } = await import("@/utils/supabase/client");
-        const { data } = await crearClienteNavegador().auth.getSession();
+        // Un solo cliente para las dos consultas: la segunda reutiliza la sesión
+        // que la primera acaba de resolver.
+        const supabase = crearClienteNavegador();
+
+        const { data } = await supabase.auth.getSession();
         const usuario = data.session?.user;
         if (cancelado || !usuario) return;
 
         const metadatos = usuario.user_metadata as { nombre?: unknown } | undefined;
         const nombre = typeof metadatos?.nombre === "string" ? metadatos.nombre.trim() : "";
 
-        setIdentidad({ nombre, correo: usuario.email ?? "" });
+        // El perfil maestro se pregunta a la base, no se deduce de los metadatos.
+        // Si la comprobación falla, el resultado es «no es maestro»: el enlace
+        // desaparece, pero nada más se rompe.
+        let esMaestro = false;
+        try {
+          const { data: resultado } = await supabase.rpc("es_maestro");
+          esMaestro = resultado === true;
+        } catch {
+          esMaestro = false;
+        }
+
+        if (cancelado) return;
+
+        setIdentidad({ nombre, correo: usuario.email ?? "", esMaestro });
       } catch {
         // Si la sesión no se puede resolver, la cabecera se queda como visitante.
       }
@@ -110,13 +139,26 @@ function BloqueVisitante() {
   );
 }
 
-/** Anfitrión con sesión: identidad + sus publicaciones + cerrar sesión. */
+/** Cuenta con sesión: identidad + sus publicaciones + cerrar sesión. */
 function BloqueSesion({ identidad }: { identidad: Identidad }) {
   const visible = identidad.nombre || identidad.correo;
   const inicial = visible.charAt(0).toLocaleUpperCase("es") || "·";
 
   return (
     <nav aria-label="Tu cuenta" className="flex min-w-0 items-center gap-1.5 md:gap-2">
+      {/* Acceso al panel maestro (tarea #34). Solo aparece si la base confirmó el
+          perfil: es una entrada más en la misma barra, no un menú aparte, porque
+          en móvil el ancho útil es de 328 px y un desplegable costaría más de lo
+          que aporta. El rótulo se acorta a «Maestro» por el mismo motivo. */}
+      {identidad.esMaestro && (
+        <Link
+          href="/maestro"
+          className="inline-flex h-11 shrink-0 items-center rounded-xl border border-accent-500 px-2.5 text-[13px] font-bold text-accent-700 transition hover:bg-accent-50 sm:px-3 sm:text-sm"
+        >
+          Maestro
+        </Link>
+      )}
+
       {/* Identidad y acceso al panel en un solo control. */}
       <Link
         href="/publicar"

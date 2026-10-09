@@ -7,9 +7,13 @@
  * comprobaba contra la base de datos y la web servida.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
+  FRASE_FILTRO,
   ORDEN_POR_DEFECTO,
   PASO_PRECIO,
   PRECIO_MAX_DEFECTO,
@@ -25,12 +29,14 @@ import {
   parametrosAFiltros,
   pensionCumpleFiltros,
   quitarFiltro,
+  type ClaveFiltro,
   type FiltrosUI,
 } from "@/lib/filtros";
 import type { Habitacion, Pension, PensionConHabitaciones } from "@/types";
 import { comportamientoScroll, prefiereMenosMovimiento } from "@/lib/accesibilidad";
 
 const MAXIMO_REAL = 1000000;
+const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const BASE: Pension = {
   id: "p1",
@@ -216,9 +222,13 @@ describe("limitesDePrecio · rango del deslizador", () => {
     });
   });
 
-  it("si todos los precios coinciden abre un tramo para que el control siga siendo usable", () => {
+  it("con un solo precio el rango no se infla: no se anuncia un tramo que no existe", () => {
+    // Antes este caso sumaba un paso al tope ($400.000 → $450.000) para que el
+    // deslizador tuviera recorrido, y el filtro acababa anunciando un abanico de
+    // precios inexistente («$600.000 a $650.000» con un único precio real de
+    // $600.000). El rango es el del catálogo, sin relleno.
     const catalogo = [pension({ id: "a", habitaciones: [habitacion({ precio_mensual_cop: 400000 })] })];
-    assert.deepEqual(limitesDePrecio(catalogo), { min: 400000, max: 400000 + PASO_PRECIO });
+    assert.deepEqual(limitesDePrecio(catalogo), { min: 400000, max: 400000 });
   });
 });
 
@@ -476,5 +486,70 @@ describe("preferencias del sistema · reducir movimiento (M-24)", () => {
     } finally {
       delete ambito.window;
     }
+  });
+});
+
+describe("estado vacío · la frase de cada filtro (el defecto «Con con alimentación»)", () => {
+  /**
+   * El mensaje se componía pegando «Con » + la etiqueta del filtro, y la de
+   * alimentación ya se llamaba «con alimentación»: salía «Con con alimentación
+   * no hay coincidencias». La frase completa vive ahora en `FRASE_FILTRO`, con su
+   * conector, así que estas pruebas comprueban dos cosas distintas: que cada frase
+   * es gramatical por sí sola y que nadie le vuelve a pegar una preposición delante.
+   */
+
+  it("cada filtro trae una frase completa, sin palabras repetidas ni conector suelto", () => {
+    const claves = Object.keys(FRASE_FILTRO) as ClaveFiltro[];
+    assert.ok(claves.length >= 6, `Se esperaban los seis filtros; hay ${claves.length}`);
+
+    for (const clave of claves) {
+      const frase = FRASE_FILTRO[clave];
+      assert.match(frase, /^[A-ZÁÉÍÓÚÑ]/, `«${frase}» debe empezar la frase en mayúscula`);
+
+      // «Con con» es un caso de duplicación, no de la palabra «con»: se vigila
+      // cualquier palabra repetida seguida, que es exactamente cómo nacía el fallo.
+      const palabras = frase.toLocaleLowerCase("es").split(/\s+/);
+      for (let i = 1; i < palabras.length; i += 1) {
+        assert.notEqual(palabras[i], palabras[i - 1], `«${frase}» repite la palabra «${palabras[i]}»`);
+      }
+
+      assert.ok(
+        !/(de|con|para|en|la|el|los|las)$/i.test(frase),
+        `«${frase}» no puede terminar en conector: la frase se lee seguida de «no hay coincidencias»`
+      );
+    }
+  });
+
+  it("el filtro de alimentación produce el mensaje correcto, no «Con con alimentación»", () => {
+    const catalogo = [
+      pension({ id: "sin-alimentacion", habitaciones: [habitacion({ alimentacion_incluida: false })] }),
+    ];
+    const bloqueante = filtroQueMasBloquea(catalogo, filtros({ soloConAlimentacion: true }), MAXIMO_REAL);
+
+    assert.equal(bloqueante?.clave, "soloConAlimentacion");
+    assert.equal(bloqueante?.frase, "Con la alimentación incluida");
+
+    // El mensaje tal como lo pinta el estado vacío.
+    const mensaje = `${bloqueante?.frase} no hay coincidencias ahora mismo.`;
+    assert.equal(mensaje, "Con la alimentación incluida no hay coincidencias ahora mismo.");
+    assert.doesNotMatch(mensaje, /con\s+con/i);
+  });
+
+  it("el estado vacío escribe la frase del filtro y no le antepone nada", () => {
+    const fuente = readFileSync(join(RAIZ, "components", "EstadoVacio.tsx"), "utf8");
+
+    assert.ok(
+      fuente.includes("bloqueante.frase"),
+      "EstadoVacio debe escribir la frase completa que viene de lib/filtros"
+    );
+    // El pegote, no el literal: cualquier «Con » que vuelva a componerse delante
+    // de la frase reintroduce la duplicación. Se dejan fuera los usos legítimos
+    // como «Quitar ese filtro» o los textos de los botones.
+    assert.ok(
+      !/\bCon\s+"\s*\+/.test(fuente) && !/\bCon\s+\{bloqueante\.frase\}/.test(fuente),
+      "EstadoVacio no puede anteponer «Con » a la frase del filtro"
+    );
+    // Las salidas del estado vacío siguen en pie.
+    assert.ok(fuente.includes('role="status"'), "el estado vacío conserva su role=\"status\"");
   });
 });

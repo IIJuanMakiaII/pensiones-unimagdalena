@@ -11,14 +11,14 @@ export default function Hero() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutro-600 md:text-lg">
           Vive a minutos caminando del campus con precios mensuales claros y
-          reserva directa por WhatsApp. Elegimos y verificamos cada hogar para
+          reserva acompañada por Nido. Elegimos y verificamos cada hogar para
           que tú, estudiante foráneo, y tus padres, decidan con tranquilidad.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#resultados"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
           >
             Ver habitaciones disponibles
           </a>

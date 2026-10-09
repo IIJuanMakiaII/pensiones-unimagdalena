@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Nido — Habitaciones para estudiantes en Santa Marta",
     short_name: "Nido",
     description:
-      "Pensiones y habitaciones verificadas a minutos caminando de la Universidad del Magdalena, Santa Marta. Precios mensuales claros y reserva directa por WhatsApp.",
+      "Pensiones y habitaciones verificadas a minutos caminando de la Universidad del Magdalena, Santa Marta. Precios mensuales claros y reserva acompañada por Nido.",
     lang: "es-CO",
     dir: "ltr",
     start_url: "/?origen=app",

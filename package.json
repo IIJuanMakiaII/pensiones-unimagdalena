@@ -22,6 +22,7 @@
     "verificar:deslizador-navegador": "node scripts/verificar-deslizador-navegador.mjs",
     "verificar:estados": "node scripts/verificar-estados.mjs",
     "verificar:supabase": "node scripts/verificar-supabase.mjs",
+    "verificar:exposicion-propietario": "node scripts/verificar-exposicion-propietario.mjs",
     "verificar:disponibilidad": "node scripts/verificar-disponibilidad.mjs",
     "verificar:storage": "node scripts/verificar-storage.mjs"
   },

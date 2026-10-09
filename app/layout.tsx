@@ -155,7 +155,7 @@ export const metadata: Metadata = {
     template: "%s · Nido",
   },
   description:
-    "Marketplace de pensiones y habitaciones para estudiantes de la Universidad del Magdalena en Santa Marta. Habitaciones verificadas a minutos caminando del campus, con precios mensuales claros y reserva directa por WhatsApp.",
+    "Marketplace de pensiones y habitaciones para estudiantes de la Universidad del Magdalena en Santa Marta. Habitaciones verificadas a minutos caminando del campus, con precios mensuales claros y reserva acompañada por Nido.",
   keywords: [
     "pensiones Santa Marta",
     "habitaciones para estudiantes Unimagdalena",
@@ -201,14 +201,14 @@ export const metadata: Metadata = {
     siteName: "Nido",
     title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
     description:
-      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva directa por WhatsApp.",
+      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva acompañada por Nido.",
     images: [{ url: SITIO_IMAGEN, width: 1200, height: 630, alt: "Habitación de pensión estudiantil en Santa Marta" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
     description:
-      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva directa por WhatsApp.",
+      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva acompañada por Nido.",
     images: [SITIO_IMAGEN],
   },
 };
