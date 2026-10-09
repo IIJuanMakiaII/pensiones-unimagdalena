@@ -86,13 +86,14 @@
 --       update public.pensiones set whatsapp = null where whatsapp is not null;
 --   · **No retira la restricción `pensiones_autorizacion_para_whatsapp`**, que
 --     desde hoy solo vigila una columna que nadie escribe. Sigue la decisión ya
---     escrita en la oleada 9: se deja documentada y se retira el día que se
---     elimine la columna.
+--     escrita en el borrador `oleada-9-descartada.sql`: se deja documentada y se
+--     retira el día que se elimine la columna.
 --   · **No toca el privilegio de INSERT**: la publicación se hace por la función
 --     transaccional y el dato quedaría igual de ilegible; reemitir ese privilegio
 --     por columnas pondría en riesgo el flujo de publicación sin ganar nada.
 --   · **No toca `habitaciones` ni `usuarios`**, ni ninguna política de RLS, ni
---     ningún rol. El perfil maestro sigue pendiente y no se adelanta aquí.
+--     ningún rol. El perfil maestro lo definió —y ya está aplicado— la migración
+--     vigente `supabase/oleada-9.sql`; aquí no se adelanta nada de eso.
 -- ============================================================================
 
 
@@ -224,5 +225,5 @@ grant update (
 --   revoke update on public.pensiones from anon, authenticated;
 --   grant update on public.pensiones to anon, authenticated;
 --   -- y reemitir después las listas de columnas de oleada-6.sql si se quiere
---   -- volver exactamente al estado previo a la oleada 9.
+--   -- volver exactamente al estado previo a este cierre.
 -- ============================================================================
