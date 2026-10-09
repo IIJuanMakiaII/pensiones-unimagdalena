@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PensionConHabitaciones } from "@/types";
 import { catalogoSinBase, fichaDemo } from "@/lib/catalogo-respaldo";
 
@@ -125,14 +126,25 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
  * Existe para que nadie confunda «no se pudo comprobar» con «no existe»: es el
  * error que sube a la frontera (`app/error.tsx`) cuando la base no responde, en
  * lugar de dejar que la ficha se declare inexistente.
+ *
+ * Los dos campos se declaran y se asignan a mano en lugar de usar propiedades de
+ * parámetro (`constructor(readonly causa: string)`), que es la forma corta. No es
+ * preferencia de estilo: este archivo lo importa `pruebas/panel-maestro.prueba.ts`
+ * para conducir las funciones reales, y el ejecutor de pruebas corre Node en modo
+ * «solo eliminar tipos», que **rechaza** esa forma abreviada
+ * (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`). El módulo no llegaba a cargarse y la
+ * prueba entera fallaba al importar. Escrito así, el módulo se puede importar y la
+ * prueba conduce el código de verdad en vez de leerlo.
  */
 export class ErrorDeCatalogo extends Error {
-  constructor(
-    readonly identificador: string,
-    readonly causa: string
-  ) {
+  readonly identificador: string;
+  readonly causa: string;
+
+  constructor(identificador: string, causa: string) {
     super(`No se pudo consultar el anuncio «${identificador}»: ${causa}`);
     this.name = "ErrorDeCatalogo";
+    this.identificador = identificador;
+    this.causa = causa;
   }
 }
 
@@ -143,18 +155,62 @@ export type ResultadoPension =
   | { estado: "error" };
 
 /**
+ * El tramo final de una lectura de anuncio, común a las dos formas de leerlo:
+ * pedir sus habitaciones y unirlas a la fila.
+ *
+ * Se extrajo al añadir la lectura con sesión (tarea #34) para que la unión de
+ * pensión y habitaciones no exista dos veces: es justo la clase de copia que se
+ * queda atrás cuando una de las dos se corrige.
+ */
+async function conHabitaciones(
+  supabase: SupabaseClient,
+  fila: PensionFila
+): Promise<ResultadoPension> {
+  // Las habitaciones se piden por el UUID real: cuando se resuelve por dirección
+  // legible, lo que venía en la URL no es una clave foránea.
+  const { data: habitaciones, error } = await supabase
+    .from("habitaciones")
+    .select(COLUMNAS_HABITACION)
+    .eq("pension_id", fila.id);
+
+  if (error) {
+    console.error("Error consultando las habitaciones:", error.message);
+    return { estado: "error" };
+  }
+
+  return {
+    estado: "ok",
+    pension: filaAPension(fila, filasDeHabitacion(habitaciones).map(filaAHabitacion)),
+  };
+}
+
+/**
  * Resuelve un anuncio por su dirección legible **o** por su UUID.
  *
  * Única fuente de verdad: ningún otro punto del código decide qué columna
  * consultar ni qué hacer con cada resultado.
+ *
+ * Lee con la **clave anónima**, y eso tiene una consecuencia que hay que tener
+ * presente: solo alcanza las publicaciones con `activa = true`. Para gestionar una
+ * retirada existe `resolverPensionConSesion()`.
+ *
+ * `cliente` deja inyectar un lector, y **solo** para las pruebas de la tarea #34:
+ * es la costura que permite conducir esta función real contra un lector que se
+ * comporta como la clave anónima (cero filas para una retirada) y comprobar que el
+ * resultado es «no existe» —que es lo que convierte el botón «Editar anuncio» en
+ * un 404—. Ningún camino de la aplicación pasa ese argumento. Su gemela
+ * `resolverPensionConSesion()` tiene la misma costura por el mismo motivo.
  */
-export async function resolverPension(identificador: string): Promise<ResultadoPension> {
+export async function resolverPension(
+  identificador: string,
+  cliente?: SupabaseClient
+): Promise<ResultadoPension> {
   const valor = normalizarIdentificador(identificador);
 
   // Ni UUID ni dirección válida: no puede existir, y no gasta una consulta.
   if (!identificadorPlausible(valor)) return { estado: "no-existe" };
 
-  if (!esSupabaseConfigurado()) {
+  if (!cliente && !esSupabaseConfigurado()) {
     const demo = fichaDemo(valor, DEMO_HABILITADA);
     return demo ? { estado: "ok", pension: demo } : { estado: "no-existe" };
   }
@@ -162,7 +218,7 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
   const columna = columnaDeIdentificador(valor);
 
   try {
-    const supabase = crearClientePublico();
+    const supabase = cliente ?? crearClientePublico();
     const { data: pension, error } = await supabase
       .from("pensiones")
       .select(COLUMNAS_PENSION)
@@ -183,26 +239,64 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
       return { estado: "no-existe" };
     }
 
-    const fila = filaDePension(pension);
+    return await conHabitaciones(supabase, filaDePension(pension));
+  } catch (error) {
+    console.error("Fallo de conexión consultando el anuncio:", error);
+    return { estado: "error" };
+  }
+}
 
-    // Las habitaciones se piden por el UUID real: cuando se resuelve por
-    // dirección legible, lo que venía en la URL no es una clave foránea.
-    const { data: habitaciones, error: errorHabitaciones } = await supabase
-      .from("habitaciones")
-      .select(COLUMNAS_HABITACION)
-      .eq("pension_id", fila.id);
+/**
+ * Resuelve un anuncio **con la sesión de quien pregunta** (tarea #34).
+ *
+ * Existe porque la lectura pública no puede ver una publicación retirada —la
+ * clave anónima solo alcanza las activas—, y hay dos personas que sí deben poder
+ * abrirla: su dueño, para corregirla antes de volver a publicarla, y el maestro,
+ * para administrarla. Quien decide si esa lectura es legítima es la **RLS**, no
+ * esta función: aquí no se filtra nada por `anfitrion_id` ni por rol, y devolver
+ * una fila que la base no autorizó es imposible.
+ *
+ * Diferencias deliberadas con `resolverPension()`, que no es un descuido:
+ *
+ *  1. **No sirve la semilla de demostración.** Un panel privado no tiene nada que
+ *     hacer con un anuncio de ejemplo: no se puede editar, ni retirar, ni borrar.
+ *     Si la base dice que no está, no está.
+ *  2. **La demo encendida no cambia nada aquí.** La demostración existe para
+ *     enseñar el catálogo, no para inventar publicaciones gestionables.
+ *  3. Deja inyectar el cliente, y **solo** para las pruebas: es lo que permite
+ *     conducir esta función real contra una base falsa y comprobar que una
+ *     retirada se resuelve (la pública no puede). Ningún camino de la aplicación
+ *     pasa ese argumento.
+ */
+export async function resolverPensionConSesion(
+  identificador: string,
+  cliente?: SupabaseClient
+): Promise<ResultadoPension> {
+  const valor = normalizarIdentificador(identificador);
 
-    if (errorHabitaciones) {
-      console.error("Error consultando las habitaciones:", errorHabitaciones.message);
+  if (!identificadorPlausible(valor)) return { estado: "no-existe" };
+  if (!cliente && !esSupabaseConfigurado()) return { estado: "no-existe" };
+
+  const columna = columnaDeIdentificador(valor);
+
+  try {
+    const supabase = cliente ?? (await crearClienteServidor());
+    const { data: pension, error } = await supabase
+      .from("pensiones")
+      .select(COLUMNAS_PENSION)
+      .eq(columna, valor)
+      .maybeSingle();
+
+    if (error) {
+      console.error(`Error buscando el anuncio con sesión por ${columna}:`, error.message);
       return { estado: "error" };
     }
 
-    return {
-      estado: "ok",
-      pension: filaAPension(fila, filasDeHabitacion(habitaciones).map(filaAHabitacion)),
-    };
+    if (!pension) return { estado: "no-existe" };
+
+    return await conHabitaciones(supabase, filaDePension(pension));
   } catch (error) {
-    console.error("Fallo de conexión consultando el anuncio:", error);
+    console.error("Fallo de conexión consultando el anuncio con sesión:", error);
     return { estado: "error" };
   }
 }
@@ -217,6 +311,24 @@ export async function resolverPension(identificador: string): Promise<ResultadoP
  */
 export async function obtenerPensionPorId(identificador: string): Promise<PensionConHabitaciones | null> {
   const resultado = await resolverPension(identificador);
+
+  if (resultado.estado === "ok") return resultado.pension;
+  if (resultado.estado === "no-existe") return null;
+
+  throw new ErrorDeCatalogo(identificador, "la consulta no se pudo completar");
+}
+
+/**
+ * Igual que la anterior, pero **con la sesión**: incluye las publicaciones
+ * retiradas que esa sesión tenga derecho a ver (su dueño o el maestro).
+ *
+ * Es el cargador que necesitan los paneles. La ficha pública sigue usando la
+ * lectura anónima a propósito: allí una retirada **debe** responder 404.
+ */
+export async function obtenerPensionPorIdConSesion(
+  identificador: string
+): Promise<PensionConHabitaciones | null> {
+  const resultado = await resolverPensionConSesion(identificador);
 
   if (resultado.estado === "ok") return resultado.pension;
   if (resultado.estado === "no-existe") return null;
@@ -290,6 +402,50 @@ export async function obtenerPensionesDelAnfitrion(
     return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
   } catch (error) {
     console.error("Fallo consultando publicaciones del anfitrión:", error);
+    return [];
+  }
+}
+
+/**
+ * **Todas** las publicaciones, retiradas incluidas (panel del maestro, tarea #34).
+ *
+ * No filtra por `anfitrion_id` **a propósito**: quien acota el resultado es la
+ * RLS. La política `pensiones: el maestro lee todas` entrega el catálogo completo
+ * —activas y retiradas— a una sesión con el perfil maestro, y solo lo suyo a
+ * cualquier otra. Repetir aquí el filtro del anfitrión sería copiar una regla que
+ * ya vive en la base; y no filtrar aquí no abre nada, porque la consulta no puede
+ * devolver una fila que la RLS no haya autorizado.
+ *
+ * Es exactamente lo contrario de la lectura pública (`crearClientePublico()`,
+ * solo `activa = true`): aquella alimenta un catálogo indexable y esta, un panel
+ * privado. Por eso usa el cliente con cookies.
+ */
+export async function obtenerTodasLasPensiones(): Promise<PensionConHabitaciones[]> {
+  if (!esSupabaseConfigurado()) return [];
+
+  try {
+    const supabase = await crearClienteServidor();
+    const { data: pensiones, error } = await supabase
+      .from("pensiones")
+      .select(COLUMNAS_PENSION)
+      // Las retiradas van primero: son las que exigen una decisión (revisar,
+      // corregir o volver a publicar) y en una lista larga quedarían enterradas.
+      .order("activa", { ascending: true })
+      .order("creada_en", { ascending: false });
+
+    if (error || !pensiones) {
+      console.error("Error consultando todas las publicaciones:", error?.message);
+      return [];
+    }
+
+    const ids = filasDePension(pensiones).map((p) => p.id);
+    const { data: habitaciones } = ids.length
+      ? await supabase.from("habitaciones").select(COLUMNAS_HABITACION).in("pension_id", ids)
+      : { data: [] };
+
+    return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
+  } catch (error) {
+    console.error("Fallo consultando todas las publicaciones:", error);
     return [];
   }
 }

@@ -3,8 +3,17 @@ interface Props {
   tamano?: "sm" | "md";
 }
 
-/** Estrellas en el naranja de marca (accent-500) con relleno proporcional a la calificación. */
+/**
+ * Estrellas en el naranja de marca (accent-500) con relleno proporcional a la calificación.
+ *
+ * **Sin calificación no se dibuja nada.** Un `0` no es «cero estrellas»: es que no
+ * hay puntaje, y pintarlo daba «0.0» junto a cinco estrellas, que se lee como una
+ * nota mala o como un dato que no cargó. La guarda vive aquí, en el componente, y
+ * no solo en quien lo llama, para que ningún sitio futuro pueda volver a mostrarlo.
+ */
 export default function Estrellas({ calificacion, tamano = "sm" }: Props) {
+  if (!Number.isFinite(calificacion) || calificacion <= 0) return null;
+
   const porcentaje = Math.max(0, Math.min(5, calificacion)) / 5;
   const medida = tamano === "md" ? "h-5 w-5" : "h-4 w-4";
   return (

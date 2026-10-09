@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { crearPension } from "@/app/actions/pensiones";
-import type { EstadoFormulario } from "@/app/actions/pensiones";
+import type { EstadoFormulario } from "@/lib/pension-escritura";
 import { formatearCOP } from "@/lib/formato";
 import SubidorFotos from "@/components/SubidorFotos";
 import EditorHabitaciones, {

@@ -166,7 +166,8 @@ const HTML_NO_ENCONTRADA = `<!DOCTYPE html>
       body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center; background: #FFFFFF; color: #222222; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
       h1 { margin: 0; font-size: 1.5rem; }
       p { margin: 0; max-width: 34rem; line-height: 1.6; color: #717171; }
-      a { display: inline-flex; min-height: 3rem; align-items: center; padding: 0 1.5rem; border-radius: 0.75rem; background: #FF385C; color: #fff; font-weight: 700; text-decoration: none; }
+      a { display: inline-flex; min-height: 3rem; align-items: center; padding: 0 1.5rem; border-radius: 0.75rem; background: #E00B41; color: #fff; font-weight: 700; text-decoration: none; }
+      a:hover { background: #C30036; }
     </style>
   </head>
   <body>
@@ -178,5 +179,11 @@ const HTML_NO_ENCONTRADA = `<!DOCTYPE html>
 </html>`;
 
 export const config = {
-  matcher: ["/publicar/:path*", "/login", "/pensiones/:path*"],
+  // `/maestro` entra aquí por la misma razón que `/publicar`: es una ruta con
+  // sesión y el middleware es quien refresca la cookie antes de que la página la
+  // lea. Sin esta entrada, el panel maestro se renderizaría con una sesión vieja
+  // (o directamente sin sesión) y la comprobación del servidor fallaría por un
+  // token caducado, no por permisos. La autorización no vive aquí: vive en la
+  // página, que vuelve a preguntar por el perfil maestro a la base.
+  matcher: ["/publicar/:path*", "/maestro/:path*", "/maestro", "/login", "/pensiones/:path*"],
 };

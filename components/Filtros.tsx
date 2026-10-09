@@ -121,11 +121,22 @@ export default function Filtros({
             </output>
           </div>
           {/* El rango del catálogo y el paso, que antes no se veían en ninguna parte:
-              sin ellos se arrastra a ciegas sin saber cuánto queda por explorar. */}
+              sin ellos se arrastra a ciegas sin saber cuánto queda por explorar.
+              Con un solo precio no hay rango que anunciar: se dice el precio que hay,
+              en lugar de un abanico con un tope que no corresponde a nada. */}
           <p id="ayuda-precio" className="mt-1 text-xs text-neutro-600">
-            Del catálogo: <span className="precio">{formatearCOP(limitesPrecio.min)}</span> a{" "}
-            <span className="precio">{formatearCOP(limitesPrecio.max)}</span> · cada paso son{" "}
-            <span className="precio">{formatearCOP(PASO_PRECIO)}</span>
+            {limitesPrecio.min === limitesPrecio.max ? (
+              <>
+                Todas las habitaciones disponibles están en{" "}
+                <span className="precio">{formatearCOP(limitesPrecio.max)}</span>
+              </>
+            ) : (
+              <>
+                Del catálogo: <span className="precio">{formatearCOP(limitesPrecio.min)}</span> a{" "}
+                <span className="precio">{formatearCOP(limitesPrecio.max)}</span> · cada paso son{" "}
+                <span className="precio">{formatearCOP(PASO_PRECIO)}</span>
+              </>
+            )}
           </p>
         </div>
 
@@ -221,7 +232,7 @@ export default function Filtros({
           <button
             type="button"
             onClick={cerrar}
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover lg:hidden"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700 lg:hidden"
           >
             {resultados === 1 ? "Ver 1 pensión" : `Ver ${resultados} pensiones`}
           </button>

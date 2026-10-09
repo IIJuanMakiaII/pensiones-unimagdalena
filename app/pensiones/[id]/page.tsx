@@ -71,7 +71,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!pension) notFound();
 
   const titulo = `${pension.titulo} — pensión en ${pension.barrio}, Santa Marta`;
-  const descripcion = `${pension.titulo} en ${pension.barrio}, Santa Marta. A ${pension.distancia_a_pie_minutos} minutos caminando de Unimagdalena. Puntaje del equipo: ${pension.calificacion.toFixed(1)}/5. Reserva directa por WhatsApp.`;
+  // El puntaje solo se anuncia si existe, y la reserva la cierra Nido (no el
+  // anfitrión), así que no se describe como «directa».
+  const puntaje =
+    pension.calificacion > 0 ? ` Puntaje del equipo: ${pension.calificacion.toFixed(1)}/5.` : "";
+  const descripcion = `${pension.titulo} en ${pension.barrio}, Santa Marta. A ${pension.distancia_a_pie_minutos} minutos caminando de Unimagdalena.${puntaje} Reserva acompañada por Nido.`;
   const principal = imagenPrincipal(pension);
 
   return {
@@ -217,13 +221,17 @@ export default async function DetallePensionPage({ params }: Props) {
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="flex items-center gap-2">
-              <Estrellas calificacion={pension.calificacion} tamano="md" />
-              <span className="text-sm font-semibold text-neutro-700">
-                {pension.calificacion.toFixed(1)}
+            {/* Sin puntaje no hay bloque que mostrar: el «0.0» con cinco estrellas
+                parecía una nota mala en vez de un dato que no existe. */}
+            {pension.calificacion > 0 && (
+              <span className="flex items-center gap-2">
+                <Estrellas calificacion={pension.calificacion} tamano="md" />
+                <span className="text-sm font-semibold text-neutro-700">
+                  {pension.calificacion.toFixed(1)}
+                </span>
+                <span className="text-xs text-neutro-500">Puntaje del equipo</span>
               </span>
-              <span className="text-xs text-neutro-500">Puntaje del equipo</span>
-            </span>
+            )}
             <span className="flex items-center gap-1.5 text-sm text-neutro-600">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4 text-primary-600" aria-hidden="true">
                 <circle cx="10" cy="10" r="7.25" />

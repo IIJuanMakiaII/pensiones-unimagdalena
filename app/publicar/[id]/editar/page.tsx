@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
-import { obtenerPensionPorId } from "@/lib/datos";
+import { obtenerPensionPorIdConSesion } from "@/lib/datos";
 import FormularioEditarPension from "@/components/FormularioEditarPension";
 import Footer from "@/components/Footer";
 
@@ -26,9 +26,25 @@ interface Props {
  *
  * Doble protección antes de renderizar: sin sesión se va al login (el middleware
  * ya cubre `/publicar/*`), y con sesión solo se edita **lo propio**. Un id ajeno
- * o inventado responde 404 sin revelar si existe: la RLS de `pensiones` solo
- * entrega las activas al público y las retiradas a su dueño, y aquí se exige
- * además que el dueño sea quien está editando.
+ * o inventado responde 404 sin revelar si existe: la RLS de `pensiones` no
+ * entrega a esta sesión nada que no sea suyo, y aquí se exige además que el
+ * dueño sea quien está editando.
+ *
+ * LA LECTURA TIENE QUE LLEVAR LA SESIÓN (tarea #34)
+ * ------------------------------------------------
+ * Aquí se leía con `obtenerPensionPorId`, que resuelve con la clave anónima y por
+ * tanto solo alcanza las publicaciones con `activa = true`. El resultado era un
+ * defecto real: **este botón daba 404 en un anuncio retirado**, incluso para su
+ * propio dueño, aunque el panel lo ofrecía a propósito
+ * (`components/PanelPublicacion.tsx`: «una publicación retirada también necesita
+ * corregirse antes de volver a publicarla»). Y el middleware ya declaraba esa
+ * misma intención al dejar pasar la ficha retirada a quien tiene sesión.
+ *
+ * Se usa `obtenerPensionPorIdConSesion`, que lee con la cookie de la petición. El
+ * control de acceso no se relaja: no hay ningún `anfitrion_id` menos, sigue el de
+ * la línea siguiente, y la RLS decide qué filas llegan a esta sesión. Un anuncio
+ * ajeno sigue respondiendo 404 —lo confirma la prueba de la suite del maestro— y
+ * lo único que cambia es que el dueño ya puede abrir el suyo cuando está retirado.
  */
 export default async function EditarPensionPage({ params }: Props) {
   const { id } = await params;
@@ -53,7 +69,7 @@ export default async function EditarPensionPage({ params }: Props) {
 
   if (!user) redirect(`/login?destino=/publicar/${encodeURIComponent(id)}/editar`);
 
-  const pension = await obtenerPensionPorId(id);
+  const pension = await obtenerPensionPorIdConSesion(id);
 
   if (!pension || pension.anfitrion_id !== user.id) notFound();
 

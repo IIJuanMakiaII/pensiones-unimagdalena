@@ -120,7 +120,7 @@ export default function DetallePension({ pension }: Props) {
                   });
                 }}
                 aria-label={`Reservar ${etiquetaTipo(h.tipo)} ${etiquetaGenero(h.genero)} por WhatsApp`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-sm font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-sm font-semibold text-white transition hover:bg-primary-700"
               >
                 <WhatsAppIcon className="h-4 w-4" />
                 Reservar
@@ -161,7 +161,7 @@ export default function DetallePension({ pension }: Props) {
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+            className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp
@@ -216,7 +216,7 @@ export default function DetallePension({ pension }: Props) {
                   con_habitacion: true,
                 })
               }
-              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch px-6 text-[15px] font-semibold text-white transition hover:bg-airbnb-rausch-hover"
+              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
             >
               <WhatsAppIcon />
               Reservar

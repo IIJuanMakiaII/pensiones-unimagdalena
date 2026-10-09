@@ -7,7 +7,7 @@ import {
   cambiarDisponibilidadHabitacion,
   cambiarEstadoPublicacion,
 } from "@/app/actions/pensiones";
-import type { EstadoFormulario } from "@/app/actions/pensiones";
+import type { EstadoFormulario } from "@/lib/pension-escritura";
 import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
 
 /**

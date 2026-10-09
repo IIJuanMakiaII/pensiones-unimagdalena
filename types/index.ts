@@ -10,7 +10,15 @@ export type TipoHabitacion = "individual" | "compartida" | "matrimonial";
 
 export type GeneroHabitacion = "mixto" | "femenino" | "masculino";
 
-export type RolUsuario = "estudiante" | "anfitrion";
+/**
+ * Perfiles de la plataforma.
+ *
+ * `maestro` es el perfil de administración (tarea #34): ve todas las
+ * publicaciones —retiradas incluidas—, cambia su disponibilidad, edita su
+ * contenido y las borra. Lo concede la base por SQL (`update public.usuarios set
+ * rol = 'maestro'`); el registro público solo admite `estudiante` y `anfitrion`.
+ */
+export type RolUsuario = "estudiante" | "anfitrion" | "maestro";
 
 /** Usuario de la plataforma. `id` es el mismo de `auth.users`. */
 export interface Usuario {

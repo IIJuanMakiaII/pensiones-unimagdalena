@@ -136,10 +136,15 @@ describe("invalidación del catálogo (M-22)", () => {
   });
 
   it("la ruta nombrada alcanza la caché que Next guardó", () => {
-    if (!existsSync(join(RAIZ, ".next", "server", "app"))) {
-      // Sin compilación no hay nada que comprobar. La comprobación de arriba ya
-      // cubre el olvido, así que esto no deja pasar un fallo: solo se salta lo
-      // que no existe.
+    // La señal de que hay compilación es `BUILD_ID`, no que la carpeta exista: un
+    // servidor de desarrollo o una compilación interrumpida dejan `.next` en pie y
+    // vacía, y entonces esta prueba acusaba de que faltaban entradas del catálogo
+    // cuando lo que faltaba era una compilación. Se salta y lo dice en voz alta.
+    if (!existsSync(join(RAIZ, ".next", "BUILD_ID"))) {
+      console.log(
+        "    (no hay compilación en .next: se omite la comprobación del artefacto; " +
+          "con `npm run build` vuelve a ejecutarse)"
+      );
       return;
     }
 
