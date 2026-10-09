@@ -19,6 +19,33 @@ const MANIFIESTO = ".next/prerender-manifest.json";
 
 /** @typedef {"siempre" | "con-catalogo" | "sin-catalogo"} Aplica */
 
+/**
+ * Marcador de que hay una tarjeta **dibujada** en el HTML servido.
+ *
+ * Se comprueba sobre el marcado y no sobre cualquier cadena del archivo: el
+ * payload de React viaja dentro del mismo HTML, así que un texto presente ahí
+ * puede no estar dibujado en ninguna tarjeta. Antes se buscaba el nombre de un
+ * anuncio de la demo («Pensión Costa Verde»), que pasaba la comprobación desde
+ * el payload aunque ninguna tarjeta real lo mostrara —y en cuanto el catálogo
+ * pasó a la base real, esa cadena dejó de significar nada—. Un ancla a una
+ * ficha, con las comillas sin escapar, solo la produce el marcado.
+ */
+const MARCA_TARJETA = 'href="/pensiones/';
+
+/**
+ * El puntaje honesto es una regla **condicional** (tareas #13 y #48), y esa es
+ * su naturaleza: si no hay nota no se dibuja ni la cifra ni la etiqueta, porque
+ * un «0.0» junto a cinco estrellas se lee como una nota mala o como un dato que
+ * no cargó. Exigir la etiqueta siempre medía los datos y no el producto, y por
+ * eso daba dos fallos con un catálogo real sin puntajes.
+ *
+ * Lo que sí es incondicional: un puntaje dibujado nunca aparece sin su etiqueta,
+ * y nunca se dibuja un «0.0».
+ */
+const MARCA_ESTRELLAS = 'aria-label="Calificación ';
+const ETIQUETA_PUNTAJE = "Puntaje del equipo";
+const CERO_DIBUJADO = />0\.0</;
+
 /** [etiqueta, texto, esperado, aplica] */
 const INVARIANTES = [
   ["JSON-LD WebSite", "WebSite", "presente", "siempre"],
@@ -30,8 +57,7 @@ const INVARIANTES = [
   ["Enlace a publicación de anfitriones", "Publicar mi pensión", "presente", "siempre"],
   ["Sellos de confianza", "Soporte para estudiantes y padres", "presente", "siempre"],
   ["Filtro de favoritos", "Mis favoritas", "presente", "siempre"],
-  ["Catálogo renderizado en el servidor", "Pensión Costa Verde", "presente", "con-catalogo"],
-  ["Puntaje honesto en las tarjetas", "Puntaje del equipo", "presente", "con-catalogo"],
+  ["Catálogo renderizado en el servidor", MARCA_TARJETA, "presente", "con-catalogo"],
   ["Estado vacío explicado al usuario", "Todavía no hay pensiones publicadas", "presente", "sin-catalogo"],
 ];
 
@@ -41,7 +67,6 @@ const FICHA = [
   ["AggregateRating (debe estar ausente)", "aggregateRating", "ausente"],
   ["reviewCount (debe estar ausente)", "reviewCount", "ausente"],
   ["Contador de reseñas inventado", "reseñas", "ausente"],
-  ["Puntaje honesto del puntaje", "Puntaje del equipo", "presente"],
   ["Galería del carrusel", "Galería de", "presente"],
   ["Favoritos en la ficha", "Guardar", "presente"],
   ["Marco adaptativo de foto (vertical se ve completa)", "bg-neutro-100", "presente"],
@@ -56,6 +81,29 @@ const revisar = (etiqueta, texto, esperado, html) => {
   if (!correcto) fallos++;
   console.log(
     `  ${correcto ? "OK   " : "FALLA"} ${etiqueta.padEnd(48)} [${esta ? "presente" : "ausente"}, se esperaba ${esperado}]`
+  );
+};
+
+/**
+ * El puntaje honesto, comprobado como condición y no como presencia fija.
+ *
+ * Falla en dos casos, que son los dos fallos reales que puede tener: que se
+ * dibuje un «0.0» (una nota que no existe), o que se dibuje un puntaje sin la
+ * etiqueta que dice de quién es. Un catálogo sin notas pasa, porque no dibujar
+ * nada es la respuesta correcta cuando no hay nada que decir.
+ */
+const revisarPuntajeHonesto = (etiqueta, html) => {
+  const hayPuntaje = html.includes(MARCA_ESTRELLAS);
+  const hayEtiqueta = html.includes(ETIQUETA_PUNTAJE);
+  const cero = CERO_DIBUJADO.test(html);
+  const correcto = !cero && (!hayPuntaje || hayEtiqueta);
+  if (!correcto) fallos++;
+  console.log(
+    `  ${correcto ? "OK   " : "FALLA"} ${etiqueta.padEnd(48)} [${
+      hayPuntaje ? "con puntaje" : "sin puntaje"
+    }, etiqueta ${hayEtiqueta ? "presente" : "ausente"}, «0.0» ${
+      cero ? "presente" : "ausente"
+    }]`
   );
 };
 
@@ -103,6 +151,7 @@ for (const [etiqueta, texto, esperado, aplica] of INVARIANTES) {
     revisar(etiqueta, texto, esperado, inicio);
   }
 }
+revisarPuntajeHonesto("Puntaje honesto en las tarjetas", inicio);
 
 // --- Primera ficha ---
 if (hayCatalogo) {
@@ -113,6 +162,7 @@ if (hayCatalogo) {
   for (const [etiqueta, texto, esperado] of FICHA) {
     revisar(etiqueta, texto, esperado, ficha);
   }
+  revisarPuntajeHonesto("Puntaje honesto del puntaje", ficha);
 
   /**
    * El `priceRange` de los datos estructurados debe corresponder a algo que se
