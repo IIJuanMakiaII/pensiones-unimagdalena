@@ -13,8 +13,8 @@ export default function Footer() {
             <LogoNido className="h-8" />
             <p className="mt-2 text-sm leading-relaxed text-neutro-600">
               Marketplace de pensiones y habitaciones para estudiantes de la
-              Universidad del Magdalena, en Santa Marta. Verificamos cada
-              propiedad antes de publicarla.
+              Universidad del Magdalena, en Santa Marta. Visitamos e inspeccionamos
+              en sitio los anuncios con nuestro sello antes de publicarlos.
             </p>
           </div>
 
@@ -24,7 +24,7 @@ export default function Footer() {
             </h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <Dot /> Verificación presencial de cada pensión
+                <Dot /> Verificación presencial de los anuncios con sello
               </li>
               <li className="flex items-center gap-2">
                 <Dot /> Cerramos contigo la reserva del primer mes

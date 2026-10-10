@@ -6,9 +6,8 @@
 > cobro definido por el fundador el **2026-10-04**. Debe ser revisado por un abogado
 > antes de publicarse. Ver [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md).
 >
-> **Datos del responsable: PENDIENTES.** Razón social, NIT, dirección y correo de
-> contacto no están definidos. No se inventan: se rellenan cuando el fundador
-> constituya o defina la figura legal.
+> **Datos del responsable: definidos.** El operador, su número de identificación, el
+> domicilio y el correo de contacto se declaran en la sección 1.
 >
 > **Qué cambió en esta versión:** la plataforma **ya no publica el número de WhatsApp
 > del anfitrión** y pasa a **gestionar la reserva del primer mes**, con cobro en línea
@@ -20,9 +19,11 @@
 
 ## 1. Quién responde por tus datos
 
-**[PENDIENTE: nombre o razón social]**, con domicilio en **[PENDIENTE]** y correo para
-asuntos de datos personales **[PENDIENTE]**, es el responsable del tratamiento de los
-datos que se recogen en este sitio.
+**Juan Sebastián Otero Cerchar**, persona natural que actúa bajo la denominación
+comercial **«Nido»**, identificado con **C.C. 1004364753**, con domicilio en **Santa
+Marta / Ciénaga, Magdalena (Colombia)** y correo para asuntos de datos personales
+**oterojuan15@gmail.com**, es el responsable del tratamiento de los datos que se recogen
+en este sitio.
 
 El sitio es un servicio de la Universidad del Magdalena y su área de influencia en
 Santa Marta, Magdalena (Colombia).
@@ -62,16 +63,17 @@ construido. Se declaran aquí para que el aviso esté completo el día que se ac
 | Habitación reservada, fechas y valores | Quien reserva | Sostener la reserva y el reparto del dinero | Base de datos |
 | Resultado del pago: referencia, monto, estado y fecha | Quien reserva | Acreditar el pago y resolver reclamaciones | Base de datos y pasarela de pagos |
 | **Datos de tarjeta o cuenta de pago** | Quien reserva | Procesar el cobro | **Solo en la pasarela de pagos.** Ver 2.3 |
-| Datos de cobro del propietario (a dónde se le gira la seña) | Propietario | Entregarle la seña que se cobró en su nombre | **[PENDIENTE: definir el mecanismo de giro y los datos necesarios]** |
+| Datos de cobro del propietario (a dónde se le gira el anticipo) | Propietario | Entregarle el anticipo que se cobró en su nombre | Los recibe la plataforma del propietario por canal privado |
 
-**[PENDIENTE: la lista exacta de campos del estudiante y el proveedor de pagos se
-cierran cuando se construya la pantalla de pago. Mientras no esté cerrada, este aviso
-no se publica.]**
+**[PENDIENTE: la lista exacta de campos del estudiante se cierra cuando se construya la
+pantalla de pago, y el proveedor de pagos cuando se contrate —a la fecha **no hay
+ninguno contratado**. Mientras no esté cerrada, este aviso no se publica.]**
 
 ### 2.3 Lo que NO guardamos
 
-- **No guardamos datos de tarjeta ni credenciales de pago.** Los procesa la **pasarela
-  de pagos**, que es un tercero con sus propias condiciones; la plataforma recibe el
+- **No guardamos datos de tarjeta ni credenciales de pago.** Los procesará la **pasarela
+  de pagos** —un tercero con sus propias condiciones, todavía sin contratar—; la
+  plataforma recibe el
   resultado de la operación (si se pagó, cuánto y con qué referencia), no el número de
   la tarjeta.
 - No pedimos **documento de identidad**, ni fecha de nacimiento, ni datos bancarios del
@@ -97,8 +99,8 @@ no se publica.]**
 - **Para publicar el anuncio y que un estudiante pueda encontrarlo.**
 - **Para gestionar la reserva del primer mes**: atender el contacto, cerrar la reserva
   y sostener el compromiso entre el estudiante y el propietario.
-- **Para cobrar el Depósito de Reserva** —la tarifa de servicio y la seña— y para
-  **entregar la seña al propietario**.
+- **Para cobrar el Depósito de Reserva** —la tarifa de servicio y el anticipo— y para
+  **entregar el anticipo al propietario**.
 - **Para administrar las cuentas:** entrar, confirmar el correo y recuperar la
   contraseña.
 - **Para moderar:** revisar publicaciones y retirar las que incumplan las condiciones

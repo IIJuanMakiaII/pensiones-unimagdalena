@@ -37,7 +37,7 @@ const SELLOS: Sello[] = [
   {
     titulo: "Verificación presencial",
     descripcion:
-      "Inspeccionamos cada pensión antes de publicarla: fotos reales, condiciones confirmadas y anfitriones validados.",
+      "Visitamos e inspeccionamos en sitio los inmuebles que llevan el sello «Verificada por el equipo»: comprobamos que las fotos correspondan al estado real y las condiciones básicas de habitabilidad.",
     icono: iconos.verificacion,
   },
   {

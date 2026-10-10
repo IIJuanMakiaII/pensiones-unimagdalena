@@ -101,11 +101,11 @@ export function resumenHabitaciones(pension: PensionConHabitaciones): string {
  *
  *   · **20 %** al reservar, que son dos rubros distintos:
  *     - 10 % **Tarifa de Servicio de la Plataforma** — dinero de la plataforma.
- *     - 10 % **Seña / Anticipo del primer mes** — dinero del propietario.
+ *     - 10 % **Anticipo del Arriendo** — dinero del propietario.
  *   · **80 %** al llegar, directo al propietario contra entrega de llaves.
  *
- * Las cuentas cierran siempre, y eso es deliberado: `tarifa + sena === deposito`
- * y `deposito + saldo === canon`. Por eso la seña se calcula como **resto** del
+ * Las cuentas cierran siempre, y eso es deliberado: `tarifa + anticipo === deposito`
+ * y `deposito + saldo === canon`. Por eso el anticipo se calcula como **resto** del
  * depósito y no con otro porcentaje: con un canon que no sea múltiplo de 10, dos
  * redondeos por separado dejarían un peso suelto y la tabla del sitio no
  * cuadraría con la del contrato que firma el estudiante.
@@ -117,8 +117,8 @@ export interface DesgloseReserva {
   deposito: number;
   /** Tarifa de Servicio de la Plataforma: el 10 % del canon. */
   tarifaServicio: number;
-  /** Seña / anticipo del primer mes: el otro 10 %, del propietario. */
-  sena: number;
+  /** Anticipo del Arriendo: el otro 10 %, del propietario. */
+  anticipo: number;
   /** Saldo que se paga al llegar: el 80 % del canon. */
   saldoAlLlegar: number;
 }
@@ -132,7 +132,7 @@ export function desgloseReserva(canon: number): DesgloseReserva {
     canon: precio,
     deposito,
     tarifaServicio,
-    sena: deposito - tarifaServicio,
+    anticipo: deposito - tarifaServicio,
     saldoAlLlegar: precio - deposito,
   };
 }

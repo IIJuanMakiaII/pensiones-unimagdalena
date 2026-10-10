@@ -21,10 +21,10 @@ error más caro de este documento:
 | Rubro | De quién es el dinero | Qué hace la plataforma |
 |---|---|---|
 | **Tarifa de Servicio** | **De la plataforma** — es su remuneración | Lo retiene |
-| **Seña / Anticipo** | **Del propietario** | Lo cobra **en su nombre** y se lo entrega |
+| **Anticipo del Arriendo** | **Del propietario** | Lo cobra **en su nombre** y se lo entrega |
 
-La plataforma **no puede** tratar la seña como dinero propio, ni usar la tarifa
-retenida como excusa para retener la seña.
+La plataforma **no puede** tratar el anticipo como dinero propio, ni usar la tarifa
+retenida como excusa para retener el anticipo.
 
 ## 2. Lo que el propietario tiene que entender antes de firmar
 
@@ -33,7 +33,7 @@ le dice antes:
 
 > De un canon pactado de **$1.000.000**, el estudiante paga en la web **$200.000** y
 > **$800.000** al recibir las llaves. **El propietario recibe $900.000**: $100.000 de
-> seña por la plataforma y $800.000 directamente del estudiante.
+> anticipo por la plataforma y $800.000 directamente del estudiante.
 
 Es decir: **el propietario recibe el 90 % del primer mes.** La tarifa de servicio se
 **recauda** del estudiante, pero se financia con el primer mes del propietario. Es el
@@ -53,7 +53,7 @@ casillas.
 
 ---
 
-**Autorizo a la plataforma a cobrar la seña en mi nombre y a entregármela**
+**Autorizo a la plataforma a cobrar el anticipo en mi nombre y a entregármelo**
 
 Entiendo y acepto que:
 
@@ -61,7 +61,7 @@ Entiendo y acepto que:
   estudiante la reserva del primer mes**. Es ella quien negocia con el estudiante, no
   yo por mi cuenta.
 - De lo que paga el estudiante en la web, **la plataforma retiene su Tarifa de
-  Servicio** y **me entrega a mí la seña**, que se descuenta del primer mes de
+  Servicio** y **me entrega a mí el anticipo**, que se descuenta del primer mes de
   arriendo. El saldo de ese primer mes me lo paga el estudiante directamente al
   entregar las llaves.
 - **Conozco cuánto voy a recibir** por el primer mes: el 90 % del canon pactado, según
@@ -83,7 +83,7 @@ Puedo leer el [aviso de privacidad](../legales/aviso-de-privacidad.md) y las
 
 ### Texto corto para el registro (si el formulario solo admite una línea)
 
-> Autorizo a la plataforma a cobrar la seña en mi nombre y a entregármela, y entiendo
+> Autorizo a la plataforma a cobrar el anticipo en mi nombre y a entregármelo, y entiendo
 > que mi número no se publica.
 
 ## 4. Cómo debe capturarse (requisitos para el desarrollo)
@@ -112,7 +112,7 @@ pago, **antes del botón** y con el desglose a la vista:
 | Concepto | Monto | Destino |
 |---|---|---|
 | Tarifa de Servicio de la Plataforma | $100.000 | Remuneración de la plataforma |
-| Abono al primer mes (seña) | $100.000 | Va al propietario, asegura tu cupo |
+| Anticipo del Arriendo | $100.000 | Va al propietario, asegura tu cupo |
 | **Total hoy en la web** | **$200.000** | Procesado por la pasarela de pagos |
 | **Saldo al llegar a la pensión** | **$800.000** | Directo al propietario, contra entrega de llaves |
 
@@ -124,22 +124,23 @@ es un depósito de reserva compuesto por dos rubros distintos.
 
 - **No publicar el número del propietario** en datos estructurados ni en metadatos. Ya
   se decidió así antes y sigue vigente: es el número de una persona, no del inmueble.
-- **No tratar la seña como dinero de la plataforma.** Va al propietario, aunque se
+- **No tratar el anticipo como dinero de la plataforma.** Va al propietario, aunque se
   recaude desde la misma cuenta.
-- **No retener la seña** por una disputa sobre la tarifa de servicio: son rubros
+- **No retener el anticipo** por una disputa sobre la tarifa de servicio: son rubros
   distintos y el propietario no tiene por qué asumir el riesgo del cobro de la tarifa.
 - **No usar los datos de cobro del propietario para fines distintos** del giro de la
-  seña.
+  anticipo.
 
 ## 7. Pendiente de definir con el abogado
 
-- Si la figura correcta es la **«arras de confirmación»** o una seña simple, y con qué
+- Si la figura correcta es la **«arras de confirmación»** o un anticipo simple, y con qué
   redacción exacta.
 - Cómo se formaliza el **mandato de cobro**: si basta la aceptación electrónica o hace
   falta documento aparte firmado.
 - Si la plataforma necesita **registro o habilitación** para recaudar dinero de
   terceros.
-- El **mecanismo de giro** de la seña al propietario y los datos que hay que pedirle
+- El **mecanismo de giro** del anticipo se acuerda **por canal privado** con cada
+  propietario; queda por definir si esa constancia basta y qué datos hay que pedirle
   para eso (ver [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md)).
 - Cómo tratar los **anuncios que existen hoy** bajo el modelo anterior, y el plazo y la
   comunicación para presentarles el mandato nuevo.
