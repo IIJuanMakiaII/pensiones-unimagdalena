@@ -1,16 +1,11 @@
 # Condiciones de Uso de Nido
 
-**Última actualización:** 9 de octubre de 2026.
+**Última actualización:** 10 de octubre de 2026.
 
-> **BORRADOR — NO PUBLICAR TODAVÍA.** Borrador fundamentado en cómo funciona hoy el
-> sitio, pendiente de revisión jurídica. Ver
-> [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md).
->
-> **Modelo de cobro definido por el fundador el 2026-10-04.** La plataforma gestiona
-> el contacto y **la reserva del primer mes**. Cobra en línea un **Depósito de
-> Reserva** equivalente al **20 % del primer canon**, compuesto por dos rubros
-> jurídicamente distintos: la **Tarifa de Servicio de la Plataforma** (la mitad) y el
-> **Anticipo del Arriendo** (la otra mitad, que se entrega al propietario).
+> **En una frase.** Nido gestiona el contacto y **la reserva del primer mes**. La
+> reserva equivale al **20 % del primer canon**, en dos rubros jurídicamente
+> distintos: la **Tarifa de Servicio de la Plataforma** (la mitad) y el **Anticipo del
+> Arriendo** (la otra mitad, que se entrega al propietario).
 
 ---
 
@@ -74,17 +69,17 @@ formalización del contrato de arriendo.
 |---|---|---|
 | Tarifa de Servicio de la Plataforma | $50.000 | Remuneración de la plataforma |
 | Anticipo del Arriendo | $50.000 | Al propietario, abonado al primer mes |
-| **Total a pagar hoy en la web** | **$100.000** | Cobro en línea; proveedor de pagos por definir |
+| **Total del Depósito de Reserva** | **$100.000** | Se paga al cerrar la reserva con la plataforma |
 | **Saldo a pagar al llegar a la pensión** | **$400.000** | Directo al propietario, contra entrega de llaves |
 
 *Ejemplo sobre un canon pactado de $500.000 mensuales: la reserva equivale al 20 %
 (la mitad, tarifa de servicio; la mitad, anticipo) y el saldo al 80 % restante.*
 
-**[PENDIENTE: el cobro en línea todavía no está construido —a la fecha no hay proveedor
-de pagos contratado— y la reserva se cierra hoy por WhatsApp con la plataforma. Esta
-tabla describe el modelo objetivo, no el estado actual.]**
+**Cómo se paga hoy.** La reserva **se cierra por WhatsApp con la plataforma**: el cobro
+en línea todavía no está habilitado y no hay proveedor de pagos contratado. Los importes
+y su destino son los de la tabla; lo que cambia es el medio de pago, no el reparto.
 
-> **Modelo confirmado por el fundador el 2026-10-04.** El estudiante paga **el canon
+> **El propietario recibe el 90 % del primer mes.** El estudiante paga **el canon
 > completo** ($100.000 + $400.000 = $500.000) y el propietario **recibe el 90 %**
 > ($50.000 de anticipo + $400.000 = $450.000). Es decir: la tarifa de servicio se
 > **recauda** del estudiante, pero se **financia con el primer mes del propietario**.
@@ -95,10 +90,9 @@ tabla describe el modelo objetivo, no el estado actual.]**
 > | El propietario recibe | **$450.000** — el 90 % |
 > | La plataforma retiene | **$50.000** — su tarifa de servicio, el 10 % |
 >
-> Como el propietario **no recibe el canon completo**, tiene que **saberlo antes de
-> aceptar el mandato**. Así queda redactado en su autorización
-> ([autorizacion-anfitrion.md](autorizacion-anfitrion.md) §2): descubrirlo al cobrar no
-> sería un malentendido, sería una reclamación con razón.
+> Como el propietario **no recibe el canon completo**, lo conoce **antes de aceptar el
+> mandato**: así queda en la autorización que firma. Descubrirlo al cobrar no sería un
+> malentendido, sería una reclamación con razón.
 
 ## 4. Naturaleza del servicio y límites del recaudo
 
@@ -222,9 +216,8 @@ Al publicar, el propietario declara y garantiza que:
    lo es. Si no puede, responde por los perjuicios.
 2. **La información es verdadera y está actualizada**: fotos del inmueble real, no de
    otro sitio; precios reales; servicios y normas que corresponden.
-3. **Otorga a la plataforma el mandato de cobro** del anticipo, en los términos de
-   [autorizacion-anfitrion.md](autorizacion-anfitrion.md). Sin ese mandato el anuncio
-   no se publica.
+3. **Otorga a la plataforma el mandato de cobro** del anticipo, en los términos de la
+   autorización que firma al publicar. Sin ese mandato el anuncio no se publica.
 4. **Respeta la reserva cerrada por la plataforma.** Si la habitación se reserva, se
    mantiene disponible para el estudiante que reservó y al precio publicado.
 5. **Las fotos son suyas o tiene permiso para usarlas.** No se suben fotos tomadas de
@@ -298,12 +291,15 @@ después de un cambio implica su aceptación.
 
 ## 15. Ley aplicable
 
-Estas condiciones se rigen por la ley colombiana. **[PENDIENTE: definir con el abogado
-el mecanismo de solución de controversias.]**
+Estas condiciones se rigen por la ley colombiana. Cualquier controversia se atiende en
+primer lugar escribiendo a **oterojuan15@gmail.com**; si no se resuelve por esa vía, ante
+las autoridades competentes. **Nada de lo anterior limita los derechos que la ley
+reconoce a quien contrata como consumidor**, incluido el de presentar quejas ante la
+Superintendencia de Industria y Comercio.
 
 ---
 
-**Última actualización:** 9 de octubre de 2026.
-**Versión:** borrador 3 — incorpora el responsable del tratamiento, la política de
-cancelación y desistimiento por tramos, el traslado del anticipo al propietario y la
-verificación diferenciada. Sin revisión jurídica.
+**Última actualización:** 10 de octubre de 2026.
+**Versión:** 1.0 — incluye el responsable del tratamiento, la política de cancelación y
+desistimiento por tramos, el traslado del anticipo al propietario y la verificación
+diferenciada.
