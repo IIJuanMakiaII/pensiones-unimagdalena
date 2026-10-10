@@ -7,8 +7,9 @@ import { contarDisponibles, habitacionDestacada } from "@/lib/filtros";
 import { galeriaDe, precioDesde } from "@/lib/pension";
 import { enlaceWhatsApp, etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
 import { medirContacto } from "@/lib/medicion";
+import { mostrarSello } from "@/lib/sello";
 import Carrusel from "@/components/Carrusel";
-import SelloVerificado from "@/components/SelloVerificado";
+import EtiquetaVerificado from "@/components/EtiquetaVerificado";
 import BotonFavorito from "@/components/BotonFavorito";
 import Estrellas from "@/components/Estrellas";
 import BadgesServicios from "@/components/BadgesServicios";
@@ -66,7 +67,14 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           diferirImagenes
           className="h-full w-full"
         />
-        {pension.verificado && <SelloVerificado className="absolute right-3 top-3" />}
+        {/* Etiqueta con texto en lugar del círculo mudo que había aquí (tarea
+            #51): un punto de color no comunica nada a quien no conoce el sitio.
+            Ocupa el mismo anclaje que el círculo, así que la composición de la
+            tarjeta no se mueve. El sello se rige por `pension.verificado`, que
+            sale de la base: solo lo concede el maestro. */}
+        {mostrarSello(pension.verificado) && (
+          <EtiquetaVerificado className="absolute right-3 top-3" />
+        )}
       </div>
 
       <div className="absolute left-3 top-3 z-10">
