@@ -65,7 +65,10 @@ jobs:
       - name: SEO sobre el build
         run: npm run verificar:seo
 
-      - name: Service Worker: que ninguna ruta con sesión sea cacheable
+      # El nombre va entre comillas a propósito: sin ellas, un valor con «: »
+      # no es un escalar válido en YAML y GitHub no llega a crear ningún
+      # trabajo (la ejecución falla en 0 s y el CI deja de comprobar nada).
+      - name: "Service Worker: que ninguna ruta con sesión sea cacheable"
         run: npm run verificar:sw
 
       - name: Publicar el build para los bloques siguientes
