@@ -27,15 +27,60 @@ export const NORMAS = [
   "Respetar zonas comunes",
 ];
 
+/**
+ * El marcador de «mi barrio no está en la lista».
+ *
+ * No es un barrio y no debe guardarse como tal: quien lo elige escribe el nombre
+ * verdadero en un campo aparte, y es ese nombre el que se guarda, el que se ve en
+ * la tarjeta y el que da dirección a `/barrios/…`. Guardar la palabra «Otro»
+ * crearía una página de barrio para un marcador de posición.
+ */
+export const BARRIO_OTRO = "Otro";
+
+/**
+ * Sectores de Santa Marta cercanos a la Universidad del Magdalena.
+ *
+ * La lista anterior tenía ocho entradas y varias fuera de lugar —«Zaragoza» y
+ * «Los Troncos» están en el otro extremo de la ciudad, a más de media hora en
+ * bus—, así que el anfitrión elegía por descarte y el estudiante buscaba por
+ * barrios que no le servían. Estos son los sectores realmente próximos al campus.
+ *
+ * **El orden es deliberado** —de más cerca a más lejos— y no alfabético: quien
+ * publica reconoce su sector por cercanía, y quien busca lee primero lo que está a
+ * un paseo. «Otro» va al final por ser la salida, no una opción más.
+ *
+ * La ortografía importa más de lo que parece: `slugDeBarrio()` deriva de cada
+ * nombre la dirección pública de su página (`El Piñón` → `/barrios/el-pinon`), así
+ * que corregir una tilde cambia la dirección de esa página.
+ */
 export const BARRIOS = [
-  "Mamatoco",
+  "El Piñón",
+  "Portal Universitario",
+  "Villa Marbella",
+  "Ciudad del Sol",
+  "La Lucha",
+  "Portal de las Avenidas",
+  "Mirador de la Sierra",
+  "Ciudadela",
+  "Urbanización Canarias",
+  "El Mayor",
+  "Urbanización El Río",
   "El Pando",
-  "Zaragoza",
-  "Gaira",
-  "San Fernando",
-  "Los Troncos",
-  "Centro",
-  "Otro",
+  "Villas del Mayor",
+  "Ciudad Campestre El Nogal",
+  "Silvia Rosa",
+  "Bavaria",
+  "Villas de Alejandría",
+  "La Capilla",
+  "La 30",
+  "Los Almendros",
+  "Mamatoco",
+  "Parque Central BCH",
+  "Cundí",
+  "17 de Diciembre",
+  "Ondas del Caribe",
+  "Las Malvinas",
+  BARRIO_OTRO,
 ];
 
 /**

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ETIQUETA_DISTANCIA,
   ETIQUETA_FILTRO,
   FILTROS_INICIALES,
   filtrosActivos,
@@ -34,10 +35,9 @@ const TEXTO: Record<ClaveFiltro, (f: FiltrosUI) => string> = {
   precioMaximoCop: (f) => `Hasta ${formatearCOP(f.precioMaximoCop)}`,
   genero: (f) =>
     ({ todos: "Todos", mixto: "Mixto", femenino: "Femenino", masculino: "Masculino" })[f.genero],
-  rangoDistancia: (f) =>
-    ({ cualquiera: "Cualquier distancia", "<5": "< 5 min", "5-10": "5–10 min", "10-15": "10–15 min" })[
-      f.rangoDistancia
-    ],
+  // El rótulo sale de la lista canónica: el chip y la opción del panel no pueden
+  // decir cosas distintas del mismo filtro.
+  rangoDistancia: (f) => ETIQUETA_DISTANCIA[f.rangoDistancia],
   soloConAlimentacion: () => "Con alimentación",
   soloVerificadas: () => "Solo verificadas",
   soloFavoritas: () => "Mis favoritas",

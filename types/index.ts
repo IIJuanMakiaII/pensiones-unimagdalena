@@ -105,12 +105,28 @@ export interface PensionConHabitaciones extends Pension {
 export interface Filtros {
   precioMaximoCop: number; // 0 = sin tope
   genero: GeneroHabitacion | "todos";
-  distanciaMaximaMin: number; // 0 = todas | 5 | 10 | 15
   soloConAlimentacion: boolean;
   soloVerificadas: boolean;
 }
 
-export type RangoDistancia = "cualquiera" | "<5" | "5-10" | "10-15";
+/**
+ * Tramos de distancia a pie (tarea #50).
+ *
+ * Cuatro tramos que **parten el rango sin huecos ni solapes**: `<5` · `5-10` ·
+ * `11-15` · `>15`. Antes solo había tres y el último cerraba en 15, así que
+ * cualquier anuncio a más de quince minutos no encajaba en ningún tramo concreto:
+ * elegir distancia dejaba fuera lo que el propio catálogo admite (el formulario
+ * acepta hasta 60 min). El tramo abierto final cierra ese agujero.
+ *
+ * El nombre de cada valor viaja en la dirección (`?dist=…`), así que importa que
+ * sobreviva la ida y vuelta. `>15` se eligió por eso y no por gusto: un `+` —como
+ * en `15+`— se decodifica como **espacio** en una cadena de consulta
+ * (`new URLSearchParams("dist=15+").get("dist")` devuelve `"15 "`), de modo que un
+ * enlace escrito a mano perdería el filtro sin avisar. `>` se codifica como `%3E`
+ * al serializar y se lee igual sin codificar, así que funciona por los dos caminos
+ * —la misma razón por la que el primer tramo ya se llamaba `<5`—.
+ */
+export type RangoDistancia = "cualquiera" | "<5" | "5-10" | "11-15" | ">15";
 
 /**
  * Habitación tal como la captura el editor antes de guardarse.

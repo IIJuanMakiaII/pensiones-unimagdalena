@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AYUDA_IMAGENES, hostImagenPermitido, MAXIMO_FOTOS } from "@/lib/imagenes";
 import { formatearCOP } from "@/lib/formato";
+import { BARRIO_OTRO } from "@/lib/formulario-pension";
 import type {
   EntradaHabitacionEditada,
   GeneroHabitacion,
@@ -38,6 +39,15 @@ export interface EstadoFormulario {
 export const TITULO_MIN = 6;
 export const DESCRIPCION_MIN = 30;
 export const DIRECCION_MIN = 5;
+/**
+ * Mínimo del nombre de barrio (tarea #50).
+ *
+ * Basta con tres letras: el barrio más corto de la lista curada es «La 30», y el
+ * mínimo no está para juzgar nombres sino para que no entre la cadena vacía.
+ */
+export const BARRIO_MIN = 3;
+/** Tope de minutos a pie vigente en la base: se comprueba antes para poder explicarlo. */
+export const DISTANCIA_MAX = 60;
 /** Límites superiores vigentes en la base: se comprueban antes para poder explicar el motivo. */
 export const TITULO_MAX = 120;
 export const DESCRIPCION_MAX = 2000;
@@ -175,8 +185,24 @@ export function leerCamposDePension(formData: FormData): LecturaDeFormulario {
   const titulo = texto("titulo");
   const descripcion = texto("descripcion");
   const direccion = texto("direccion");
-  const barrio = texto("barrio") || "Santa Marta";
-  const distancia = Number(texto("distancia"));
+  const barrio = texto("barrio");
+
+  /**
+   * Los minutos se leen **desde el texto**, no del número.
+   *
+   * `Number("")` es `0`, y `0` es un valor legítimo —un alojamiento dentro del
+   * campus—, así que leer solo el número convertiría un campo vacío en «a cero
+   * minutos a pie» sin que nada lo delate: es exactamente el dato inventado que
+   * esta tarea viene a cerrar, con otra cara. Por eso se guarda la cadena tal como
+   * llegó y se exige que no esté vacía antes de creerle al número.
+   */
+  const distanciaTexto = texto("distancia");
+  const distancia = Number(distanciaTexto);
+  const distanciaInvalida =
+    distanciaTexto === "" ||
+    !Number.isFinite(distancia) ||
+    distancia < 0 ||
+    distancia > DISTANCIA_MAX;
 
   const servicios = formData
     .getAll("servicios")
@@ -220,6 +246,28 @@ export function leerCamposDePension(formData: FormData): LecturaDeFormulario {
       `La descripción no puede pasar de ${DESCRIPCION_MAX} caracteres (ahora tiene ${descripcion.length}).`
     );
   }
+
+  /**
+   * El barrio y los minutos dejan de rellenarse solos (tarea #50).
+   *
+   * Antes este módulo sustituía en silencio: un barrio vacío se guardaba como
+   * «Santa Marta» y unos minutos ausentes o absurdos, como `10`. El efecto era un
+   * anuncio que el anfitrión nunca declaró —«Mamatoco a 10 min a pie», las dos
+   * preselecciones del formulario, sobrevivía a cualquier edición— y, peor, un
+   * dato que parecía verificado porque lo había escrito el servidor. Un campo
+   * obligatorio en el HTML no basta: el navegador se salta con una petición a
+   * mano, y estos dos errores son la única puerta que decide si se escribe.
+   */
+  if (barrio.length < BARRIO_MIN || barrio === BARRIO_OTRO) {
+    errores.push(
+      barrio === BARRIO_OTRO
+        ? "Escribe el nombre real del barrio: «Otro» es el desplegable, no un barrio."
+        : "El barrio es obligatorio: es lo que el estudiante usa para buscar por zona."
+    );
+  }
+  if (distanciaInvalida) {
+    errores.push(`Los minutos a pie deben ser un número entre 0 y ${DISTANCIA_MAX}.`);
+  }
   if (imagenesNoPermitidas.length > 0) {
     errores.push(
       `Estos enlaces de foto no están permitidos: ${imagenesNoPermitidas
@@ -229,8 +277,15 @@ export function leerCamposDePension(formData: FormData): LecturaDeFormulario {
   }
   errores.push(...erroresHabitaciones);
 
-  const distanciaValida =
-    Number.isFinite(distancia) && distancia >= 0 && distancia <= 60 ? Math.round(distancia) : 10;
+  /**
+   * El número que se devuelve es siempre utilizable, pero **no se escribe cuando
+   * hay errores**: las tres acciones que llaman aquí —el alta, la edición del
+   * anfitrión y la del maestro— devuelven antes de tocar la base si `errores` no
+   * está vacío. Así que el `0` de un formulario inválido nunca llega a la base; es
+   * un valor de relleno para que el contrato de `CamposDePension` no tenga que
+   * admitir `undefined`, no una decisión sobre el dato.
+   */
+  const distanciaValida = Number.isFinite(distancia) ? Math.round(distancia) : 0;
 
   return {
     campos: {

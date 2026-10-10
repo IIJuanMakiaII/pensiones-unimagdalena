@@ -15,6 +15,7 @@ import EditorHabitaciones, {
   type HabitacionForm,
 } from "@/components/EditorHabitaciones";
 import {
+  BARRIO_OTRO,
   BARRIOS,
   NORMAS,
   SERVICIOS,
@@ -99,9 +100,21 @@ export default function FormularioEditarPension({
   const [largoTitulo, setLargoTitulo] = useState(pension.titulo.length);
   const [largoDescripcion, setLargoDescripcion] = useState(pension.descripcion.length);
 
-  // El anuncio pudo publicarse con un barrio, un servicio o una norma que hoy no
-  // esté en la lista: se añaden para no perderlos al guardar.
-  const opcionesBarrios = conOpcionesActuales(BARRIOS, [pension.barrio]);
+  /**
+   * Barrio del anuncio, sin preseleccionar nada que nadie eligió (tarea #50).
+   *
+   * Arranca en el barrio guardado y, si ese nombre ya no está en la lista curada
+   * —o si es la palabra «Otro», que es un marcador y no un barrio—, en «Otro» con
+   * el nombre verdadero ya escrito en el campo de texto. Un anuncio viejo no pierde
+   * su barrio al guardar y el anfitrión ve lo que hay antes de tocarlo.
+   */
+  const barrioEnLaLista = BARRIOS.includes(pension.barrio);
+  const [barrio, setBarrio] = useState(barrioEnLaLista ? pension.barrio : BARRIO_OTRO);
+  const [barrioOtro, setBarrioOtro] = useState(barrioEnLaLista ? "" : pension.barrio);
+  const esOtro = barrio === BARRIO_OTRO;
+
+  // Un servicio o una norma que hoy no esté en la lista se añade para no perderlo
+  // al guardar. El barrio no pasa por aquí: su salida es «Otro».
   const opcionesServicios = conOpcionesActuales(SERVICIOS, pension.servicios);
   const opcionesNormas = conOpcionesActuales(NORMAS, pension.normas);
 
@@ -185,15 +198,48 @@ export default function FormularioEditarPension({
             <label htmlFor="barrio" className={claseEtiqueta}>
               Barrio
             </label>
-            <select id="barrio" name="barrio" className={claseInput} defaultValue={pension.barrio}>
-              {opcionesBarrios.map((barrio) => (
-                <option key={barrio} value={barrio}>
-                  {barrio}
+            <select
+              id="barrio"
+              /* Con «Otro» elegido el `name` se muda al campo de texto, para que la
+                 palabra «Otro» no pueda guardarse como si fuera un barrio. */
+              name={esOtro ? undefined : "barrio"}
+              required={!esOtro}
+              value={barrio}
+              onChange={(evento) => setBarrio(evento.target.value)}
+              className={claseInput}
+            >
+              {BARRIOS.map((opcion) => (
+                <option key={opcion} value={opcion}>
+                  {opcion}
                 </option>
               ))}
             </select>
           </div>
         </div>
+
+        {esOtro && (
+          <div>
+            <label htmlFor="barrioOtro" className={claseEtiqueta}>
+              ¿Cuál barrio?
+            </label>
+            <input
+              id="barrioOtro"
+              name="barrio"
+              type="text"
+              required
+              minLength={3}
+              maxLength={60}
+              value={barrioOtro}
+              onChange={(evento) => setBarrioOtro(evento.target.value)}
+              className={claseInput}
+              placeholder="Ej.: Ciudadela"
+            />
+            <p className="mt-1 text-xs text-neutro-500">
+              Escríbelo como lo conoce el estudiante: con ese nombre aparece en la tarjeta y se
+              crea su página de barrio.
+            </p>
+          </div>
+        )}
 
         <div className="max-w-xs">
           <label htmlFor="distancia" className={claseEtiqueta}>

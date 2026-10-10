@@ -3,7 +3,13 @@
 import { useRef, useState } from "react";
 import type { GeneroHabitacion, RangoDistancia } from "@/types";
 import type { FiltrosUI } from "@/lib/filtros";
-import { FILTROS_INICIALES, PASO_PRECIO, filtrosActivos } from "@/lib/filtros";
+import {
+  ETIQUETA_DISTANCIA,
+  FILTROS_INICIALES,
+  PASO_PRECIO,
+  TRAMOS_DISTANCIA,
+  filtrosActivos,
+} from "@/lib/filtros";
 import { formatearCOP } from "@/lib/formato";
 
 interface Props {
@@ -24,11 +30,19 @@ const OPCIONES_GENERO: { valor: FiltrosUI["genero"]; etiqueta: string }[] = [
   { valor: "masculino", etiqueta: "Masculino" },
 ];
 
+/**
+ * Opciones del filtro de distancia: primero la ausencia de filtro y después los
+ * cuatro tramos.
+ *
+ * Se construyen desde `lib/filtros.ts` en vez de escribirse aquí. Antes el panel y
+ * el motor guardaban cada uno su lista, y el panel ofrecía tres tramos mientras el
+ * catálogo admitía anuncios hasta 60 minutos: lo que no cabía en ninguno de los
+ * tres quedaba fuera de la búsqueda en cuanto se elegía distancia. Con una sola
+ * lista, añadir o mover un tramo no puede dejar al panel desinformado.
+ */
 const OPCIONES_DISTANCIA: { valor: RangoDistancia; etiqueta: string }[] = [
-  { valor: "cualquiera", etiqueta: "Cualquiera" },
-  { valor: "<5", etiqueta: "< 5 min" },
-  { valor: "5-10", etiqueta: "5–10 min" },
-  { valor: "10-15", etiqueta: "10–15 min" },
+  { valor: "cualquiera", etiqueta: ETIQUETA_DISTANCIA.cualquiera },
+  ...TRAMOS_DISTANCIA.map((valor) => ({ valor, etiqueta: ETIQUETA_DISTANCIA[valor] })),
 ];
 
 /**
