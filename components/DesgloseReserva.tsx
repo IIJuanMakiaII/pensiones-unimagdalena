@@ -26,7 +26,7 @@ interface Props {
  * plataforma— y este bloque solo explica qué se paga y a quién.
  */
 export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: Props) {
-  const { canon, deposito, tarifaServicio, sena, saldoAlLlegar } = desgloseReserva(precioMensual);
+  const { canon, deposito, tarifaServicio, anticipo, saldoAlLlegar } = desgloseReserva(precioMensual);
 
   // Sin precio no hay nada que desglosar (y no se muestra un depósito de $0).
   if (canon <= 0) return null;
@@ -61,8 +61,8 @@ export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: P
           destino="Remuneración de la plataforma"
         />
         <Fila
-          etiqueta="Seña / Anticipo del primer mes"
-          monto={sena}
+          etiqueta="Anticipo del Arriendo"
+          monto={anticipo}
           destino="Al propietario, abonado al primer mes"
         />
       </dl>
@@ -85,7 +85,7 @@ export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: P
 
       <p className="mt-3 rounded-xl bg-neutro-50 px-3 py-2.5 text-xs leading-relaxed text-neutro-600">
         El dinero de hoy <strong className="text-neutro-700">no es el arriendo</strong>: son dos
-        rubros distintos —la tarifa de la plataforma y la seña, que va al propietario y se abona al
+        rubros distintos —la tarifa de la plataforma y el anticipo, que va al propietario y se abona al
         primer mes—. La reserva se cierra con nosotros por WhatsApp.
       </p>
     </section>

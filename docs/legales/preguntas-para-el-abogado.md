@@ -38,29 +38,29 @@ Reserva del 20 % del primer canon**, compuesto por dos rubros:
 | Rubro | % del primer canon | De quién es el dinero |
 |---|---|---|
 | Tarifa de Servicio de la Plataforma | 10 % | De la plataforma |
-| Seña / Anticipo del Arriendo | 10 % | **Del propietario** |
+| Anticipo del Arriendo | 10 % | **Del propietario** |
 | Saldo que paga directamente al propietario | 80 % | Del propietario |
 
 La figura propuesta es un **«mandato de cobro parcial con arras de confirmación»**: la
-plataforma cobra la seña **como mandataria del propietario** y a la vez su propia
+plataforma cobra el anticipo **como mandataria del propietario** y a la vez su propia
 remuneración. La política de cancelación ya redactada deja **la tarifa de servicio no
-reembolsable** al estudiante y **la seña a favor del propietario** como indemnización.
+reembolsable** al estudiante y **el anticipo a favor del propietario** como indemnización.
 
 5. ¿Es correcta la figura del **mandato de cobro** para este caso, o conviene otra
-   (seña simple, arras confirmatorias, depósito en garantía)? ¿Cambia algo que el
+   (anticipo simple, arras confirmatorias, depósito en garantía)? ¿Cambia algo que el
    cobro se haga con **tarjeta** y no en efectivo?
-6. **Arras o seña:** ¿la redacción propuesta resiste si el propietario alega que no
-   autorizó la retención? ¿Qué hace falta para que la seña **quede en su favor** sin
+6. **Arras o anticipo:** ¿la redacción propuesta resiste si el propietario alega que no
+   autorizó la retención? ¿Qué hace falta para que el anticipo **quede en su favor** sin
    que él tenga que reclamarla?
 7. **El conflicto de interés, dicho sin rodeos:** la plataforma **retiene su tarifa del
-   mismo pago** del que sale la seña del propietario. ¿Es defendible cobrar ambas cosas
+   mismo pago** del que sale el anticipo del propietario. ¿Es defendible cobrar ambas cosas
    en una sola operación, o conviene **separar los cobros** para que no parezca que la
    plataforma se paga a sí misma con dinero ajeno?
-8. **¿Puede la plataforma retener la seña** si el estudiante discute la tarifa de
+8. **¿Puede la plataforma retener el anticipo** si el estudiante discute la tarifa de
    servicio (por ejemplo, una devolución de tarjeta)? Nuestra intención es que **no**,
    porque son rubros distintos — queremos confirmarlo.
 9. **Devoluciones y contracargos:** si la pasarela reversa el pago después de haber
-   girado la seña al propietario, **¿quién asume la pérdida**? ¿Cómo hay que
+   girado el anticipo al propietario, **¿quién asume la pérdida**? ¿Cómo hay que
    redactarlo para no quedar expuestos?
 10. ¿Necesita la plataforma **registro, habilitación o algún tipo de permiso** para
     recaudar dinero de terceros y girarlo? ¿Aplica alguna norma de lavado de activos
@@ -80,13 +80,13 @@ reembolsable** al estudiante y **la seña a favor del propietario** como indemni
 ## C. Impuestos y facturación
 
 **Contexto:** la plataforma pasa a tener **ingresos propios** (la tarifa de servicio) y
-a **mover dinero de terceros** (la seña).
+a **mover dinero de terceros** (el anticipo).
 
 13. **Facturación electrónica:** ¿qué obligaciones se activan al cobrar la tarifa de
     servicio? ¿Se factura al estudiante? ¿Con qué concepto?
 14. **¿La tarifa de servicio causa IVA?** Y si lo causa, ¿cómo se refleja en el
     desglose que ve el estudiante antes de pagar?
-15. **La seña:** al girarla al propietario, ¿es **ingreso suyo** y por tanto él debe
+15. **El anticipo:** al girarlo al propietario, ¿es **ingreso suyo** y por tanto él debe
     facturar o declarar? ¿La plataforma tiene que practicar alguna retención o informar
     a la DIAN?
 16. ¿La plataforma necesita **RUT y obligaciones formales** antes del primer cobro?
@@ -98,19 +98,22 @@ a **mover dinero de terceros** (la seña).
 18. **El propietario recibe el 90 % del primer mes** (ver la pregunta 11). ¿Hay que
     hacerlo constar por escrito **antes** de que acepte el mandato? ¿Basta la casilla, o
     conviene un documento informativo aparte?
-19. ¿Qué **datos de cobro** del propietario hay que pedir para girarle la seña, y con
-    qué nivel de protección? ¿Cambia si el propietario es persona natural y no tiene
-    RUT?
+19. El **giro del anticipo** al propietario se acuerda **por canal privado** con cada uno.
+    ¿Basta esa constancia privada, o hay que formalizarla por escrito? ¿Qué **datos de
+    cobro** hay que pedir y con qué nivel de protección? ¿Cambia si el propietario es
+    persona natural y no tiene RUT?
 20. Si el propietario **no tiene cuenta bancaria** o prefiere efectivo, ¿es viable
-    entregarle la seña en efectivo, o eso agrava la posición de la plataforma?
+    entregarle el anticipo en efectivo, o eso agrava la posición de la plataforma?
 21. ¿Necesitamos **condiciones distintas** para propietarios que arriendan como
     actividad económica frente a quien arrienda una habitación de su propia casa?
 22. Si un propietario **retira su anuncio** con una reserva ya cerrada, ¿qué pasa con
-    la seña que ya está en su poder?
+    el anticipo que ya está en su poder?
 
 ## E. La pasarela de pagos y los datos de pago
 
-**Contexto:** el cobro se hará con una **pasarela en línea**, todavía sin elegir.
+**Contexto:** el cobro en línea **todavía no está construido** y a la fecha **no hay
+proveedor de pagos contratado**. Hoy la reserva se cierra por WhatsApp con la plataforma.
+Las preguntas de esta sección son para cuando se contrate.
 
 23. ¿Qué exige la ley colombiana a la hora de elegir **proveedor de pagos**? ¿Debe ser
     una entidad vigilada local, o se puede usar un proveedor extranjero?
@@ -127,12 +130,17 @@ a **mover dinero de terceros** (la seña).
 
 **Contexto:** el sitio dice hoy, entre otras cosas:
 
-- «Pensiones verificadas a minutos de Unimagdalena» (portada)
-- «**Inspeccionamos cada pensión antes de publicarla**: fotos reales, condiciones
-  confirmadas y anfitriones validados»
+- «Pensiones para estudiantes a minutos de Unimagdalena, en Santa Marta» (portada)
+- «Visitamos en sitio cada inmueble que sellamos» (portada) y «Visitamos e
+  inspeccionamos en sitio los inmuebles que llevan el sello “Verificada por el
+  equipo”: comprobamos que las fotos correspondan al estado real y las condiciones
+  básicas de habitabilidad» (banda de sellos)
 - «Gestionamos tu reserva» y «Cerramos contigo la reserva del primer mes» (portada y
   pie, desde el 2026-10-04)
-- Un sello que dice «Verificada por el equipo»
+- Un sello que dice «Verificado por Nido ✓» / «Verificada por el equipo», que solo
+  llevan los anuncios **visitados en sitio**
+- El desglose de lo que se paga al reservar —los dos rubros y a quién va cada uno—
+  **antes del botón de pago** (tarjeta de la ficha)
 
 *(La frase «Hablas directo con el anfitrión por WhatsApp. Sin comisiones ocultas ni
 terceros en el camino» ya fue **retirada**: describía el modelo anterior y hoy sería
@@ -141,8 +149,11 @@ falsa.)*
 27. Como **plataforma** y no como arrendador, ¿qué nivel de responsabilidad asumimos
     por lo que publica un propietario (un inmueble que no existe, un precio falso, una
     foto que no es del sitio)?
-28. La frase «inspeccionamos cada pensión»: **¿es la redacción adecuada para una
-    plataforma, o nos convierte en garantes** de lo que allí se ofrece?
+28. El sello «Verificada por el equipo» promete **visita e inspección presencial**
+    (que las fotos correspondan al estado real y que existan condiciones básicas de
+    habitabilidad). **¿Nos convierte esa promesa en garantes** de esas condiciones
+    frente al estudiante, y basta la advertencia de que la ausencia del sello no
+    implica fraude para delimitar nuestra responsabilidad?
 29. Ahora que **sí cobramos**, ¿cómo hay que comunicar la tarifa de servicio para que
     no se lea como un «costo oculto»? ¿Basta con el desglose antes del pago?
 30. ¿Conviene una **cláusula de exención de responsabilidad** por el contenido

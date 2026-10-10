@@ -1,28 +1,17 @@
 # Aviso de privacidad y tratamiento de datos personales
 
-> **BORRADOR — NO PUBLICAR TODAVÍA.**
-> Este documento es un borrador fundamentado en lo que la plataforma realmente guarda
-> (verificado contra el esquema y las políticas de la base de datos) y en el modelo de
-> cobro definido por el fundador el **2026-10-04**. Debe ser revisado por un abogado
-> antes de publicarse. Ver [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md).
->
-> **Datos del responsable: PENDIENTES.** Razón social, NIT, dirección y correo de
-> contacto no están definidos. No se inventan: se rellenan cuando el fundador
-> constituya o defina la figura legal.
->
-> **Qué cambió en esta versión:** la plataforma **ya no publica el número de WhatsApp
-> del anfitrión** y pasa a **gestionar la reserva del primer mes**, con cobro en línea
-> del Depósito de Reserva. Eso añade categorías de datos nuevas, que se declaran abajo
-> distinguiendo lo que **ya se guarda hoy** de lo que **se guardará cuando se active el
-> cobro**.
+> **En una frase.** Este aviso explica qué datos guarda Nido, para qué los usa, quién
+> puede verlos y cómo pedir que se corrijan o se borren.
 
 ---
 
 ## 1. Quién responde por tus datos
 
-**[PENDIENTE: nombre o razón social]**, con domicilio en **[PENDIENTE]** y correo para
-asuntos de datos personales **[PENDIENTE]**, es el responsable del tratamiento de los
-datos que se recogen en este sitio.
+**Juan Sebastián Otero Cerchar**, persona natural que actúa bajo la denominación
+comercial **«Nido»**, identificado con **C.C. 1004364753**, con domicilio en **Santa
+Marta / Ciénaga, Magdalena (Colombia)** y correo para asuntos de datos personales
+**oterojuan15@gmail.com**, es el responsable del tratamiento de los datos que se recogen
+en este sitio.
 
 El sitio es un servicio de la Universidad del Magdalena y su área de influencia en
 Santa Marta, Magdalena (Colombia).
@@ -46,10 +35,10 @@ Esta no es una lista genérica: es exactamente lo que el sitio guarda hoy.
 | Habitaciones: tipo, género, precio, si dan comida, si están libres | Propietario | Al publicar | Base de datos, tabla `habitaciones` |
 | Fecha de creación de la cuenta | Quien crea cuenta | Al registrarse | Base de datos |
 
-**El número de WhatsApp del anfitrión ya no se pide ni se guarda para publicarse.** El
-campo existe todavía en la tabla por razones históricas, pero **no se solicita, no se
-muestra y no viaja a la página**. **[PENDIENTE: eliminar los valores que quedaran
-guardados y retirar el campo — ver [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md).]**
+**El número de WhatsApp del anfitrión ya no se pide ni se publica.** El campo existe
+todavía en la tabla por razones históricas, pero **no se solicita, no se muestra y no
+viaja a la página**. Si hubiera quedado algún valor guardado de versiones anteriores, se
+elimina a petición por el canal de la sección 7.
 
 ### 2.2 Lo que se añade con la reserva y el pago
 
@@ -62,16 +51,18 @@ construido. Se declaran aquí para que el aviso esté completo el día que se ac
 | Habitación reservada, fechas y valores | Quien reserva | Sostener la reserva y el reparto del dinero | Base de datos |
 | Resultado del pago: referencia, monto, estado y fecha | Quien reserva | Acreditar el pago y resolver reclamaciones | Base de datos y pasarela de pagos |
 | **Datos de tarjeta o cuenta de pago** | Quien reserva | Procesar el cobro | **Solo en la pasarela de pagos.** Ver 2.3 |
-| Datos de cobro del propietario (a dónde se le gira la seña) | Propietario | Entregarle la seña que se cobró en su nombre | **[PENDIENTE: definir el mecanismo de giro y los datos necesarios]** |
+| Datos de cobro del propietario (a dónde se le gira el anticipo) | Propietario | Entregarle el anticipo que se cobró en su nombre | Los recibe la plataforma del propietario por canal privado |
 
-**[PENDIENTE: la lista exacta de campos del estudiante y el proveedor de pagos se
-cierran cuando se construya la pantalla de pago. Mientras no esté cerrada, este aviso
-no se publica.]**
+La lista exacta de campos del estudiante se cerrará al habilitar la pantalla de pago, y
+con ella el proveedor de pagos. **Hoy no hay ninguno contratado y ninguna de estas
+categorías se recoge todavía**; cuando se activen, esta sección se actualizará antes de
+empezar a usarlas.
 
 ### 2.3 Lo que NO guardamos
 
-- **No guardamos datos de tarjeta ni credenciales de pago.** Los procesa la **pasarela
-  de pagos**, que es un tercero con sus propias condiciones; la plataforma recibe el
+- **No guardamos datos de tarjeta ni credenciales de pago.** Los procesará la **pasarela
+  de pagos** —un tercero con sus propias condiciones, todavía sin contratar—; la
+  plataforma recibe el
   resultado de la operación (si se pagó, cuánto y con qué referencia), no el número de
   la tarjeta.
 - No pedimos **documento de identidad**, ni fecha de nacimiento, ni datos bancarios del
@@ -97,8 +88,8 @@ no se publica.]**
 - **Para publicar el anuncio y que un estudiante pueda encontrarlo.**
 - **Para gestionar la reserva del primer mes**: atender el contacto, cerrar la reserva
   y sostener el compromiso entre el estudiante y el propietario.
-- **Para cobrar el Depósito de Reserva** —la tarifa de servicio y la seña— y para
-  **entregar la seña al propietario**.
+- **Para cobrar el Depósito de Reserva** —la tarifa de servicio y el anticipo— y para
+  **entregar el anticipo al propietario**.
 - **Para administrar las cuentas:** entrar, confirmar el correo y recuperar la
   contraseña.
 - **Para moderar:** revisar publicaciones y retirar las que incumplan las condiciones
@@ -120,22 +111,23 @@ No se guarda ahí ningún dato personal — ni correo, ni nombre, ni número de 
 nada del pago — y por eso **el sitio no muestra el aviso de cookies** que sí necesitarían
 otras herramientas de medición.
 
-**[PENDIENTE: confirmar con el proveedor las condiciones del plan contratado y
-conservar esta afirmación solo mientras siga siendo cierta.]**
+Esta afirmación se mantiene solo mientras siga siendo cierta. Si la medición cambiara a
+una herramienta que use cookies o que identifique personas, esta sección se actualizaría
+y se pediría el consentimiento correspondiente **antes** de activarla.
 
 ## 6. Cuánto tiempo los conservamos
 
-**[PENDIENTE: definir el plazo.]** Los datos del anuncio se conservan mientras el
-anuncio siga publicado. Cuando un propietario retira su anuncio, se propone conservarlo
-**sin publicar** durante **[PENDIENTE]** por si quiere volver a activarlo, y borrarlo
-definitivamente después.
+Los datos del anuncio se conservan **mientras el anuncio siga publicado**. Cuando el
+propietario lo retira, se deja de publicar de inmediato y se conserva **sin publicar**
+solo el tiempo necesario para atender reclamaciones y por si quiere volver a activarlo;
+después se elimina.
 
 Las cuentas se conservan mientras no se pida su eliminación. Los correos electrónicos no
 se pueden reciclar mientras la cuenta exista.
 
-**Los datos de una reserva y de su pago se conservan el tiempo que exija la ley
-contable y tributaria**, aunque la reserva se cancele o la cuenta se elimine: son el
-soporte de un movimiento de dinero. **[PENDIENTE: fijar el plazo con el abogado.]**
+**Los datos de una reserva y de su pago se conservan el tiempo que exija la ley contable
+y tributaria**, aunque la reserva se cancele o la cuenta se elimine: son el soporte de un
+movimiento de dinero. Agotado ese plazo, se eliminan.
 
 ## 7. Tus derechos
 
@@ -148,15 +140,16 @@ La Constitución y la Ley 1581 de 2012 amparan estos derechos sobre tus datos:
 - **Solicitar prueba de la autorización.**
 - **Presentar quejas** ante la Superintendencia de Industria y Comercio.
 
-**Cómo ejercerlos: [PENDIENTE: canal de contacto y plazo de respuesta.]** Se propone un
-correo dedicado a estos asuntos y un plazo de respuesta de quince (15) días hábiles,
-ampliable en los términos de la ley. **[PENDIENTE: confirmar con el abogado.]**
+**Cómo ejercerlos:** escribiendo a **oterojuan15@gmail.com**, indicando qué dato quieres
+conocer, corregir o suprimir y quién eres. Respondemos en un plazo máximo de **quince
+(15) días hábiles**, ampliable en los términos de la ley.
 
 ### Si eres propietario y quieres dejar de recibir cobros en tu nombre
 
 Puedes **retirar el mandato** cuando quieras, retirando tu anuncio. Desde ese momento la
-plataforma deja de cobrar en tu nombre, sin afectar a las reservas ya cerradas.
-**[PENDIENTE: definir el canal formal por escrito para que quede constancia.]**
+plataforma deja de cobrar en tu nombre, sin afectar a las reservas ya cerradas. Para que
+quede constancia por escrito, basta con pedirlo a **oterojuan15@gmail.com** desde el
+correo registrado de tu cuenta.
 
 ### Si retiraste tu número de WhatsApp
 
@@ -168,8 +161,9 @@ guardado de antes, pídelo por el canal de la sección 7 y se elimina.
 
 El sitio está pensado para estudiantes universitarios y para propietarios de inmuebles.
 **No está dirigido a menores de edad**, y no se pide ningún dato a sabiendas de que lo
-sea. **[PENDIENTE: definir con el abogado qué hacer si se detecta una cuenta o una
-reserva de un menor — y si una reserva con pago en línea exige comprobación de edad.]**
+sea. Si se detecta una cuenta o una reserva de un menor de edad, **se suspende y se
+eliminan los datos asociados**, y quien ejerza su representación puede pedirlo por el
+canal de la sección 7.
 
 ## 9. Seguridad
 
@@ -188,6 +182,6 @@ actualización y se avisará a los propietarios por el correo registrado.
 
 ---
 
-**Última actualización:** [PENDIENTE — no publicar sin fecha]
-**Versión:** borrador 2 — incorpora el modelo de cobro del 2026-10-04, sin revisión
-jurídica
+**Última actualización:** 10 de octubre de 2026.
+**Versión:** 1.0 — incluye los datos del responsable del tratamiento y el modelo de
+reserva del primer mes.
