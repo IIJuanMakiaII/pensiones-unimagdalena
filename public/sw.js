@@ -68,6 +68,9 @@ const RUTAS_CACHEABLES = ["/", "/pensiones", "/barrios", "/guias", "/legal", "/o
 /**
  * Rutas de cuenta: nunca entran en ninguna caché, ni como respaldo sin
  * conexión. `/auth` cubre los manejadores de confirmación y cierre de sesión.
+ * `/maestro` cubre el panel del perfil maestro y su editor: es la pantalla más
+ * sensible del sitio —lista todos los anuncios y permite retirarlos— y no puede
+ * quedar guardada en un equipo compartido.
  */
 const RUTAS_CON_SESION = [
   "/publicar",
@@ -76,6 +79,7 @@ const RUTAS_CON_SESION = [
   "/recuperar",
   "/restablecer",
   "/auth",
+  "/maestro",
 ];
 
 /**
