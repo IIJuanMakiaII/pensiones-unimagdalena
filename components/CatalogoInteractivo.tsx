@@ -368,14 +368,14 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
             <h2 className="font-display text-lg font-bold text-neutro-800">
               Todavía no hay pensiones publicadas
             </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-neutro-600">
+            <p className="mx-auto mt-2 max-w-md text-base leading-relaxed text-neutro-600">
               Sé el primero: publica tu pensión o habitación y aparecerá aquí para
               los estudiantes de la Universidad del Magdalena.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/publicar"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-[15px] font-bold text-white transition hover:bg-primary-700"
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-base font-bold text-white transition hover:bg-primary-700"
               >
                 Publicar mi pensión
               </Link>
@@ -383,7 +383,7 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
                 <button
                   type="button"
                   onClick={alternarDemo}
-                  className="inline-flex h-12 items-center justify-center rounded-xl border border-accent-500 bg-white px-6 text-[15px] font-bold text-accent-700 transition hover:bg-accent-50"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-accent-500 bg-white px-6 text-base font-bold text-accent-700 transition hover:bg-accent-50"
                 >
                   🎓 Ver la demostración
                 </button>

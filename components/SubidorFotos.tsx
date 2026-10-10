@@ -155,7 +155,7 @@ export default function SubidorFotos({ valor, onChange, maximo = MAXIMO_FOTOS }:
 
         <label
           htmlFor="archivos-fotos"
-          className={`inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-[15px] font-bold text-white transition ${
+          className={`inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-bold text-white transition ${
             disponibles === 0 || subiendo
               ? "cursor-not-allowed bg-neutro-400"
               : "bg-primary-600 hover:bg-primary-700"
@@ -195,7 +195,7 @@ export default function SubidorFotos({ valor, onChange, maximo = MAXIMO_FOTOS }:
                 className="h-24 w-full object-cover"
               />
               {indice === 0 && (
-                <span className="absolute left-1 top-1 rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="absolute left-1 top-1 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-bold text-white">
                   Principal
                 </span>
               )}
@@ -233,7 +233,7 @@ export default function SubidorFotos({ valor, onChange, maximo = MAXIMO_FOTOS }:
             Añadir
           </button>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-neutro-500">{AYUDA_IMAGENES}</p>
+        <p className="mt-1 text-xs leading-relaxed text-neutro-500">{AYUDA_IMAGENES}</p>
       </details>
     </div>
   );

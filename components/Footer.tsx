@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <LogoNido className="h-8" />
-            <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+            <p className="mt-2 text-base leading-relaxed text-neutro-600">
               Marketplace de pensiones y habitaciones para estudiantes de la
               Universidad del Magdalena, en Santa Marta. Verificamos cada
               propiedad antes de publicarla.

@@ -103,7 +103,7 @@ export default function FormularioLogin({ destino, configurado, aviso }: Props) 
       <button
         type="submit"
         disabled={enviando || !configurado}
-        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-base font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? "Ingresando…" : "Iniciar sesión"}
       </button>

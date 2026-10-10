@@ -84,10 +84,10 @@ export default function SellosConfianza() {
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white shadow-sm">
                 {s.icono}
               </span>
-              <h3 className="font-display text-[15px] font-bold leading-snug text-neutro-800">
+              <h3 className="font-display text-base font-bold leading-snug text-neutro-800">
                 {s.titulo}
               </h3>
-              <p className="text-sm leading-relaxed text-neutro-600">{s.descripcion}</p>
+              <p className="text-base leading-relaxed text-neutro-600">{s.descripcion}</p>
             </li>
           ))}
         </ul>

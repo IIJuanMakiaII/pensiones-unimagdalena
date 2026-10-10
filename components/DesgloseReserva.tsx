@@ -43,11 +43,11 @@ export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: P
         Qué pagas al reservar
       </h3>
       {etiquetaHabitacion && (
-        <p className="mt-1.5 inline-flex rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary-800 ring-1 ring-primary-100">
+        <p className="mt-1.5 inline-flex rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary-800 ring-1 ring-primary-100">
           Habitación {etiquetaHabitacion}
         </p>
       )}
-      <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+      <p className="mt-2 text-base leading-relaxed text-neutro-600">
         El primer mes son <strong className="text-neutro-800">{formatearCOP(canon)}</strong> y se
         paga en dos momentos: la reserva ahora y el saldo cuando llegues.
       </p>

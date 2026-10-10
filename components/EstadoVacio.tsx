@@ -28,7 +28,7 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
           Ninguna pensión coincide con tus filtros
         </h2>
         {bloqueante ? (
-          <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-neutro-600">
+          <p className="mx-auto mt-1 max-w-md text-base leading-relaxed text-neutro-600">
             <strong className="font-semibold text-neutro-800">{bloqueante.frase}</strong> no hay
             coincidencias ahora mismo.{" "}
             {bloqueante.resultadosAlQuitar > 0
@@ -40,7 +40,7 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
               : "Puedes probar a quitar varios filtros a la vez."}
           </p>
         ) : (
-          <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-neutro-600">
+          <p className="mx-auto mt-1 max-w-md text-base leading-relaxed text-neutro-600">
             Prueba subiendo el precio máximo o quitando algunos filtros.
           </p>
         )}
@@ -50,7 +50,7 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
           <button
             type="button"
             onClick={onQuitarBloqueante}
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-accent-700 px-6 text-[15px] font-bold text-white transition hover:bg-accent-800"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-accent-700 px-6 text-base font-bold text-white transition hover:bg-accent-800"
           >
             Quitar ese filtro
           </button>
@@ -58,7 +58,7 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
         <button
           type="button"
           onClick={onLimpiar}
-          className={`inline-flex h-12 items-center justify-center rounded-xl px-6 text-[15px] font-bold transition ${
+          className={`inline-flex h-12 items-center justify-center rounded-xl px-6 text-base font-bold transition ${
             haySalidaParcial
               ? "border border-primary-600 bg-white text-primary-700 hover:bg-primary-50"
               : "bg-accent-700 text-white hover:bg-accent-800"

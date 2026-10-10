@@ -41,13 +41,13 @@ export default function PanelPublicacion({ pension }: Props) {
     <div className="rounded-2xl bg-white p-4 ring-1 ring-neutro-200">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-display text-[15px] font-bold text-neutro-800">{pension.titulo}</p>
+          <p className="font-display text-base font-bold text-neutro-800">{pension.titulo}</p>
           <p className="mt-0.5 text-xs text-neutro-500">{pension.barrio || "Santa Marta"}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+            className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
               pension.activa
                 ? "bg-primary-50 text-primary-800 ring-1 ring-primary-100"
                 : "bg-neutro-100 text-neutro-600 ring-1 ring-neutro-200"
@@ -55,7 +55,7 @@ export default function PanelPublicacion({ pension }: Props) {
           >
             {pension.activa ? "Publicada" : "Retirada"}
           </span>
-          <span className="rounded-full bg-neutro-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-neutro-600">
+          <span className="rounded-full bg-neutro-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-neutro-600">
             {libres.length} de {habitaciones.length} libres
           </span>
         </div>
@@ -115,7 +115,7 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-neutro-800">
             {descripcion}
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
+              className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${
                 habitacion.disponible
                   ? "bg-primary-50 text-primary-800 ring-1 ring-primary-100"
                   : "bg-confianza-danger/10 text-confianza-danger"

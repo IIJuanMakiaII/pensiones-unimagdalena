@@ -83,7 +83,7 @@ export default function EditorHabitaciones({ habitaciones, onChange, maximo = 20
               <button
                 type="button"
                 onClick={() => quitar(indice)}
-                className="ml-3 rounded-lg px-2 py-0.5 text-[11px] font-semibold text-confianza-danger transition hover:bg-confianza-danger/10"
+                className="ml-3 rounded-lg px-2 py-0.5 text-xs font-semibold text-confianza-danger transition hover:bg-confianza-danger/10"
               >
                 Quitar
               </button>

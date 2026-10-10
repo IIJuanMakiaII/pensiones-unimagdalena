@@ -32,13 +32,13 @@ export default function FormularioRestablecer({ conSesion }: Props) {
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">
           El enlace ya no sirve
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-2 text-base leading-relaxed text-neutro-600">
           Los enlaces de recuperación caducan por seguridad y solo se pueden usar una vez desde el
           mismo navegador donde los pediste. Pide uno nuevo y ábrelo enseguida.
         </p>
         <Link
           href="/recuperar"
-          className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700"
+          className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-primary-600 px-4 text-base font-bold text-white transition hover:bg-primary-700"
         >
           Pedir otro enlace
         </Link>
@@ -60,7 +60,7 @@ export default function FormularioRestablecer({ conSesion }: Props) {
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">
           Contraseña actualizada
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-2 text-base leading-relaxed text-neutro-600">
           Ya puedes entrar con tu contraseña nueva. Tu sesión sigue abierta en este dispositivo.
         </p>
         <button
@@ -69,7 +69,7 @@ export default function FormularioRestablecer({ conSesion }: Props) {
             router.push("/publicar");
             router.refresh();
           }}
-          className="mt-5 h-12 w-full rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700"
+          className="mt-5 h-12 w-full rounded-xl bg-primary-600 px-4 text-base font-bold text-white transition hover:bg-primary-700"
         >
           Ir a mis publicaciones
         </button>
@@ -165,7 +165,7 @@ export default function FormularioRestablecer({ conSesion }: Props) {
       <button
         type="submit"
         disabled={enviando}
-        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-base font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? "Guardando…" : "Guardar contraseña"}
       </button>

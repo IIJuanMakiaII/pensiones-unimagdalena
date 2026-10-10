@@ -270,7 +270,7 @@ function BotonPublicar() {
     <button
       type="submit"
       disabled={pending}
-      className="mt-6 h-12 w-full rounded-xl bg-accent-700 px-4 text-[15px] font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
+      className="mt-6 h-12 w-full rounded-xl bg-accent-700 px-4 text-base font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "Publicando…" : "Publicar pensión"}
     </button>

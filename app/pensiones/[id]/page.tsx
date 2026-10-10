@@ -266,7 +266,7 @@ export default async function DetallePensionPage({ params }: Props) {
               <h2 className="font-display text-lg font-bold text-neutro-800">
                 Sobre este alojamiento
               </h2>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-neutro-600">
+              <p className="mt-2 whitespace-pre-line text-base leading-relaxed text-neutro-600">
                 {pension.descripcion}
               </p>
             </section>

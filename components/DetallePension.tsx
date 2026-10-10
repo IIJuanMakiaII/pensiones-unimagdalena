@@ -46,7 +46,7 @@ export default function DetallePension({ pension }: Props) {
 
       {/* Quién responde. El botón de reserva abre el WhatsApp de la plataforma, no
           el del anfitrión: el estudiante tiene que saber con quién va a hablar. */}
-      <p className="mt-3 rounded-xl bg-primary-50 px-3.5 py-2.5 text-sm font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
+      <p className="mt-3 rounded-xl bg-primary-50 px-3.5 py-2.5 text-base font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
         Tu reserva la gestionamos nosotros: al pulsar «Reservar» nos escribes por WhatsApp y
         cerramos contigo el primer mes.
       </p>
@@ -90,11 +90,11 @@ export default function DetallePension({ pension }: Props) {
                 />
                 <span className="flex-1">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-display text-[15px] font-bold text-neutro-800">
+                    <span className="font-display text-base font-bold text-neutro-800">
                       {etiquetaTipo(h.tipo)} · {etiquetaGenero(h.genero)}
                     </span>
                     {h.alimentacion_incluida && (
-                      <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary-800 ring-1 ring-primary-100">
+                      <span className="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary-800 ring-1 ring-primary-100">
                         Con alimentación
                       </span>
                     )}
@@ -133,7 +133,7 @@ export default function DetallePension({ pension }: Props) {
       {disponibles.length === 0 && (
         <div className="mt-4 rounded-2xl border border-dashed border-neutro-300 bg-white p-5">
           {pension.habitaciones.length === 0 ? (
-            <p className="text-sm leading-relaxed text-neutro-600">
+            <p className="text-base leading-relaxed text-neutro-600">
               Este anfitrión todavía no publicó habitaciones con tipo, género y precio.
               Escríbele para conocer la disponibilidad y el precio exacto.
             </p>
@@ -144,7 +144,7 @@ export default function DetallePension({ pension }: Props) {
               <p className="font-display text-base font-bold text-neutro-800">
                 Sin habitaciones libres ahora
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-neutro-600">
+              <p className="mt-1 text-base leading-relaxed text-neutro-600">
                 El anfitrión marcó todas sus habitaciones como ocupadas. Pregúntale por la
                 próxima disponibilidad o por otras opciones del mismo alojamiento.
               </p>
@@ -161,7 +161,7 @@ export default function DetallePension({ pension }: Props) {
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+            className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp
@@ -183,7 +183,7 @@ export default function DetallePension({ pension }: Props) {
                 <span>
                   {etiquetaTipo(h.tipo)} · {etiquetaGenero(h.genero)}
                 </span>
-                <span className="rounded-full bg-confianza-danger/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-confianza-danger">
+                <span className="rounded-full bg-confianza-danger/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-confianza-danger">
                   Agotado
                 </span>
               </li>
@@ -216,7 +216,7 @@ export default function DetallePension({ pension }: Props) {
                   con_habitacion: true,
                 })
               }
-              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
             >
               <WhatsAppIcon />
               Reservar

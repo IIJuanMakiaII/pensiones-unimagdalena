@@ -123,7 +123,7 @@ function BloqueVisitante() {
           `sm` se recuperan los rótulos completos. */}
       <Link
         href="/registro"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-2.5 text-[13px] font-bold text-primary-700 transition hover:bg-primary-50 sm:px-3 sm:text-sm"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-2.5 text-sm font-bold text-primary-700 transition hover:bg-primary-50 sm:px-3 sm:text-sm"
       >
         <span className="sm:hidden">Crear cuenta</span>
         <span className="hidden sm:inline">Hazte una cuenta</span>
@@ -131,7 +131,7 @@ function BloqueVisitante() {
 
       <Link
         href="/login"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-3 text-[13px] font-bold text-white transition hover:bg-primary-700 sm:px-3.5 sm:text-sm"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-3 text-sm font-bold text-white transition hover:bg-primary-700 sm:px-3.5 sm:text-sm"
       >
         Inicia sesión
       </Link>
@@ -153,7 +153,7 @@ function BloqueSesion({ identidad }: { identidad: Identidad }) {
       {identidad.esMaestro && (
         <Link
           href="/maestro"
-          className="inline-flex h-11 shrink-0 items-center rounded-xl border border-accent-500 px-2.5 text-[13px] font-bold text-accent-700 transition hover:bg-accent-50 sm:px-3 sm:text-sm"
+          className="inline-flex h-11 shrink-0 items-center rounded-xl border border-accent-500 px-2.5 text-sm font-bold text-accent-700 transition hover:bg-accent-50 sm:px-3 sm:text-sm"
         >
           Maestro
         </Link>
@@ -167,7 +167,7 @@ function BloqueSesion({ identidad }: { identidad: Identidad }) {
       >
         <span
           aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-[13px] font-extrabold text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-extrabold text-white"
         >
           {inicial}
         </span>

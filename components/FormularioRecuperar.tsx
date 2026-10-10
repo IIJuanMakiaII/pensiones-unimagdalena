@@ -54,7 +54,7 @@ export default function FormularioRecuperar({ configurado }: Props) {
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-card ring-1 ring-neutro-200 md:p-8"
       >
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">Revisa tu correo</h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-2 text-base leading-relaxed text-neutro-600">
           Si <strong className="break-all">{email}</strong> tiene una cuenta, te enviamos un enlace
           para crear una contraseña nueva. Ábrelo desde este mismo dispositivo y tarda poco: los
           enlaces caducan por seguridad.
@@ -67,7 +67,7 @@ export default function FormularioRecuperar({ configurado }: Props) {
         <button
           type="button"
           onClick={() => setEnviado(false)}
-          className="mt-5 h-12 w-full rounded-xl border border-primary-600 px-4 text-[15px] font-bold text-primary-700 transition hover:bg-primary-50"
+          className="mt-5 h-12 w-full rounded-xl border border-primary-600 px-4 text-base font-bold text-primary-700 transition hover:bg-primary-50"
         >
           Usar otro correo
         </button>
@@ -121,7 +121,7 @@ export default function FormularioRecuperar({ configurado }: Props) {
       <button
         type="submit"
         disabled={enviando || !configurado}
-        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-[15px] font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 h-12 w-full rounded-xl bg-primary-600 px-4 text-base font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? "Enviando…" : "Enviar enlace de recuperación"}
       </button>
