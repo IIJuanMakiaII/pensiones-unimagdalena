@@ -161,7 +161,7 @@ export default function FormularioRegistro({ configurado }: Props) {
           onChange={(evento) => setAceptaTerminos(evento.target.checked)}
           className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
         />
-        <div className="text-sm leading-relaxed text-neutro-700">
+        <div className="text-base leading-relaxed text-neutro-700">
           <label htmlFor="aceptaTerminos" className="cursor-pointer">
             He leído y acepto las condiciones de uso y el aviso de privacidad.
           </label>
@@ -190,7 +190,7 @@ export default function FormularioRegistro({ configurado }: Props) {
       <button
         type="submit"
         disabled={enviando || !configurado}
-        className="mt-6 h-12 w-full rounded-xl bg-accent-700 px-4 text-[15px] font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 h-12 w-full rounded-xl bg-accent-700 px-4 text-base font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? "Creando cuenta…" : "Crear cuenta de anfitrión"}
       </button>

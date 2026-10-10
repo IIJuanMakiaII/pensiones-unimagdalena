@@ -18,13 +18,13 @@ export default function Hero() {
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#resultados"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             Ver habitaciones disponibles
           </a>
           <a
             href="#confianza"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-neutro-200 bg-white px-6 text-[15px] font-semibold text-neutro-800 transition hover:border-neutro-800"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-neutro-200 bg-white px-6 text-base font-semibold text-neutro-800 transition hover:border-neutro-800"
           >
             Conoce cómo funciona
           </a>

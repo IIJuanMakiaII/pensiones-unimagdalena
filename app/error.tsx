@@ -36,7 +36,7 @@ export default function Error({
       <h1 className="mt-4 font-display text-2xl font-extrabold text-neutro-900">
         Algo no cargó como esperábamos
       </h1>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-neutro-600">
+      <p className="mt-2 max-w-md text-base leading-relaxed text-neutro-600">
         Tuvimos un problema temporal al traer las pensiones. Tus filtros y favoritos
         siguen guardados: puedes reintentar o volver al inicio.
       </p>
@@ -45,13 +45,13 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-[15px] font-bold text-white transition hover:bg-primary-700"
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-base font-bold text-white transition hover:bg-primary-700"
         >
           Reintentar
         </button>
         <Link
           href="/"
-          className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-6 text-[15px] font-bold text-neutro-700 transition hover:bg-neutro-100"
+          className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-6 text-base font-bold text-neutro-700 transition hover:bg-neutro-100"
         >
           Volver al inicio
         </Link>

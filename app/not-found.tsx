@@ -19,7 +19,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="inline-flex h-12 items-center justify-center rounded-xl bg-accent-700 px-6 text-[15px] font-bold text-white transition hover:bg-accent-800"
+        className="inline-flex h-12 items-center justify-center rounded-xl bg-accent-700 px-6 text-base font-bold text-white transition hover:bg-accent-800"
       >
         Ver todas las pensiones
       </Link>

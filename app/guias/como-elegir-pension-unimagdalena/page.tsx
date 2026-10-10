@@ -121,7 +121,7 @@ export default function PaginaGuia() {
         <h1 className="mt-2 font-display text-2xl font-extrabold text-neutro-800 md:text-3xl">
           Cómo elegir pensión cerca de Unimagdalena
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-2 text-base leading-relaxed text-neutro-600">
           Elegir dónde vivir el semestre se decide en una visita, no en una página web. Esto es lo
           que conviene preguntar y comprobar antes de firmar o transferir, en el orden en que
           ocurre.
@@ -132,7 +132,7 @@ export default function PaginaGuia() {
             <h2 className="font-display text-lg font-bold text-neutro-800">{bloque.titulo}</h2>
             <ul className="mt-3 space-y-2">
               {bloque.puntos.map((punto) => (
-                <li key={punto} className="flex gap-2 text-sm leading-relaxed text-neutro-700">
+                <li key={punto} className="flex gap-2 text-base leading-relaxed text-neutro-700">
                   <span aria-hidden="true" className="text-primary-600">
                     ✓
                   </span>
@@ -149,7 +149,7 @@ export default function PaginaGuia() {
             {PREGUNTAS.map((item) => (
               <div key={item.pregunta} className="rounded-2xl border border-neutro-200 bg-white p-4">
                 <dt className="font-semibold text-neutro-800">{item.pregunta}</dt>
-                <dd className="mt-1 text-sm leading-relaxed text-neutro-600">{item.respuesta}</dd>
+                <dd className="mt-1 text-base leading-relaxed text-neutro-600">{item.respuesta}</dd>
               </div>
             ))}
           </dl>
@@ -159,7 +159,7 @@ export default function PaginaGuia() {
           <h2 className="font-display text-base font-bold text-primary-900">
             Siga buscando por barrio
           </h2>
-          <p className="mt-1 text-sm leading-relaxed text-primary-900/80">
+          <p className="mt-1 text-base leading-relaxed text-primary-900/80">
             Cada barrio tiene su propia distancia al campus y su rango de precios. Puede verlos
             todos, con datos de las publicaciones actuales.
           </p>

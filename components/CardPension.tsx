@@ -124,7 +124,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           <div>
             {precioMostrado > 0 && (
               <>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-neutro-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutro-500">
                   {destacada ? `Desde · ${etiquetaTipo(destacada.tipo)}` : "Mensual"}
                 </p>
                 <p className="precio font-display text-xl font-semibold leading-none text-neutro-800">
@@ -148,7 +148,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: true,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Reservar por WhatsApp
@@ -172,7 +172,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                   con_habitacion: false,
                 })
               }
-              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
             >
               <WhatsAppIcon />
               Consultar por WhatsApp
@@ -190,7 +190,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp
@@ -206,7 +206,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             </p>
             <Link
               href={`/pensiones/${pension.slug}`}
-              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl border border-primary-600 bg-white px-4 text-[15px] font-bold text-primary-700 transition hover:bg-primary-50"
+              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl border border-primary-600 bg-white px-4 text-base font-bold text-primary-700 transition hover:bg-primary-50"
             >
               Ver todas las habitaciones
             </Link>

@@ -31,7 +31,7 @@ interface Props {
 export default function EtiquetaVerificado({ className = "" }: Props) {
   return (
     <span
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full bg-primary-600 px-2 py-1 text-[11px] font-semibold leading-none text-white shadow-sm ${className}`}
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full bg-primary-600 px-2 py-1 text-xs font-semibold leading-none text-white shadow-sm ${className}`}
     >
       {TEXTO_SELLO}
     </span>

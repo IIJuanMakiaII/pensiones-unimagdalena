@@ -361,7 +361,7 @@ export default function FormularioEditarPension({
         <BotonGuardar />
         <Link
           href={volverA}
-          className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-5 text-[15px] font-bold text-neutro-700 transition hover:bg-neutro-100"
+          className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-5 text-base font-bold text-neutro-700 transition hover:bg-neutro-100"
         >
           Cancelar
         </Link>
@@ -377,7 +377,7 @@ function BotonGuardar() {
     <button
       type="submit"
       disabled={pending}
-      className="h-12 flex-1 rounded-xl bg-accent-700 px-4 text-[15px] font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
+      className="h-12 flex-1 rounded-xl bg-accent-700 px-4 text-base font-bold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "Guardando…" : "Guardar cambios"}
     </button>

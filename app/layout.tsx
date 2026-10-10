@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Public_Sans } from "next/font/google";
+import { Lexend, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import {
   numeroWhatsAppValido,
@@ -28,7 +28,13 @@ const fuenteDisplay = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const fuenteCuerpo = Public_Sans({
+/**
+ * Lexend para el cuerpo. Se eligio por sus tres numeros medidos, no por gusto:
+ * x-height 0,53 (a 1 punto de la anterior), el mayor contraste de negrita de las
+ * ocho candidatas (6,3 %) y la unica pensada para legibilidad en pantalla. Es la
+ * mas ancha de todas (105 %), asi que el reflujo de lineas se vigila aparte.
+ */
+const fuenteCuerpo = Lexend({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--fuente-cuerpo",

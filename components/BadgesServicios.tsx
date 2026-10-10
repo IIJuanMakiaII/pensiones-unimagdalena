@@ -14,13 +14,13 @@ export default function BadgesServicios({ servicios, maxVisibles = 3 }: Props) {
       {visibles.map((s) => (
         <li
           key={s}
-          className="rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary-800"
+          className="rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary-800"
         >
           {s}
         </li>
       ))}
       {ocultos > 0 && (
-        <li className="rounded-full bg-neutro-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutro-600">
+        <li className="rounded-full bg-neutro-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-neutro-600">
           +{ocultos}
         </li>
       )}

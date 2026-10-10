@@ -121,14 +121,14 @@ function ConfiguracionPendiente() {
         </h1>
 
         <div className="mt-4 rounded-2xl border border-accent-200 bg-accent-50 p-5">
-          <p className="text-sm leading-relaxed text-neutro-700">
+          <p className="text-base leading-relaxed text-neutro-700">
             El formulario de publicación y el inicio de sesión ya están construidos, pero
             necesitan las credenciales de Supabase para funcionar. Mientras tanto, el catálogo
             sigue mostrando los datos de demostración: <strong>nada está roto</strong>.
           </p>
         </div>
 
-        <ol className="mt-6 space-y-4 text-sm leading-relaxed text-neutro-700">
+        <ol className="mt-6 space-y-4 text-base leading-relaxed text-neutro-700">
           <li>
             <strong>1.</strong> Crea un proyecto en{" "}
             <span className="font-semibold">supabase.com</span> (plan gratuito) y copia la
@@ -173,20 +173,20 @@ function ErrorSesion() {
         <h1 className="font-display text-2xl font-extrabold text-neutro-900">
           No pudimos verificar tu sesión
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-3 text-base leading-relaxed text-neutro-600">
           Tu sesión está guardada, pero el servicio de cuentas no respondió. Suele ser
           algo temporal: vuelve a intentarlo en unos segundos.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/publicar"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-[15px] font-bold text-white transition hover:bg-primary-700"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-primary-600 px-6 text-base font-bold text-white transition hover:bg-primary-700"
           >
             Reintentar
           </Link>
           <Link
             href="/"
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-6 text-[15px] font-bold text-neutro-700 transition hover:bg-neutro-100"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-neutro-300 px-6 text-base font-bold text-neutro-700 transition hover:bg-neutro-100"
           >
             Volver al catálogo
           </Link>

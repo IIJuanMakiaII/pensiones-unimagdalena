@@ -19,18 +19,18 @@ const CLASES: Record<string, string> = {
   h1: "mt-2 font-display text-2xl font-extrabold text-neutro-900 md:text-3xl",
   h2: "mt-8 font-display text-xl font-bold text-neutro-900",
   h3: "mt-6 font-display text-lg font-bold text-neutro-800",
-  p: "mt-3 text-sm leading-relaxed text-neutro-700 md:text-[15px]",
-  ul: "mt-3 space-y-1.5 pl-5 text-sm leading-relaxed text-neutro-700 md:text-[15px]",
-  ol: "mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-neutro-700 md:text-[15px]",
+  p: "mt-3 text-base leading-relaxed text-neutro-700",
+  ul: "mt-3 space-y-1.5 pl-5 text-base leading-relaxed text-neutro-700",
+  ol: "mt-3 list-decimal space-y-1.5 pl-5 text-base leading-relaxed text-neutro-700",
   li: "list-disc",
   blockquote:
-    "mt-4 rounded-xl border-l-4 border-confianza-gold bg-confianza-gold/10 px-4 py-3 text-sm leading-relaxed text-neutro-700",
+    "mt-4 rounded-xl border-l-4 border-confianza-gold bg-confianza-gold/10 px-4 py-3 text-base leading-relaxed text-neutro-700",
   hr: "mt-8 border-neutro-200",
   table: "mt-4 w-full border-collapse text-left text-sm",
   th: "border-b border-neutro-300 bg-neutro-100 px-3 py-2 font-bold text-neutro-800",
   td: "border-b border-neutro-200 px-3 py-2 align-top text-neutro-700",
   a: "font-semibold text-primary-700 underline underline-offset-2 hover:text-primary-800",
-  code: "rounded bg-neutro-100 px-1.5 py-0.5 font-mono text-[13px] text-neutro-800",
+  code: "rounded bg-neutro-100 px-1.5 py-0.5 font-mono text-sm text-neutro-800",
   strong: "font-semibold text-neutro-900",
 };
 

@@ -246,7 +246,7 @@ export default function Filtros({
           <button
             type="button"
             onClick={cerrar}
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch-hover px-6 text-[15px] font-semibold text-white transition hover:bg-primary-700 lg:hidden"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700 lg:hidden"
           >
             {resultados === 1 ? "Ver 1 pensión" : `Ver ${resultados} pensiones`}
           </button>

@@ -41,7 +41,7 @@ export default async function PaginaBarrios() {
         <h1 className="mt-2 font-display text-2xl font-extrabold text-neutro-800 md:text-3xl">
           Barrios cerca de la Universidad del Magdalena
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        <p className="mt-2 text-base leading-relaxed text-neutro-600">
           Los barrios donde hoy hay habitaciones publicadas. La distancia es la que declara cada
           anfitrión y el rango de precios sale de las habitaciones que se pueden reservar.
         </p>
