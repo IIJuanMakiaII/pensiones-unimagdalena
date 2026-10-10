@@ -150,8 +150,9 @@ export default function FormularioRegistro({ configurado }: Props) {
 
       {/* Los textos legales deben alcanzarse también desde el registro: la cuenta
           se crea con ellos publicados (tarea #30). */}
-      <label className="mt-5 flex cursor-pointer items-start gap-3">
+      <div className="mt-5 flex items-start gap-3">
         <input
+          id="aceptaTerminos"
           type="checkbox"
           name="aceptaTerminos"
           value="si"
@@ -160,28 +161,31 @@ export default function FormularioRegistro({ configurado }: Props) {
           onChange={(evento) => setAceptaTerminos(evento.target.checked)}
           className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
         />
-        <span className="text-sm leading-relaxed text-neutro-700">
-          He leído y acepto las{" "}
-          <Link
-            href="/legal/condiciones"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-primary-700 underline underline-offset-2"
-          >
-            condiciones de uso
-          </Link>{" "}
-          y el{" "}
-          <Link
-            href="/legal/privacidad"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-primary-700 underline underline-offset-2"
-          >
-            aviso de privacidad
-          </Link>
-          .
-        </span>
-      </label>
+        <div className="text-sm leading-relaxed text-neutro-700">
+          <label htmlFor="aceptaTerminos" className="cursor-pointer">
+            He leído y acepto las condiciones de uso y el aviso de privacidad.
+          </label>
+          <p className="mt-1">
+            <Link
+              href="/legal/condiciones"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-primary-700 underline underline-offset-2"
+            >
+              Leer las condiciones de uso
+            </Link>{" "}
+            ·{" "}
+            <Link
+              href="/legal/privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-primary-700 underline underline-offset-2"
+            >
+              Leer el aviso de privacidad
+            </Link>
+          </p>
+        </div>
+      </div>
 
       <button
         type="submit"
