@@ -7,12 +7,13 @@ export default function Hero() {
           Santa Marta · Universidad del Magdalena
         </p>
         <h1 className="max-w-3xl font-display text-3xl font-extrabold leading-tight md:text-5xl">
-          Pensiones verificadas a minutos de Unimagdalena, en Santa Marta
+          Pensiones para estudiantes a minutos de Unimagdalena, en Santa Marta
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutro-600 md:text-lg">
           Vive a minutos caminando del campus con precios mensuales claros y
-          reserva acompañada por Nido. Elegimos y verificamos cada hogar para
-          que tú, estudiante foráneo, y tus padres, decidan con tranquilidad.
+          reserva acompañada por Nido. Visitamos en sitio cada inmueble que
+          sellamos, para que tú, estudiante foráneo, y tus padres, decidan con
+          tranquilidad.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -32,7 +33,7 @@ export default function Hero() {
 
         <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm font-semibold text-neutro-700">
           <li className="flex items-center gap-2">
-            <CheckBadge /> Verificación presencial
+            <CheckBadge /> Verificación presencial con sello
           </li>
           <li className="flex items-center gap-2">
             <CheckBadge /> Gestionamos tu reserva
