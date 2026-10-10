@@ -77,18 +77,65 @@ export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: num
   return { min, max };
 }
 
+/**
+ * ¿Cae este anuncio dentro del tramo elegido?
+ *
+ * Los cuatro tramos **parten el rango sin dejar nada fuera y sin solaparse**, y
+ * cada frontera está decidida en un solo sitio: 5 empieza el segundo tramo —por eso
+ * el primero es `<5` y no `≤5`— y 15 cierra el tercero, de modo que 16 ya es
+ * «+ 15 min». El reparto queda así, con cada valor en exactamente un tramo:
+ *
+ *   <5 → 0..4 · 5-10 → 5..10 · 11-15 → 11..15 · >15 → 16 y siguientes
+ *
+ * `cualquiera` es la ausencia de filtro y no un quinto tramo: devuelve `true` para
+ * cualquier valor, incluidos los que el catálogo no admite por arriba. Por eso el
+ * `default` es correcto y no un descuido.
+ */
 export function coincideRangoDistancia(minutos: number, rango: RangoDistancia): boolean {
   switch (rango) {
     case "<5":
       return minutos < 5;
     case "5-10":
       return minutos >= 5 && minutos <= 10;
-    case "10-15":
+    case "11-15":
       return minutos > 10 && minutos <= 15;
+    case ">15":
+      return minutos > 15;
     default:
       return true;
   }
 }
+
+/**
+ * Los cuatro tramos con filtro, en orden de cercanía. No incluye `cualquiera`,
+ * que es la ausencia de filtro y no un tramo.
+ *
+ * Es la lista canónica: la usan el motor para validar lo que llega por la
+ * dirección y el panel para pintar sus opciones. Antes las opciones y su nombre
+ * vivían en dos mapas copiados —uno en el panel y otro en los chips—, que es la
+ * clase de copia que se queda atrás cuando solo se corrige una.
+ */
+export const TRAMOS_DISTANCIA: Exclude<RangoDistancia, "cualquiera">[] = [
+  "<5",
+  "5-10",
+  "11-15",
+  ">15",
+];
+
+/**
+ * Cómo se llama cada tramo en pantalla.
+ *
+ * Los rótulos no repiten el 10: el tramo que va de 11 a 15 se llama «11–15 min»
+ * aunque su frontera inferior sea 10, porque quien lee busca «¿me sirve algo a
+ * doce minutos?» y no tiene por qué saber que 10 pertenece al tramo anterior.
+ */
+export const ETIQUETA_DISTANCIA: Record<RangoDistancia, string> = {
+  cualquiera: "Cualquiera",
+  "<5": "< 5 min",
+  "5-10": "5–10 min",
+  "11-15": "11–15 min",
+  ">15": "+ 15 min",
+};
 
 /** Una habitación coincide si está disponible y cumple precio, género y alimentación. */
 export function habitacionCumpleFiltros(h: Habitacion, f: FiltrosUI): boolean {
@@ -374,13 +421,36 @@ export function filtrosAParametros(f: FiltrosUI, precioMaximoReal: number): URLS
   return parametros;
 }
 
+/**
+ * Nombres de tramo que ya no se escriben pero se siguen entendiendo.
+ *
+ * Antes de la tarea #50 el tramo de 11 a 15 se llamaba `10-15`: nombraba su
+ * frontera inferior aunque nunca incluyó el 10. Se sigue aceptando al leer para
+ * que un enlace ya compartido conserve **su significado** en vez de degradarse a
+ * «cualquier distancia» sin avisar, que ampliaría la búsqueda del estudiante a sus
+ * espaldas. Al escribir se emite siempre el nombre nuevo, así que la dirección se
+ * corrige sola en la siguiente navegación.
+ */
+const ALIAS_DISTANCIA: Record<string, RangoDistancia> = { "10-15": "11-15" };
+
+/**
+ * El tramo que nombra una dirección, o `cualquiera` si no nombra ninguno.
+ *
+ * Cualquier valor no reconocido cae en «cualquiera» a propósito: una dirección
+ * manipulada no debe dejar la lista vacía, y «sin filtro» es lo que el estudiante
+ * espera si el enlace venía roto.
+ */
+function tramoDeDistancia(valor: string): RangoDistancia {
+  if ((TRAMOS_DISTANCIA as string[]).includes(valor)) return valor as RangoDistancia;
+  return ALIAS_DISTANCIA[valor] ?? "cualquiera";
+}
+
 /** Reconstruye los filtros desde la URL. Ignora valores inválidos. */
 export function parametrosAFiltros(
   parametros: URLSearchParams,
   precioMaximoReal: number
 ): FiltrosUI {
   const generos = ["mixto", "femenino", "masculino"];
-  const rangos: RangoDistancia[] = ["<5", "5-10", "10-15"];
   const ordenes: Orden[] = ["distancia", "precio", "puntaje"];
 
   const genero = parametros.get("genero") ?? "";
@@ -392,9 +462,7 @@ export function parametrosAFiltros(
     precioMaximoCop:
       Number.isFinite(precio) && precio > 0 ? Math.min(precio, precioMaximoReal) : precioMaximoReal,
     genero: generos.includes(genero) ? (genero as FiltrosUI["genero"]) : "todos",
-    rangoDistancia: rangos.includes(distancia as RangoDistancia)
-      ? (distancia as RangoDistancia)
-      : "cualquiera",
+    rangoDistancia: tramoDeDistancia(distancia),
     soloConAlimentacion: parametros.get("comida") === "1",
     soloVerificadas: parametros.get("verificadas") === "1",
     soloFavoritas: parametros.get("favoritas") === "1",

@@ -11,6 +11,7 @@ import EditorHabitaciones, {
   type HabitacionForm,
 } from "@/components/EditorHabitaciones";
 import {
+  BARRIO_OTRO,
   BARRIOS,
   NORMAS,
   SERVICIOS,
@@ -37,6 +38,19 @@ export default function FormularioPension() {
    * sin habitaciones desaparece en cuanto el estudiante usa un filtro.
    */
   const [habitaciones, setHabitaciones] = useState<HabitacionForm[]>([{ ...HABITACION_INICIAL }]);
+
+  /**
+   * Barrio: el desplegable arranca **sin elegir** (tarea #50).
+   *
+   * Antes traía «Mamatoco» puesto. Un valor preseleccionado no se lee como una
+   * pregunta: si el anfitrión no lo mira, publica un barrio que nunca declaró, y el
+   * dato acaba pareciendo verificado. Vacío obliga a contestar, y de paso la lista
+   * enseña los sectores reales cercanos al campus.
+   */
+  const [barrio, setBarrio] = useState("");
+  /** El nombre que se escribe cuando el barrio no está en la lista. */
+  const [barrioOtro, setBarrioOtro] = useState("");
+  const esOtro = barrio === BARRIO_OTRO;
 
   /**
    * Precio que verá el estudiante en la tarjeta ("desde $X"): la habitación
@@ -100,15 +114,53 @@ export default function FormularioPension() {
             <label htmlFor="barrio" className={claseEtiqueta}>
               Barrio
             </label>
-            <select id="barrio" name="barrio" className={claseInput} defaultValue="Mamatoco">
-              {BARRIOS.map((barrio) => (
-                <option key={barrio} value={barrio}>
-                  {barrio}
+            <select
+              id="barrio"
+              /* Con «Otro» elegido, el nombre lo lleva el campo de texto y el
+                 desplegable se queda sin `name`: así no puede viajar la palabra
+                 «Otro» como si fuera un barrio y crear una página `/barrios/otro`
+                 para un marcador de posición. */
+              name={esOtro ? undefined : "barrio"}
+              required={!esOtro}
+              value={barrio}
+              onChange={(evento) => setBarrio(evento.target.value)}
+              className={claseInput}
+            >
+              <option value="" disabled>
+                Elige tu barrio
+              </option>
+              {BARRIOS.map((opcion) => (
+                <option key={opcion} value={opcion}>
+                  {opcion}
                 </option>
               ))}
             </select>
           </div>
         </div>
+
+        {esOtro && (
+          <div>
+            <label htmlFor="barrioOtro" className={claseEtiqueta}>
+              ¿Cuál barrio?
+            </label>
+            <input
+              id="barrioOtro"
+              name="barrio"
+              type="text"
+              required
+              minLength={3}
+              maxLength={60}
+              value={barrioOtro}
+              onChange={(evento) => setBarrioOtro(evento.target.value)}
+              className={claseInput}
+              placeholder="Ej.: Ciudadela"
+            />
+            <p className="mt-1 text-xs text-neutro-500">
+              Escríbelo como lo conoce el estudiante: con ese nombre aparece en la tarjeta y se
+              crea su página de barrio.
+            </p>
+          </div>
+        )}
 
         <div className="max-w-xs">
           <label htmlFor="distancia" className={claseEtiqueta}>
@@ -120,9 +172,10 @@ export default function FormularioPension() {
             type="number"
             min={0}
             max={60}
-            defaultValue={10}
+            required
             inputMode="numeric"
             className={claseInput}
+            placeholder="15"
           />
           <p className="mt-1 text-xs text-neutro-500">
             Los estudiantes filtran por distancia: este dato decide si apareces.
