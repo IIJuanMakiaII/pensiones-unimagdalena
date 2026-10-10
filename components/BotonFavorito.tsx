@@ -58,7 +58,7 @@ export default function BotonFavorito({
         aria-label={etiqueta}
         className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition ${
           activo
-          ? "border-airbnb-rausch bg-airbnb-pink-badge text-airbnb-rausch-hover"
+          ? "border-airbnb-rausch bg-airbnb-pink-badge text-primary-700"
             : "border-neutro-300 bg-white text-neutro-700 hover:bg-neutro-100"
         } ${className}`}
       >
