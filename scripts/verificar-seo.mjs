@@ -56,7 +56,14 @@ const INVARIANTES = [
   ["Sin peticiones a Google Fonts", "fonts.googleapis.com", "ausente", "siempre"],
   ["Enlace a publicación de anfitriones", "Publicar mi pensión", "presente", "siempre"],
   ["Sellos de confianza", "Soporte para estudiantes y padres", "presente", "siempre"],
-  ["Filtro de favoritos", "Mis favoritas", "presente", "siempre"],
+  /**
+   * El filtro de favoritos vive **dentro** del catálogo. Cuando no hay
+   * inventario la portada dibuja el estado de captura en su lugar, así que
+   * exigirlo «siempre» convertía el estado vacío —que es justo el que la
+   * auditoría pide para la retirada del anuncio de prueba— en un fallo del
+   * verificador. Se comprueba donde de verdad puede existir: con catálogo.
+   */
+  ["Filtro de favoritos", "Mis favoritas", "presente", "con-catalogo"],
   ["Catálogo renderizado en el servidor", MARCA_TARJETA, "presente", "con-catalogo"],
   ["Estado vacío explicado al usuario", "Todavía no hay pensiones publicadas", "presente", "sin-catalogo"],
 ];
