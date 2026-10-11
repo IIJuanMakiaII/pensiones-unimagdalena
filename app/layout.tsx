@@ -5,6 +5,7 @@ import {
   numeroWhatsAppValido,
   NUMERO_DE_EJEMPLO,
   WHATSAPP_CONFIGURADO,
+  WHATSAPP_DISPONIBLE,
   WHATSAPP_NUMERO,
   WHATSAPP_NUMERO_CRUDO,
 } from "@/lib/formato";
@@ -71,7 +72,11 @@ const jsonLdOrganizacion = {
   url: SITIO_URL,
   logo: SITIO_LOGO,
   image: SITIO_IMAGEN,
-  telephone: `+${WHATSAPP_NUMERO}`,
+  // El teléfono solo se publica si el canal está realmente disponible. Si la
+  // variable falta, es inválida o trae el número de ejemplo, el marcado
+  // anunciaría a los buscadores un teléfono que no existe; y con el respaldo de
+  // `/contacto` activo, la vía real de contacto pasa a ser el formulario.
+  ...(WHATSAPP_DISPONIBLE ? { telephone: `+${WHATSAPP_NUMERO}` } : {}),
   areaServed: "Santa Marta, Magdalena, Colombia",
   knowsAbout: [
     "Pensiones universitarias",
