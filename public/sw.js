@@ -57,13 +57,26 @@ const PRECACHE = [
 
 /**
  * Lista BLANCA: lo único que puede guardarse en el dispositivo. Son páginas
- * idénticas para todo el mundo (catálogo, barrios, guías y textos legales).
+ * idénticas para todo el mundo (catálogo, barrios, guías, textos legales y el
+ * formulario de contacto).
+ *
+ * Sobre `/contacto` (tarea #59), porque es la que invita a dudar: la página
+ * refleja el resultado de un envío en la propia dirección (`?enviado=1`), y eso
+ * hace pensar que no debería guardarse. No es el caso. Lo que decide la lista no
+ * es que la respuesta sea siempre la misma, sino que **no dependa de quién
+ * pregunta**: `/contacto?enviado=1` se dibuja igual para cualquiera, no muestra
+ * ningún dato de nadie y no lleva sesión — y si la llevara, `puedeGuardarse` lo
+ * detendría igualmente. Lo que sí conviene saber es que la caché se guarda **por
+ * dirección completa**, de modo que cada combinación de `?pension=…` que alguien
+ * visite es una entrada distinta. No se "optimice" guardándola solo por ruta: el
+ * día que dos anuncios compartieran la clave, el formulario llegaría con el
+ * anuncio equivocado.
  *
  * Esta lista y `RUTAS_CON_SESION` las verifica `scripts/verificar-sw.mjs`
  * contra las rutas reales del build: si aparece una ruta que no esté en
  * ninguna de las dos, la comprobación falla.
  */
-const RUTAS_CACHEABLES = ["/", "/pensiones", "/barrios", "/guias", "/legal", "/offline"];
+const RUTAS_CACHEABLES = ["/", "/pensiones", "/barrios", "/guias", "/legal", "/contacto", "/offline"];
 
 /**
  * Rutas de cuenta: nunca entran en ninguna caché, ni como respaldo sin

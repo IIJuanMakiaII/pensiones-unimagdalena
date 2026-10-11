@@ -155,7 +155,24 @@ export default function EditorHabitaciones({ habitaciones, onChange, maximo = 20
                 }
                 className="h-5 w-5 rounded border-neutro-300 text-primary-600 focus:ring-primary-500"
               />
-              🍽️ Incluye alimentación
+              {/* Cubiertos dibujados, no emoji (tarea #56): el emoji se ve distinto
+                  en cada sistema y el lector de pantalla lo anuncia por su nombre,
+                  que se suma al rótulo de la casilla. */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 shrink-0"
+                aria-hidden="true"
+              >
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                <path d="M7 2v20" />
+                <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+              </svg>
+              <span>Incluye alimentación</span>
             </label>
 
             <label className="inline-flex items-center gap-2 text-sm text-neutro-700">

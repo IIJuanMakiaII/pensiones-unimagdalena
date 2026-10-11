@@ -1,9 +1,20 @@
 import Link from "next/link";
-import { WHATSAPP_NUMERO } from "@/lib/formato";
+import {
+  WHATSAPP_DISPONIBLE,
+  atributosDeContacto,
+  enlaceWhatsAppPlataforma,
+} from "@/lib/formato";
 import { DEMO_HABILITADA } from "@/lib/sitio";
 import LogoNido from "@/components/LogoNido";
 
-/** Footer de confianza: sellos, contacto WhatsApp y aviso legal (§4.1.5). */
+/**
+ * Footer: marca, acceso a «cómo verificamos», contacto y avisos legales.
+ *
+ * Ya no lleva el bloque «Sellos de confianza» (tarea #57): repetía, junto al pie,
+ * la misma lista que la banda de confianza de la portada. Ahora **enlaza** a la
+ * sección que lo explica, que es útil desde cualquier página sin repetir la
+ * promesa en todas ellas.
+ */
 export default function Footer() {
   return (
     <footer className="mt-12 border-t border-neutro-200 bg-neutro-100 text-neutro-600">
@@ -12,30 +23,25 @@ export default function Footer() {
           <div>
             <LogoNido className="h-8" />
             <p className="mt-2 text-base leading-relaxed text-neutro-600">
-              Marketplace de pensiones y habitaciones para estudiantes de la
-              Universidad del Magdalena, en Santa Marta. Visitamos e inspeccionamos
-              en sitio los anuncios con nuestro sello antes de publicarlos.
+              Pensiones y habitaciones para estudiantes de la Universidad del
+              Magdalena, en Santa Marta.
             </p>
           </div>
 
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-neutro-800">
-              Sellos de confianza
+              Confianza
             </h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex items-center gap-2">
-                <Dot /> Verificación presencial de los anuncios con sello
-              </li>
-              <li className="flex items-center gap-2">
-                <Dot /> Cerramos contigo la reserva del primer mes
-              </li>
-              <li className="flex items-center gap-2">
-                <Dot /> Precios mensuales claros en COP
-              </li>
-              <li className="flex items-center gap-2">
-                <Dot /> Atención al estudiante y a sus padres
-              </li>
-            </ul>
+            {/* Enlace, no promesa: la comprobación se explica una sola vez, en la
+                portada, y esto solo lleva hasta ella desde cualquier página. */}
+            <p className="mt-3 text-sm">
+              <Link
+                href="/#como-funciona"
+                className="font-normal text-neutro-600 underline-offset-2 hover:text-neutro-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+              >
+                Cómo verificamos cada anuncio
+              </Link>
+            </p>
           </div>
 
           <div>
@@ -45,15 +51,24 @@ export default function Footer() {
             <p className="mt-3 text-sm text-neutro-600">
               ¿Tienes una pensión o buscas asesoría?
             </p>
+            {/*
+              Este enlace componía su propio `wa.me` a mano. Con el número sin
+              configurar, aquella copia caía al número de ejemplo y mandaba al
+              vacío: el mismo fallo que el resto del sitio evita. Ahora sale de
+              la fuente única, y con el canal caído lleva al formulario.
+            */}
+            {/* El enlace se pide a `lib/formato.ts` en lugar de componerlo aquí: el
+                pie construía su propio `wa.me` y ese es, literalmente, el camino por
+                el que el número de ejemplo llegó a estar vivo en dos sitios a la vez.
+                Además, si el canal de WhatsApp no está disponible, este helper ya
+                devuelve el formulario de respaldo. */}
             <a
-              href={`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(
-                "Hola, quiero información sobre Nido."
-              )}`}
+              href={enlaceWhatsAppPlataforma()}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-sm font-semibold text-white transition hover:bg-primary-700"
+              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-sm font-semibold text-white transition hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700"
             >
-              Escríbenos por WhatsApp
+              {WHATSAPP_DISPONIBLE ? "Escríbenos por WhatsApp" : "Escríbenos"}
             </a>
           </div>
         </div>
@@ -86,8 +101,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
-
-function Dot() {
-  return <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-confianza-success" aria-hidden="true" />;
 }

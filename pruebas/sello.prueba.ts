@@ -137,7 +137,13 @@ describe("la tarjeta · quién gobierna el sello", () => {
   });
 
   it("vive sobre la foto, en el mismo anclaje que tenía el círculo", () => {
-    assert.match(tarjeta, /<EtiquetaVerificado className="absolute right-3 top-3"/);
+    // El invariante es el ancla —`absolute right-3 top-3` sobre la foto—, no el
+    // formato del marcado. Antes se comparaba contra la etiqueta escrita en una sola
+    // línea; al pasarle la fecha al sello (tarea #57) la etiqueta ocupa tres líneas,
+    // así que la afirmación medía cómo está escrito y no dónde queda.
+    const sello = tarjeta.slice(tarjeta.indexOf("<EtiquetaVerificado"));
+    const bloque = sello.slice(0, sello.indexOf("/>"));
+    assert.match(bloque, /className="absolute right-3 top-3"/);
   });
 });
 

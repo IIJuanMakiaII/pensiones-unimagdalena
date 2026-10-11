@@ -257,14 +257,24 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
       />
 
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+        {/* H2 de la sección de resultados (tarea #56). Faltaba, y sin él el `<h3>`
+            del título de cada pensión colgaba directamente del H2 del hero: un
+            salto de nivel que deja al lector de pantalla sin saber que ahí empieza
+            la lista. Es `sr-only` porque el recuento que va justo debajo ya dice
+            cuántas hay y el diseño no necesita otro rótulo a la vista. */}
+        <h2 className="sr-only">Pensiones disponibles</h2>
+
         {modoDemo && (
           <div
             role="status"
             className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent-200 bg-accent-50 px-4 py-3"
           >
-            <p className="text-sm font-semibold text-accent-800">
-              🎓 Modo demostración: estás viendo 6 pensiones de ejemplo. No son
-              publicaciones reales.
+            <p className="flex items-start gap-1.5 text-sm font-semibold text-accent-800">
+              <IconoDemostracion className="mt-0.5" />
+              <span>
+                Modo demostración: estás viendo 6 pensiones de ejemplo. No son
+                publicaciones reales.
+              </span>
             </p>
             <button
               type="button"
@@ -314,7 +324,8 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
                 onClick={alternarDemo}
                 className="inline-flex h-11 items-center gap-2 rounded-xl border border-accent-500 bg-white px-4 text-sm font-bold text-accent-700 transition hover:bg-accent-50"
               >
-                🎓 Ver demostración
+                <IconoDemostracion />
+                <span>Ver demostración</span>
               </button>
             )}
             <Link
@@ -385,7 +396,8 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
                   onClick={alternarDemo}
                   className="inline-flex h-12 items-center justify-center rounded-xl border border-accent-500 bg-white px-6 text-base font-bold text-accent-700 transition hover:bg-accent-50"
                 >
-                  🎓 Ver la demostración
+                  <IconoDemostracion />
+                  <span>Ver la demostración</span>
                 </button>
               )}
             </div>
@@ -411,5 +423,34 @@ export default function CatalogoInteractivo({ pensiones, pensionesDemo, demoHabi
         )}
       </main>
     </>
+  );
+}
+
+/**
+ * Icono del modo demostración (tarea #56).
+ *
+ * Antes era un emoji (🎓) en tres sitios. Un emoji lo dibuja el sistema
+ * operativo —se ve distinto en Android, iOS y Windows, y con la tipografía del
+ * sistema— y además los lectores de pantalla lo anuncian por su nombre («gorro de
+ * graduación»), que se suma al texto del control. Se dibuja a mano en vez de
+ * añadir una librería de iconos: el proyecto no necesita una dependencia para
+ * cuatro trazos, y el binario crece a cambio de nada.
+ */
+function IconoDemostracion({ className = "h-4 w-4 shrink-0" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M2 9l10-5 10 5-10 5L2 9Z" />
+      <path d="M6 11.4V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.6" />
+      <path d="M22 9v5" />
+    </svg>
   );
 }

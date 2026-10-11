@@ -46,7 +46,7 @@ function archivos(carpeta: string, extensiones: string[]): string[] {
  * lee lo del anfitrión con su sesión y el panel es dinámico, así que no hay
  * caché que descartar.
  */
-const LEE_EL_CATALOGO = /\b(obtenerPensiones|obtenerPensionesReales|obtenerPensionPorId|resolverPension)\s*\(/;
+const LEE_EL_CATALOGO = /\b(obtenerPensiones|obtenerCatalogo|obtenerPensionesReales|obtenerPensionPorId|resolverPension)\s*\(/;
 
 /**
  * Una página que se renderiza en cada petición. No guarda caché —ni de página

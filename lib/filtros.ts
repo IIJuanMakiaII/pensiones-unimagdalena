@@ -81,11 +81,15 @@ export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: num
  * ¿Cae este anuncio dentro del tramo elegido?
  *
  * Los cuatro tramos **parten el rango sin dejar nada fuera y sin solaparse**, y
- * cada frontera está decidida en un solo sitio: 5 empieza el segundo tramo —por eso
- * el primero es `<5` y no `≤5`— y 15 cierra el tercero, de modo que 16 ya es
- * «+ 15 min». El reparto queda así, con cada valor en exactamente un tramo:
+ * cada frontera se escribe una sola vez, como umbral y no como intervalo: `≤5`,
+ * `>5 y ≤10`, `>10 y ≤15`, `>15`. Así el reparto no tiene huecos ni siquiera con
+ * valores fraccionarios, y cada minuto cae en exactamente un tramo:
  *
- *   <5 → 0..4 · 5-10 → 5..10 · 11-15 → 11..15 · >15 → 16 y siguientes
+ *   hasta5 → 0..5 · 6-10 → 6..10 · 11-15 → 11..15 · mas15 → 16 y siguientes
+ *
+ * El 5 pertenece al **primer** tramo: por eso su rótulo dice «≤ 5» y el siguiente
+ * empieza en 6. Antes el 5 abría el segundo tramo y el rótulo `< 5` lo excluía, de
+ * modo que el mismo número aparecía en dos nombres y en ninguno con claridad.
  *
  * `cualquiera` es la ausencia de filtro y no un quinto tramo: devuelve `true` para
  * cualquier valor, incluidos los que el catálogo no admite por arriba. Por eso el
@@ -93,13 +97,13 @@ export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: num
  */
 export function coincideRangoDistancia(minutos: number, rango: RangoDistancia): boolean {
   switch (rango) {
-    case "<5":
-      return minutos < 5;
-    case "5-10":
-      return minutos >= 5 && minutos <= 10;
+    case "hasta5":
+      return minutos <= 5;
+    case "6-10":
+      return minutos > 5 && minutos <= 10;
     case "11-15":
       return minutos > 10 && minutos <= 15;
-    case ">15":
+    case "mas15":
       return minutos > 15;
     default:
       return true;
@@ -116,25 +120,27 @@ export function coincideRangoDistancia(minutos: number, rango: RangoDistancia): 
  * clase de copia que se queda atrás cuando solo se corrige una.
  */
 export const TRAMOS_DISTANCIA: Exclude<RangoDistancia, "cualquiera">[] = [
-  "<5",
-  "5-10",
+  "hasta5",
+  "6-10",
   "11-15",
-  ">15",
+  "mas15",
 ];
 
 /**
  * Cómo se llama cada tramo en pantalla.
  *
- * Los rótulos no repiten el 10: el tramo que va de 11 a 15 se llama «11–15 min»
- * aunque su frontera inferior sea 10, porque quien lee busca «¿me sirve algo a
- * doce minutos?» y no tiene por qué saber que 10 pertenece al tramo anterior.
+ * El rótulo dice el rango que de verdad se aplica, no la frontera del vecino: `≤ 5`
+ * incluye el 5 y `6–10` empieza en 6, así que nadie tiene que saber de memoria a
+ * qué tramo pertenece el 5. El tramo de 11 a 15 se llama «11–15» aunque su frontera
+ * inferior sea 10 —que cierra el anterior—: quien lee busca «¿me sirve algo a doce
+ * minutos?» y no necesita reconstruir el reparto.
  */
 export const ETIQUETA_DISTANCIA: Record<RangoDistancia, string> = {
   cualquiera: "Cualquiera",
-  "<5": "< 5 min",
-  "5-10": "5–10 min",
+  hasta5: "≤ 5 min",
+  "6-10": "6–10 min",
   "11-15": "11–15 min",
-  ">15": "+ 15 min",
+  mas15: "> 15 min",
 };
 
 /** Una habitación coincide si está disponible y cumple precio, género y alimentación. */
@@ -424,14 +430,30 @@ export function filtrosAParametros(f: FiltrosUI, precioMaximoReal: number): URLS
 /**
  * Nombres de tramo que ya no se escriben pero se siguen entendiendo.
  *
- * Antes de la tarea #50 el tramo de 11 a 15 se llamaba `10-15`: nombraba su
- * frontera inferior aunque nunca incluyó el 10. Se sigue aceptando al leer para
- * que un enlace ya compartido conserve **su significado** en vez de degradarse a
- * «cualquier distancia» sin avisar, que ampliaría la búsqueda del estudiante a sus
- * espaldas. Al escribir se emite siempre el nombre nuevo, así que la dirección se
- * corrige sola en la siguiente navegación.
+ * Los rótulos cambiaron dos veces y las direcciones compartidas pueden llevar
+ * cualquiera de los nombres viejos. Se siguen aceptando al leer para que un enlace
+ * ya compartido conserve **su significado** en vez de degradarse a «cualquier
+ * distancia» sin avisar, que ampliaría la búsqueda del estudiante a sus espaldas.
+ *
+ * La traducción es la más cercana posible, y conviene decir dónde se pierde:
+ *
+ *   `10-15` → `11-15`  exacto: nunca incluyó el 10.
+ *   `>15`   → `mas15`  exacto: el nombre solo cambió de forma.
+ *   `<5`    → `hasta5` añade el minuto 5, que antes abría el tramo siguiente.
+ *   `5-10`  → `6-10`   pierde el minuto 5. El 5 pasa a `hasta5`, así que un enlace
+ *                      viejo enseña todo menos los anuncios de exactamente 5 min.
+ *                      Se eligió perder un valor antes que perder los cinco
+ *                      siguientes, que es lo que habría pasado mandándolo a `hasta5`.
+ *
+ * Al escribir se emite siempre el nombre nuevo, así que la dirección se corrige
+ * sola en la siguiente navegación.
  */
-const ALIAS_DISTANCIA: Record<string, RangoDistancia> = { "10-15": "11-15" };
+const ALIAS_DISTANCIA: Record<string, RangoDistancia> = {
+  "<5": "hasta5",
+  "5-10": "6-10",
+  "10-15": "11-15",
+  ">15": "mas15",
+};
 
 /**
  * El tramo que nombra una dirección, o `cualquiera` si no nombra ninguno.

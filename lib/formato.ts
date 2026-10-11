@@ -40,6 +40,76 @@ export function numeroWhatsAppValido(numero: string = WHATSAPP_NUMERO): boolean 
   return /^\d{10,15}$/.test(numero);
 }
 
+/**
+ * ¿Se puede ofrecer WhatsApp de verdad? (tarea #59)
+ *
+ * `WHATSAPP_CONFIGURADO` responde a «¿llegó un valor?», que no es lo mismo que
+ * «¿ese valor sirve?». Faltaba la segunda pregunta, y su ausencia era el
+ * agujero: con la variable ausente, vacía o con el número de ejemplo,
+ * `WHATSAPP_NUMERO` devolvía un número **inexistente** y los botones de contacto
+ * lo usaban sin que nada lo dijera. El canal único de captación quedaba
+ * apuntando a la nada.
+ *
+ * En un despliegue de Vercel eso no llega a ocurrir —`app/layout.tsx` detiene la
+ * compilación—, pero el resto de los entornos sí lo permitía. Y aquel guardián
+ * protege el despliegue, no al visitante: esto completa la comprobación dentro
+ * de la aplicación, que es donde el fallo se convierte en un estudiante que
+ * escribe y no le contesta nadie.
+ *
+ * No cambia `WHATSAPP_NUMERO` a propósito. Ese valor sigue cayendo al número de
+ * ejemplo, porque el guardián de `app/layout.tsx` decide si detiene una
+ * compilación comparándolo con `NUMERO_DE_EJEMPLO`: si aquí se devolviera una
+ * cadena vacía, la protección del despliegue dejaría de dispararse.
+ */
+export type MotivoSinWhatsApp = "sin_configurar" | "invalido" | "ejemplo";
+
+export interface EstadoCanalWhatsApp {
+  /** Solo `true` si hay un número real al que escribir. */
+  disponible: boolean;
+  /** Por qué no está disponible. `null` cuando sí lo está. */
+  motivo: MotivoSinWhatsApp | null;
+}
+
+/**
+ * La decisión, como función pura.
+ *
+ * Recibe el valor crudo en lugar de leerlo del entorno para que se pueda probar
+ * entera. Una variable de entorno se lee una sola vez, al cargar el módulo, así
+ * que sin esto los cuatro casos —ausente, vacía, inválida y de ejemplo— quedarían
+ * fuera de las pruebas, que es justo donde vivía el fallo.
+ */
+export function estadoDelCanalWhatsApp(crudo: string | null | undefined): EstadoCanalWhatsApp {
+  if (typeof crudo !== "string" || crudo.trim() === "") {
+    return { disponible: false, motivo: "sin_configurar" };
+  }
+  const normalizado = normalizarNumeroWhatsApp(crudo);
+  if (!numeroWhatsAppValido(normalizado)) return { disponible: false, motivo: "invalido" };
+  if (normalizado === NUMERO_DE_EJEMPLO) return { disponible: false, motivo: "ejemplo" };
+  return { disponible: true, motivo: null };
+}
+
+/** Estado del canal con el valor real de este despliegue. */
+export const ESTADO_WHATSAPP = estadoDelCanalWhatsApp(NUMERO_CRUDO);
+
+/**
+ * El canal sirve o no sirve. Todo lo que dibuje un botón de contacto tiene que
+ * preguntar esto antes y ofrecer el respaldo cuando sea `false`.
+ */
+export const WHATSAPP_DISPONIBLE = ESTADO_WHATSAPP.disponible;
+
+/** Formulario de respaldo. Una sola constante: la comparten la app y las pruebas. */
+export const RUTA_CONTACTO = "/contacto";
+
+/**
+ * Correo de respaldo del canal de contacto (tarea #59). Opcional.
+ *
+ * Si nadie lo configura, la página simplemente no ofrece esa vía; no se deja un
+ * correo escrito en el código. Sería exactamente el error que esta tarea corrige
+ * con el número de WhatsApp: un dato del negocio dentro del programa, que cambia
+ * sin que el código cambie y que nadie encuentra el día que hay que cambiarlo.
+ */
+export const CORREO_CONTACTO = (process.env.NEXT_PUBLIC_CORREO_CONTACTO ?? "").trim();
+
 if (process.env.NODE_ENV !== "production") {
   if (!WHATSAPP_CONFIGURADO) {
     console.warn(
@@ -126,9 +196,60 @@ export function numeroDeReserva(): string {
   return WHATSAPP_NUMERO;
 }
 
-/** Enlace wa.me con el mensaje prellenado, listo para abrir en pestaña nueva. */
+/**
+ * El enlace de contacto, por el canal que hoy funciona.
+ *
+ * Con WhatsApp disponible devuelve el `wa.me` de siempre, idéntico al de antes.
+ * Sin él **no devuelve un `wa.me` al número de ejemplo**: devuelve la ruta del
+ * formulario de respaldo, llevándose en la consulta el anuncio que la persona
+ * estaba mirando para que no tenga que volver a explicarlo.
+ *
+ * La decisión vive aquí, y no en cada botón, por un motivo concreto: los botones
+ * de contacto los dibujan tres componentes distintos y solo dos son de esta
+ * tarea. Repetir la condición en cada uno habría dejado sin arreglar justo el
+ * que quedara fuera. Esta es la única puerta.
+ */
+function enlaceDeContacto(mensaje: string, contexto: Record<string, string>): string {
+  if (WHATSAPP_DISPONIBLE) {
+    return `https://wa.me/${numeroDeReserva()}?text=${encodeURIComponent(mensaje)}`;
+  }
+  const consulta = new URLSearchParams({
+    motivo: ESTADO_WHATSAPP.motivo ?? "sin_configurar",
+    ...contexto,
+  });
+  return `${RUTA_CONTACTO}?${consulta.toString()}`;
+}
+
+/** Enlace de contacto de un anuncio: WhatsApp si sirve, formulario de respaldo si no. */
 export function enlaceWhatsApp(pension: Pension, habitacion?: Habitacion): string {
-  return `https://wa.me/${numeroDeReserva()}?text=${encodeURIComponent(
-    mensajeWhatsApp(pension, habitacion)
-  )}`;
+  return enlaceDeContacto(mensajeWhatsApp(pension, habitacion), {
+    pension: pension.slug,
+    ...(habitacion ? { habitacion: habitacion.id } : {}),
+  });
+}
+
+/**
+ * Enlace de contacto general, sin anuncio (el del pie de página).
+ *
+ * Existe para que el pie deje de componer su propio `wa.me` a mano: dos sitios
+ * construyendo el mismo enlace es exactamente la forma en que el número de
+ * ejemplo se quedaba vivo en uno de los dos.
+ */
+export function enlaceWhatsAppPlataforma(
+  mensaje: string = "Hola, quiero información sobre Nido."
+): string {
+  return enlaceDeContacto(mensaje, { origen: "pie" });
+}
+
+/**
+ * Los atributos de apertura que corresponden a un enlace de contacto.
+ *
+ * Los botones abren WhatsApp en una pestaña nueva desde siempre. El día que el
+ * canal falla, ese mismo `target="_blank"` se queda puesto sobre una página del
+ * propio sitio, y abrir Nido en otra pestaña sin avisar desconcierta a quien
+ * navega con lector de pantalla. Aquí se decide por el enlace y no por el botón,
+ * que es el único sitio desde el que se puede decidir bien.
+ */
+export function atributosDeContacto(href: string): { target?: string; rel?: string } {
+  return /^https?:\/\//i.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : {};
 }

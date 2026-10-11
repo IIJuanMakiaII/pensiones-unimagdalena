@@ -14,6 +14,11 @@ import LogoNido from "@/components/LogoNido";
  * NO es `sticky`: el catálogo ya tiene su barra de filtros fija en `top-0` y dos
  * barras pegadas se comerían la primera pantalla del móvil. Además, la cabecera
  * es compacta (h-14 en móvil) para no desplazar el hero.
+ *
+ * Por qué el logo va sin texto en móvil (tarea #56): con el logotipo completo el
+ * contenido llegaba a x365 en un viewport de 320 —45 px de desborde horizontal—.
+ * El detalle de la medición y de las alternativas descartadas está en
+ * `LogoNido.soloMarcaEnMovil`.
  */
 export default function Cabecera() {
   return (
@@ -24,7 +29,7 @@ export default function Cabecera() {
           aria-label="Nido, ir al inicio"
           className="flex min-w-0 shrink-0 items-center gap-2 rounded-xl py-1 pr-1 transition hover:opacity-90"
         >
-          <LogoNido className="h-8" />
+          <LogoNido className="h-8" soloMarcaEnMovil />
         </Link>
 
         <div className="ml-auto flex min-w-0 items-center">

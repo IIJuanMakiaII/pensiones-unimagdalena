@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PensionConHabitaciones } from "@/types";
-import { catalogoSinBase, fichaDemo } from "@/lib/catalogo-respaldo";
+import { catalogoSinBase, fichaDemo, type CatalogoLeido } from "@/lib/catalogo-respaldo";
 
 // El catálogo de demostración sigue publicándose desde aquí para no cambiar la
 // ruta de quien ya lo importaba; su definición vive en `lib/catalogo-respaldo.ts`,
@@ -90,12 +90,25 @@ function combinar(
   return pensiones.map((fila) => filaAPension(fila, porPension.get(fila.id) ?? []));
 }
 
-/** Catálogo completo: solo pensiones activas, las más recientes primero. */
-export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
-  if (!esSupabaseConfigurado()) return catalogoSinBase("sin-configurar", DEMO_HABILITADA);
+/**
+ * Catálogo completo **con el motivo** por el que no vino de la base (tarea #67).
+ *
+ * Es la función que debe usar quien tenga que distinguir «la base falló» de «no
+ * hay inventario». `obtenerPensiones()` se conserva justo debajo devolviendo
+ * solo la lista, para no romper a quien ya la consumía.
+ *
+ * El cliente se puede inyectar, y **solo** para las pruebas —la misma costura
+ * que `resolverPensionConSesion()`—: es lo que permite conducir esta función
+ * real contra un lector sembrado y medir los tres motivos sin tocar la base.
+ * Ningún camino de la aplicación pasa ese argumento.
+ */
+export async function obtenerCatalogo(cliente?: SupabaseClient): Promise<CatalogoLeido> {
+  if (!cliente && !esSupabaseConfigurado()) {
+    return { pensiones: catalogoSinBase("sin-configurar", DEMO_HABILITADA), motivo: "sin-configurar" };
+  }
 
   try {
-    const supabase = crearClientePublico();
+    const supabase = cliente ?? crearClientePublico();
     const [{ data: pensiones, error: errorPensiones }, { data: habitaciones, error: errorHabitaciones }] =
       await Promise.all([
         supabase
@@ -109,15 +122,30 @@ export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
     if (errorPensiones || errorHabitaciones || !pensiones) {
       console.error("Error consultando Supabase:", errorPensiones?.message ?? errorHabitaciones?.message);
       // Un fallo NUNCA sirve la semilla: un catálogo vacío es honesto, seis
-      // anuncios inventados con su botón de reserva no (tarea #42).
-      return catalogoSinBase("error", DEMO_HABILITADA);
+      // anuncios inventados con su botón de reserva no (tarea #42). El motivo
+      // viaja con la lista para que la portada pueda decir «no pudimos
+      // consultar» en vez de «todavía no hay pensiones» (tarea #67).
+      return { pensiones: catalogoSinBase("error", DEMO_HABILITADA), motivo: "error" };
     }
 
-    return combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones));
+    return {
+      pensiones: combinar(filasDePension(pensiones), filasDeHabitacion(habitaciones)),
+      motivo: null,
+    };
   } catch (error) {
     console.error("Fallo de conexión con Supabase:", error);
-    return catalogoSinBase("error", DEMO_HABILITADA);
+    return { pensiones: catalogoSinBase("error", DEMO_HABILITADA), motivo: "error" };
   }
+}
+
+/**
+ * Catálogo completo: solo pensiones activas, las más recientes primero.
+ *
+ * Devuelve solo la lista. Si necesitas saber **por qué** está vacía, usa
+ * `obtenerCatalogo()`.
+ */
+export async function obtenerPensiones(): Promise<PensionConHabitaciones[]> {
+  return (await obtenerCatalogo()).pensiones;
 }
 
 /**

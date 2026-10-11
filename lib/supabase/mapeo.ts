@@ -28,6 +28,19 @@ export interface PensionFila {
   normas: string[] | null;
   calificacion: number | null;
   verificado: boolean | null;
+  /**
+   * Instante en que se registró la verificación (Oleada 13, tarea #61).
+   * `null` = verificado sin constancia de cuándo.
+   *
+   * Opcional por el mismo motivo que `latitud`: contra una base a la que todavía
+   * no se le aplicó la migración, el campo llega ausente y la ficha se dibuja sin
+   * fecha en lugar de romperse. Eso vale para el VALOR; para la COLUMNA no: la
+   * proyección de abajo sí la pide, y una columna que falte en la base hace
+   * fallar la consulta con `42501`. Por eso
+   * `supabase/oleada-13-fecha-verificacion.sql` se aplica ANTES de desplegar
+   * este cambio.
+   */
+  verificado_en?: string | null;
   imagenes: string[] | null;
   activa: boolean;
   creada_en: string;
@@ -87,6 +100,7 @@ export const COLUMNAS_PENSION = [
   "normas",
   "calificacion",
   "verificado",
+  "verificado_en",
   "imagenes",
   "activa",
   "creada_en",
@@ -144,6 +158,22 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
     normas: fila.normas ?? [],
     calificacion: Number(fila.calificacion ?? 0),
     verificado: Boolean(fila.verificado),
+    // La fecha solo viaja si el sello está puesto: una fecha sin verificación
+    // sería un dato sin sentido, y la restricción de la base ya lo impide, pero
+    // aquí se vuelve a cerrar para que el dominio no pueda representar un estado
+    // que la base considera inválido.
+    //
+    // `null` es «verificado, sin constancia de cuándo», y se conserva como null:
+    // no se sustituye por `creada_en` ni por la fecha de hoy. La interfaz tendrá
+    // que decir «Verificado» a secas, que es la verdad.
+    // El nombre de destino es `verificado_en`, igual que el de la columna: es la
+    // convención de los campos que vienen de la base (`creada_en`), y es lo que
+    // lee quien dibuja el sello. Escribirlo en camelCase compilaría igual y la
+    // fecha no llegaría nunca, sin que nada fallara.
+    verificado_en:
+      fila.verificado === true && fila.verificado_en
+        ? new Date(fila.verificado_en)
+        : null,
     latitud: typeof fila.latitud === "number" ? fila.latitud : null,
     longitud: typeof fila.longitud === "number" ? fila.longitud : null,
     habitaciones,

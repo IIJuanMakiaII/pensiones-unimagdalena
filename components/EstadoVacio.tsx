@@ -20,9 +20,26 @@ export default function EstadoVacio({ onLimpiar, bloqueante = null, onQuitarBloq
       role="status"
       className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-neutro-300 bg-white px-6 py-14 text-center"
     >
-      <span className="text-4xl" aria-hidden="true">
-        🏠
-      </span>
+      {/* Casa dibujada, no emoji (tarea #56). Un emoji lo dibuja el sistema
+          operativo —cambia de forma en cada plataforma—, y el `role="status"` de
+          este bloque hace que un lector de pantalla lo anuncie por su nombre por
+          encima del mensaje, que es lo único que importa aquí. El trazo es
+          decorativo, así que va con `aria-hidden` y en el gris más claro de la
+          paleta: la casa acompaña, no informa. */}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-10 w-10 text-neutro-300"
+        aria-hidden="true"
+      >
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5.5 9.2V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.2" />
+        <path d="M9.75 21v-5.5h4.5V21" />
+      </svg>
       <div>
         <h2 className="font-display text-lg font-bold text-neutro-800">
           Ninguna pensión coincide con tus filtros

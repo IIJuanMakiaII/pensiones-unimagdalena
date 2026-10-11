@@ -108,10 +108,15 @@ export default function FormularioLogin({ destino, configurado, aviso }: Props) 
         {enviando ? "Ingresando…" : "Iniciar sesión"}
       </button>
 
+      {/* Qué es esta cuenta y para qué sirve (tarea #57). Antes decía «¿Aún no
+          tienes cuenta? Hazte una cuenta de anfitrión»: hablaba de «cuenta» en
+          general y solo al final aclaraba de quién. Las cuentas de Nido son de
+          anfitrión —quien va a publicar—, así que la frase empieza por eso y
+          encadena con la puerta única de la cabecera, «Publicar mi pensión». */}
       <p className="mt-4 text-center text-sm text-neutro-600">
-        ¿Aún no tienes cuenta?{" "}
+        ¿Vas a publicar una pensión?{" "}
         <Link href="/registro" className="font-bold text-primary-700 hover:underline">
-          Hazte una cuenta de anfitrión
+          Crea tu cuenta de anfitrión
         </Link>
       </p>
     </form>

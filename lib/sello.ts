@@ -30,3 +30,50 @@ export const TEXTO_SELLO = "Verificado por Nido ✓";
 export function mostrarSello(verificado: unknown): boolean {
   return verificado === true;
 }
+
+/**
+ * La fecha de la visita de verificación, ya formateada para el sello (tareas #57 y #61).
+ *
+ * HOY TODAVÍA NO HAY DATO QUE FORMATEAR, Y ESO ES DELIBERADO
+ * ---------------------------------------------------------
+ * La fecha no existe como columna ni como campo del contrato de tipos: la añade la
+ * tarea #61. Esta función existe para que el día que llegue no haya que decidir nada
+ * más, solo pasarla. Hasta entonces devuelve `null` y el sello se dibuja sin fecha,
+ * exactamente como antes.
+ *
+ * POR QUÉ NO SE USA `creada_en`
+ * -----------------------------
+ * Es la fecha en que se creó el anuncio, no la de la visita. Un sello fechado es una
+ * afirmación de verificación —en Colombia, con implicaciones de protección al
+ * consumidor—, así que poner ahí una fecha que no es la de la inspección sería la
+ * misma promesa sin respaldo que la auditoría señaló.
+ *
+ * ZONA HORARIA
+ * ------------
+ * Se formatea en `America/Bogota` a propósito. La columna será `timestamptz`, que se
+ * guarda en UTC: una visita de las 20:00 en Santa Marta ya es el día siguiente en UTC,
+ * así que formatear con la zona del servidor mostraría un día que no es el de nadie.
+ *
+ * FALLA CERRADO
+ * -------------
+ * Solo acepta un `Date` o una cadena ISO no vacía. Cualquier otra cosa —un número, un
+ * objeto, una fecha imposible— devuelve `null`, que significa «sin fecha». Una fecha
+ * inventada dentro de un sello de confianza es peor que ninguna.
+ */
+export function formatearFechaVerificacion(valor: unknown): string | null {
+  const fecha =
+    valor instanceof Date
+      ? valor
+      : typeof valor === "string" && valor.trim() !== ""
+        ? new Date(valor)
+        : null;
+
+  if (fecha === null || Number.isNaN(fecha.getTime())) return null;
+
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "America/Bogota",
+  }).format(fecha);
+}

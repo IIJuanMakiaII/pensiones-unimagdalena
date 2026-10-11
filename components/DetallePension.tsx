@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PensionConHabitaciones } from "@/types";
 import {
+  atributosDeContacto,
   enlaceWhatsApp,
   etiquetaGenero,
   etiquetaTipo,
@@ -108,8 +109,7 @@ export default function DetallePension({ pension }: Props) {
 
               <a
                 href={enlaceWhatsApp(pension, h)}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...atributosDeContacto(enlaceWhatsApp(pension, h))}
                 /* Mantiene sincronizada la barra fija del móvil con lo reservado. */
                 onClick={() => {
                   setSeleccionadaId(h.id);
@@ -152,8 +152,7 @@ export default function DetallePension({ pension }: Props) {
           )}
           <a
             href={enlaceWhatsApp(pension)}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...atributosDeContacto(enlaceWhatsApp(pension))}
             onClick={() =>
               medirContacto({
                 pension: pension.id,
@@ -207,8 +206,7 @@ export default function DetallePension({ pension }: Props) {
             </div>
             <a
               href={enlaceWhatsApp(pension, seleccionada)}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...atributosDeContacto(enlaceWhatsApp(pension, seleccionada))}
               onClick={() =>
                 medirContacto({
                   pension: pension.id,

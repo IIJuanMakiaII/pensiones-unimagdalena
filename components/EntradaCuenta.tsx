@@ -107,31 +107,36 @@ function BloqueVisitante() {
       aria-label="Acceso a tu cuenta"
       className="flex min-w-0 items-center gap-1.5 md:gap-2"
     >
-      {/* «Registra tu pensión» es la oferta (anfitrión); «Hazte una cuenta» es la
-          cuenta. Son acciones distintas y por eso tienen rótulos distintos. */}
+      {/* UNA SOLA PUERTA DE PROPIETARIO (tarea #57).
+          Aquí había dos enlaces con rótulos distintos —«Registra tu pensión» y
+          «Crear cuenta»— apuntando LOS DOS a `/registro`. No eran dos caminos: eran
+          dos nombres para la misma página, y obligaban al visitante a elegir entre
+          sinónimos antes de saber cuál era el suyo. Ahora hay una sola puerta, con
+          el nombre que ya usan el catálogo y el estado sin inventario («Publicar mi
+          pensión»), y lleva a `/publicar`, que sabe mandar al acceso conservando el
+          destino (`?destino=/publicar`) cuando no hay sesión. Desde ahí, quien no
+          tenga cuenta la crea: el círculo se cierra sin una segunda entrada que
+          compita con la primera. */}
       <Link
-        href="/registro"
-        className="hidden h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-primary-700 transition hover:bg-primary-50 md:inline-flex"
+        href="/publicar"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-2 text-sm font-bold text-primary-700 transition hover:bg-primary-50 sm:px-3"
       >
-        Registra tu pensión
-      </Link>
-
-      {/* A 375 px el ancho útil es de 328 px y el bloque no podía encogerse
-          (`shrink-0`), así que los botones se salían 21 px y «Inicia sesión»
-          quedaba cortado. El arreglo es estructural: en móvil el rótulo y la
-          densidad son más compactos (250 px en total, 78 px de margen), y desde
-          `sm` se recuperan los rótulos completos. */}
-      <Link
-        href="/registro"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl border border-primary-600 px-2.5 text-sm font-bold text-primary-700 transition hover:bg-primary-50 sm:px-3 sm:text-sm"
-      >
-        <span className="sm:hidden">Crear cuenta</span>
-        <span className="hidden sm:inline">Hazte una cuenta</span>
+        {/* Rótulo corto en móvil, por espacio medido: a 320 px la barra deja 248 px
+            útiles para este bloque y el rótulo largo no cabe junto a «Inicia
+            sesión». Los dos textos visibles van con `aria-hidden` y el nombre
+            accesible lo aporta un único texto para lectores: `hidden` es CSS, así
+            que sin aislarlos los dos textos están en el DOM y el nombre saldría
+            concatenado —«PublicarPublicar mi pensión»—, que es exactamente el
+            defecto que se corrigió en la tarea #56. El nombre contiene el texto
+            visible en cada ancho, así que 2.5.3 se cumple. */}
+        <span aria-hidden="true" className="sm:hidden">Publicar</span>
+        <span aria-hidden="true" className="hidden sm:inline">Publicar mi pensión</span>
+        <span className="sr-only">Publicar mi pensión</span>
       </Link>
 
       <Link
         href="/login"
-        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-3 text-sm font-bold text-white transition hover:bg-primary-700 sm:px-3.5 sm:text-sm"
+        className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary-600 px-2.5 text-sm font-bold text-white transition hover:bg-primary-700 sm:px-3.5"
       >
         Inicia sesión
       </Link>

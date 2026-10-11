@@ -7,9 +7,22 @@ export default function NotFound() {
       tabIndex={-1}
       className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center"
     >
-      <p className="text-5xl" aria-hidden="true">
-        🏠
-      </p>
+      {/* Casa dibujada, no emoji (tarea #56). El 🏠 lo dibuja el sistema operativo
+          —cambia de forma en cada plataforma— y algunos lectores de pantalla lo
+          anuncian por su nombre por delante del mensaje. */}<svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-12 w-12 text-neutro-300"
+        aria-hidden="true"
+      >
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5.5 9.2V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.2" />
+        <path d="M9.75 21v-5.5h4.5V21" />
+      </svg>
       <h1 className="font-display text-2xl font-extrabold text-neutro-800">
         Pensión no encontrada
       </h1>

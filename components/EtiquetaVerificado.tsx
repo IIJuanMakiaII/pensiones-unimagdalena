@@ -1,7 +1,17 @@
-import { TEXTO_SELLO } from "@/lib/sello";
+import { TEXTO_SELLO, formatearFechaVerificacion } from "@/lib/sello";
 
 interface Props {
   className?: string;
+  /**
+   * Fecha de la visita de verificación, tal como llegue de la base (`verificado_en`,
+   * tarea #61). Sin ella el sello se dibuja exactamente como antes, sin fecha.
+   *
+   * Es `unknown` a propósito: la decisión de qué cuenta como fecha válida vive en
+   * `formatearFechaVerificacion` y no repartida por cada componente que dibuje el
+   * sello. Y mientras el dato no exista, la firma `unknown` evita inventar el campo
+   * en el contrato de tipos antes que en la base.
+   */
+  verificadoEn?: unknown;
 }
 
 /**
@@ -28,12 +38,24 @@ interface Props {
  * `scripts/verificar-contraste.mjs` con mínimo 4,5:1, y ese verificador lo mide
  * en cada pasada leyendo la paleta real.
  */
-export default function EtiquetaVerificado({ className = "" }: Props) {
+export default function EtiquetaVerificado({ className = "", verificadoEn }: Props) {
+  const fecha = formatearFechaVerificacion(verificadoEn);
+
   return (
     <span
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full bg-primary-600 px-2 py-1 text-xs font-semibold leading-none text-white shadow-sm ${className}`}
+      className={`inline-flex justify-center rounded-full bg-primary-600 px-2 py-1 text-xs font-semibold leading-none text-white shadow-sm ${
+        // Con fecha, la insignia pasa a dos líneas en vez de estirarse a lo ancho:
+        // a 320 px la tarjeta tiene 288 px y la etiqueta va anclada arriba a la
+        // derecha, así que una sola línea larga chocaría con el corazón de
+        // favoritos. En columna, el ancho lo fija el texto más largo —el sello— y
+        // la fecha cabe debajo sin moverse de su sitio.
+        fecha ? "flex-col items-start gap-0.5" : "items-center whitespace-nowrap"
+      } ${className}`}
     >
       {TEXTO_SELLO}
+      {/* «el 12 oct 2026» y no «12 oct 2026»: junto al sello, sin preposición, la
+          fecha se lee como el día en que se publicó o se actualizó el anuncio. */}
+      {fecha && <span className="font-normal">el {fecha}</span>}
     </span>
   );
 }

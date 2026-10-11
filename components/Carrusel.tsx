@@ -125,7 +125,7 @@ export default function Carrusel({
             type="button"
             onClick={() => mover(-1)}
             aria-label="Imagen anterior"
-            className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutro-800 shadow-md transition hover:bg-white md:flex"
+            className="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutro-800 shadow-md transition hover:bg-white md:flex"
           >
             ‹
           </button>
@@ -133,7 +133,7 @@ export default function Carrusel({
             type="button"
             onClick={() => mover(1)}
             aria-label="Imagen siguiente"
-            className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutro-800 shadow-md transition hover:bg-white md:flex"
+            className="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutro-800 shadow-md transition hover:bg-white md:flex"
           >
             ›
           </button>
@@ -144,9 +144,15 @@ export default function Carrusel({
           El punto visible mide 8 px, pero lo que se toca es el botón: 44×44 px, el
           mínimo del contrato Mobile-First. Con más de 6 fotos —el tope son 8— ocho
           áreas de 44 px no caben en el ancho de un móvil, así que baja a 24×24 px,
-          que es el mínimo exigible por WCAG 2.5.8 y sigue sin solaparse. */}
+          que es el mínimo exigible por WCAG 2.5.8 y sigue sin solaparse.
+
+          `z-10` (tarea #56) porque en las tarjetas el enlace al detalle está
+          estirado sobre toda la tarjeta con un `::after`: sin elevar los controles,
+          el pseudo-elemento pintaba por encima —va después en el DOM— y pulsar un
+          punto navegaba en vez de cambiar de foto. Es el mismo motivo por el que las
+          flechas y el botón de favoritos también van elevados. */}
       {total > 1 && (
-        <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 justify-center">
+        <div className="absolute bottom-0 left-1/2 z-10 flex -translate-x-1/2 justify-center">
           {imagenes.map((src, i) => (
             <button
               key={src + i}

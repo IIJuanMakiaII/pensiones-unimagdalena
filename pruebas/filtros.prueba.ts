@@ -179,15 +179,17 @@ describe("pensionCumpleFiltros · con habitaciones libres", () => {
 });
 
 describe("coincideRangoDistancia · límites exactos", () => {
-  it("«<5» excluye los 5 minutos (son el inicio del tramo siguiente)", () => {
-    assert.equal(coincideRangoDistancia(4, "<5"), true);
-    assert.equal(coincideRangoDistancia(5, "<5"), false);
+  it("«hasta5» incluye el 5: es el tramo al que pertenece", () => {
+    assert.equal(coincideRangoDistancia(4, "hasta5"), true);
+    assert.equal(coincideRangoDistancia(5, "hasta5"), true);
+    assert.equal(coincideRangoDistancia(6, "hasta5"), false);
   });
 
-  it("«5-10» incluye ambos extremos", () => {
-    assert.equal(coincideRangoDistancia(5, "5-10"), true);
-    assert.equal(coincideRangoDistancia(10, "5-10"), true);
-    assert.equal(coincideRangoDistancia(11, "5-10"), false);
+  it("«6-10» empieza en 6 y cierra en 10, ambos incluidos", () => {
+    assert.equal(coincideRangoDistancia(5, "6-10"), false);
+    assert.equal(coincideRangoDistancia(6, "6-10"), true);
+    assert.equal(coincideRangoDistancia(10, "6-10"), true);
+    assert.equal(coincideRangoDistancia(11, "6-10"), false);
   });
 
   it("«11-15» empieza justo después de 10", () => {
@@ -197,13 +199,13 @@ describe("coincideRangoDistancia · límites exactos", () => {
     assert.equal(coincideRangoDistancia(16, "11-15"), false);
   });
 
-  it("«>15» recoge todo lo que pasa de quince, sin techo", () => {
-    assert.equal(coincideRangoDistancia(15, ">15"), false);
-    assert.equal(coincideRangoDistancia(16, ">15"), true);
+  it("«mas15» recoge todo lo que pasa de quince, sin techo", () => {
+    assert.equal(coincideRangoDistancia(15, "mas15"), false);
+    assert.equal(coincideRangoDistancia(16, "mas15"), true);
     // El formulario acepta hasta 60 minutos: el tramo abierto tiene que llegar ahí.
-    assert.equal(coincideRangoDistancia(60, ">15"), true);
+    assert.equal(coincideRangoDistancia(60, "mas15"), true);
     // Y más allá, porque un dato viejo puede ser mayor aunque ya no se pueda escribir.
-    assert.equal(coincideRangoDistancia(120, ">15"), true);
+    assert.equal(coincideRangoDistancia(120, "mas15"), true);
   });
 
   it("«cualquiera» no filtra nada", () => {
@@ -237,7 +239,7 @@ describe("los cuatro tramos parten el rango sin huecos ni solapes", () => {
 
   it("el 0 también tiene tramo: un alojamiento dentro del campus es válido", () => {
     const dentro = TRAMOS_DISTANCIA.filter((tramo) => coincideRangoDistancia(0, tramo));
-    assert.deepEqual(dentro, ["<5"]);
+    assert.deepEqual(dentro, ["hasta5"]);
   });
 
   it("«cualquiera» no es un tramo, es la ausencia de filtro", () => {
@@ -247,14 +249,67 @@ describe("los cuatro tramos parten el rango sin huecos ni solapes", () => {
     }
   });
 
-  it("cada tramo tiene su rótulo, y el 10 no se nombra dos veces", () => {
+  /**
+   * El rótulo dice el rango que de verdad aplica.
+   *
+   * Es el defecto que la ronda de auditoría señaló: con los nombres anteriores el
+   * tramo se llamaba «5–10» pero su frontera inferior era 4, y el primero se
+   * llamaba `< 5` excluyendo justo el 5 que anunciaba el siguiente.
+   *
+   * La comprobación es contra el **rango que el motor acepta**, no contra el texto
+   * del rótulo. La versión anterior de esta prueba buscaba el número dentro de la
+   * etiqueta con `includes` y falló por un motivo que conviene dejar escrito: «5»
+   * está dentro de «11–15» y de «> 15», así que el 5 salía en tres rótulos sin que
+   * nada estuviera mal. Contar apariciones de un dígito no mide fronteras.
+   */
+  it("cada rótulo nombra exactamente la frontera de su tramo", () => {
     assert.deepEqual(
       TRAMOS_DISTANCIA.map((tramo) => ETIQUETA_DISTANCIA[tramo]),
-      ["< 5 min", "5–10 min", "11–15 min", "+ 15 min"]
+      ["≤ 5 min", "6–10 min", "11–15 min", "> 15 min"]
     );
     assert.equal(ETIQUETA_DISTANCIA.cualquiera, "Cualquiera");
-    const conDiez = TRAMOS_DISTANCIA.filter((tramo) => ETIQUETA_DISTANCIA[tramo].includes("10"));
-    assert.equal(conDiez.length, 1, "el 10 es frontera de un solo tramo");
+
+    // Rango real que el motor acepta, medido valor por valor sobre 0..60.
+    const rangoAceptado = (tramo: (typeof TRAMOS_DISTANCIA)[number]) => {
+      const aceptados = [];
+      for (let minutos = 0; minutos <= 60; minutos += 1) {
+        if (coincideRangoDistancia(minutos, tramo)) aceptados.push(minutos);
+      }
+      return aceptados;
+    };
+
+    assert.deepEqual(rangoAceptado("hasta5")[0], 0);
+    assert.deepEqual(rangoAceptado("hasta5").at(-1), 5);
+    assert.deepEqual(rangoAceptado("6-10")[0], 6);
+    assert.deepEqual(rangoAceptado("6-10").at(-1), 10);
+    assert.deepEqual(rangoAceptado("11-15")[0], 11);
+    assert.deepEqual(rangoAceptado("11-15").at(-1), 15);
+    assert.deepEqual(rangoAceptado("mas15")[0], 16);
+
+    // Y los números que cada rótulo nombra son los de su propio rango: los dos
+    // extremos en los cerrados, y el último minuto excluido en el abierto.
+    const numerosDe = (rotulo: string) => (rotulo.match(/\d+/g) ?? []).map(Number);
+    assert.deepEqual(numerosDe(ETIQUETA_DISTANCIA.hasta5), [5]);
+    assert.deepEqual(numerosDe(ETIQUETA_DISTANCIA["6-10"]), [6, 10]);
+    assert.deepEqual(numerosDe(ETIQUETA_DISTANCIA["11-15"]), [11, 15]);
+    assert.deepEqual(numerosDe(ETIQUETA_DISTANCIA.mas15), [15]);
+  });
+
+  /**
+   * El rótulo y la frontera no pueden ir por caminos distintos.
+   *
+   * Se comprueba lo que de verdad importa: que los números que el rótulo nombra
+   * sean exactamente los que el motor admite. Si alguien cambia el motor y se
+   * olvida del rótulo —o al revés—, esta prueba cae.
+   */
+  it("«≤ 5 min» admite exactamente hasta 5, y «6–10 min» desde 6", () => {
+    const hasta5 = [0, 1, 2, 3, 4, 5].every((m) => coincideRangoDistancia(m, "hasta5"));
+    assert.equal(hasta5, true);
+    assert.equal(coincideRangoDistancia(6, "hasta5"), false);
+
+    const desde6 = [6, 7, 8, 9, 10].every((m) => coincideRangoDistancia(m, "6-10"));
+    assert.equal(desde6, true);
+    assert.equal(coincideRangoDistancia(5, "6-10"), false);
   });
 });
 
@@ -324,7 +379,7 @@ describe("aplicarFiltros", () => {
   });
 
   it("el filtro por rango de distancia deja fuera lo que no encaja", () => {
-    const resultado = aplicarFiltros(catalogo, filtros({ rangoDistancia: "<5" }), MAXIMO_REAL);
+    const resultado = aplicarFiltros(catalogo, filtros({ rangoDistancia: "hasta5" }), MAXIMO_REAL);
     assert.deepEqual(
       resultado.map((p) => p.id),
       ["cerca"]
@@ -345,7 +400,7 @@ describe("filtros en la URL", () => {
     const original = filtros({
       precioMaximoCop: 400000,
       genero: "femenino",
-      rangoDistancia: "5-10",
+      rangoDistancia: "6-10",
       soloConAlimentacion: true,
       soloVerificadas: true,
       soloFavoritas: true,
@@ -359,59 +414,92 @@ describe("filtros en la URL", () => {
   });
 
   /**
-   * El nombre del tramo abierto tiene que sobrevivir la dirección (tarea #50).
+   * Todo nombre de tramo sobrevive la dirección (tarea #50, ampliado en la #56).
    *
-   * Es el criterio de aceptación que obligó a elegir `>15` en vez del `15+` que
-   * sugería el encargo. La medición está en los comentarios de `RangoDistancia`:
-   * `new URLSearchParams("dist=15+").get("dist")` devuelve `"15 "` —un espacio—,
-   * así que un enlace escrito a mano perdería el filtro en silencio y el
-   * estudiante vería todo el catálogo creyendo que filtró. El `>` viaja igual
-   * codificado (`%3E`) que escrito a mano, que es lo que se comprueba aquí.
+   * Los cuatro valores son ASCII y viajan igual codificados que escritos a mano en
+   * un enlace. Se comprueba el tramo abierto aparte porque es el único que podría
+   * tentar a usar un `+`.
    */
-  describe("el tramo abierto viaja intacto en la dirección", () => {
-    it("se escribe codificado y se lee de vuelta igual", () => {
-      const parametros = filtrosAParametros(filtros({ rangoDistancia: ">15" }), MAXIMO_REAL);
-      assert.equal(parametros.toString(), "dist=%3E15");
-      assert.equal(parametrosAFiltros(parametros, MAXIMO_REAL).rangoDistancia, ">15");
+  describe("los tramos viajan intactos en la dirección", () => {
+    it("se escriben y se leen de vuelta igual", () => {
+      for (const tramo of TRAMOS_DISTANCIA) {
+        const parametros = filtrosAParametros(filtros({ rangoDistancia: tramo }), MAXIMO_REAL);
+        assert.equal(parametrosAFiltros(parametros, MAXIMO_REAL).rangoDistancia, tramo);
+      }
+      assert.equal(
+        filtrosAParametros(filtros({ rangoDistancia: "mas15" }), MAXIMO_REAL).toString(),
+        "dist=mas15"
+      );
     });
 
-    it("se lee igual si alguien escribe el enlace a mano, sin codificar", () => {
-      assert.equal(parametrosAFiltros(new URLSearchParams("dist=>15"), MAXIMO_REAL).rangoDistancia, ">15");
+    it("se leen igual si alguien escribe el enlace a mano, sin codificar", () => {
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=mas15"), MAXIMO_REAL).rangoDistancia, "mas15");
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=hasta5"), MAXIMO_REAL).rangoDistancia, "hasta5");
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=6-10"), MAXIMO_REAL).rangoDistancia, "6-10");
     });
 
-    it("el `+` sin codificar NO sirve, y por eso no se usa", () => {
+    it("un `+` sin codificar NO sirve, y por eso ningún nombre lo usa", () => {
       // La razón medida, no supuesta: un `+` crudo se decodifica como espacio.
       assert.equal(new URLSearchParams("dist=15+").get("dist"), "15 ");
       // Y ese espacio no es un tramo, así que el filtro se degrada a «cualquiera»:
       // falla en silencio, que es la peor forma de fallar.
       assert.equal(parametrosAFiltros(new URLSearchParams("dist=15+"), MAXIMO_REAL).rangoDistancia, "cualquiera");
+      // El mismo riesgo con el nombre nuevo del tramo abierto:
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=mas15+"), MAXIMO_REAL).rangoDistancia, "cualquiera");
     });
 
-    it("los cinco nombres de tramo dan la vuelta completa sin perderse", () => {
+    it("ningún nombre de tramo contiene un `+` ni un espacio", () => {
       for (const tramo of TRAMOS_DISTANCIA) {
-        const parametros = filtrosAParametros(filtros({ rangoDistancia: tramo }), MAXIMO_REAL);
-        assert.equal(parametrosAFiltros(parametros, MAXIMO_REAL).rangoDistancia, tramo, `«${tramo}» se perdió`);
+        assert.doesNotMatch(tramo, /[+\s]/, `«${tramo}» no puede viajar en una dirección`);
       }
     });
   });
 
   /**
-   * El nombre retirado sigue leyéndose con su significado exacto.
+   * Los nombres retirados siguen leyéndose con su significado.
    *
-   * Antes de la tarea #50 el tramo de 11 a 15 se llamaba `10-15`. Un enlace ya
-   * compartido con ese nombre tiene que seguir filtrando de 11 a 15: degradarlo a
-   * «cualquiera» ampliaría la búsqueda del estudiante a sus espaldas, que es peor
-   * que conservar un nombre viejo.
+   * El defecto que esto evita es peor que conservar un nombre viejo: degradar a
+   * «cualquiera» un enlace ya compartido ampliaría la búsqueda del estudiante a sus
+   * espaldas. Cada traducción busca el significado más cercano, y donde la frontera
+   * cambió se declara qué se pierde.
    */
-  it("el nombre retirado «10-15» conserva su significado, no se degrada", () => {
-    const leido = parametrosAFiltros(new URLSearchParams("dist=10-15"), MAXIMO_REAL);
-    assert.equal(leido.rangoDistancia, "11-15");
-    assert.equal(coincideRangoDistancia(10, leido.rangoDistancia), false);
-    assert.equal(coincideRangoDistancia(11, leido.rangoDistancia), true);
-    assert.equal(coincideRangoDistancia(15, leido.rangoDistancia), true);
-    // Y al volver a escribir se emite el nombre nuevo, así que la dirección se
-    // corrige sola en la siguiente navegación.
-    assert.equal(filtrosAParametros(leido, MAXIMO_REAL).toString(), "dist=11-15");
+  describe("los nombres retirados conservan su significado", () => {
+    it("«10-15» sigue filtrando de 11 a 15, y se reescribe con el nombre nuevo", () => {
+      const leido = parametrosAFiltros(new URLSearchParams("dist=10-15"), MAXIMO_REAL);
+      assert.equal(leido.rangoDistancia, "11-15");
+      assert.equal(coincideRangoDistancia(10, leido.rangoDistancia), false);
+      assert.equal(coincideRangoDistancia(11, leido.rangoDistancia), true);
+      assert.equal(coincideRangoDistancia(15, leido.rangoDistancia), true);
+      assert.equal(filtrosAParametros(leido, MAXIMO_REAL).toString(), "dist=11-15");
+    });
+
+    it("«>15» y «<5» se traducen a los nombres nuevos", () => {
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=>15"), MAXIMO_REAL).rangoDistancia, "mas15");
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=%3E15"), MAXIMO_REAL).rangoDistancia, "mas15");
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=<5"), MAXIMO_REAL).rangoDistancia, "hasta5");
+      assert.equal(parametrosAFiltros(new URLSearchParams("dist=%3C5"), MAXIMO_REAL).rangoDistancia, "hasta5");
+    });
+
+    /**
+     * Aquí está la única pérdida, y se declara en vez de esconderse.
+     *
+     * `5-10` significaba «de 5 a 10». Su traducción más cercana es `6-10`, porque el
+     * minuto 5 pasó al primer tramo. Un enlace viejo enseña todo menos los anuncios
+     * de exactamente 5 minutos; mandarlo a `hasta5` habría enseñado como máximo 5,
+     * ocultando cinco valores de diez. Se pierde el menos valioso.
+     */
+    it("«5-10» se traduce a «6-10»: pierde el 5 y conserva el resto", () => {
+      const leido = parametrosAFiltros(new URLSearchParams("dist=5-10"), MAXIMO_REAL);
+      assert.equal(leido.rangoDistancia, "6-10");
+      assert.equal(coincideRangoDistancia(5, leido.rangoDistancia), false);
+      for (const minutos of [6, 7, 8, 9, 10]) {
+        assert.equal(
+          coincideRangoDistancia(minutos, leido.rangoDistancia),
+          true,
+          `${minutos} min debe conservarse`
+        );
+      }
+    });
   });
 
   it("un valor inventado cae en «cualquiera» en lugar de vaciar el catálogo", () => {

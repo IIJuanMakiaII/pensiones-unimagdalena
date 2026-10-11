@@ -67,6 +67,34 @@ export interface Pension {
    */
   calificacion: number;
   verificado: boolean;
+  /**
+   * Cuándo la plataforma REGISTRÓ la verificación (Oleada 13, tarea #61).
+   *
+   * Lo sella la base, no la interfaz: el disparador `sellar_fecha_verificacion`
+   * escribe el instante en que `verificado` pasa a `true`, y lo borra cuando el
+   * sello se retira. Ningún llamante puede enviar una fecha —ni el anfitrión ni
+   * el maestro—, así que una fecha aquí es siempre una fecha registrada de
+   * verdad.
+   *
+   * Opcional y anulable a propósito, y las dos cosas significan algo distinto:
+   *   · `null` es «verificado, pero sin constancia de cuándo». Es el estado
+   *     honesto de los anuncios que ya estaban verificados antes de que esta
+   *     columna existiera, y NO se rellena con una fecha inventada. Antes un
+   *     sello sin fecha que una fecha falsa. La interfaz debe decir «Verificado
+   *     por Nido ✓» a secas, no un guion ni «fecha desconocida».
+   *   · Opcional para que la semilla de demostración y cualquier objeto literal
+   *     sigan compilando sin declararlo. Ninguna pantalla puede dar por hecho
+   *     que venga informado.
+   *
+   * Se llama `verificado_en` y no `verificadoEn` por coherencia con el resto de
+   * este contrato y con la interfaz que ya lo consume: los campos que vienen de
+   * la base conservan aquí su nombre de columna (`creada_en`, `anfitrion_id`,
+   * `distancia_a_pie_minutos`), y `components/CardPension.tsx` ya lee
+   * `pension.verificado_en`. Un nombre en camelCase habría compilado igual y el
+   * dato no habría llegado nunca al sello, en silencio: es justo el fallo que
+   * esta tarea existe para evitar.
+   */
+  verificado_en?: Date | null;
   /*
    * Aquí vivían `whatsapp` (el número del dueño) y `autorizacion_contacto_en`
    * (la fecha en que autorizó publicarlo). Se retiraron el 2026-10-02, cuando el
@@ -110,23 +138,35 @@ export interface Filtros {
 }
 
 /**
- * Tramos de distancia a pie (tarea #50).
+ * Tramos de distancia a pie.
  *
- * Cuatro tramos que **parten el rango sin huecos ni solapes**: `<5` · `5-10` ·
- * `11-15` · `>15`. Antes solo había tres y el último cerraba en 15, así que
- * cualquier anuncio a más de quince minutos no encajaba en ningún tramo concreto:
- * elegir distancia dejaba fuera lo que el propio catálogo admite (el formulario
- * acepta hasta 60 min). El tramo abierto final cierra ese agujero.
+ * Cuatro tramos que **parten el rango sin huecos ni solapes**: `≤5` · `6–10` ·
+ * `11–15` · `>15`. Antes eran tres y el último cerraba en 15, así que cualquier
+ * anuncio a más de quince minutos no encajaba en ningún tramo concreto: elegir
+ * distancia dejaba fuera lo que el propio catálogo admite (el formulario acepta
+ * hasta 60 min). El tramo abierto final cierra ese agujero.
  *
- * El nombre de cada valor viaja en la dirección (`?dist=…`), así que importa que
- * sobreviva la ida y vuelta. `>15` se eligió por eso y no por gusto: un `+` —como
- * en `15+`— se decodifica como **espacio** en una cadena de consulta
- * (`new URLSearchParams("dist=15+").get("dist")` devuelve `"15 "`), de modo que un
- * enlace escrito a mano perdería el filtro sin avisar. `>` se codifica como `%3E`
- * al serializar y se lee igual sin codificar, así que funciona por los dos caminos
- * —la misma razón por la que el primer tramo ya se llamaba `<5`—.
+ * POR QUÉ LA FRONTERA DEL 5 CAMBIÓ (ronda de auditoría)
+ * ----------------------------------------------------
+ * Los rótulos anteriores eran `< 5` y `5–10`, y quien los leía no tenía forma de
+ * saber de quién era el 5: el tramo se llamaba «5–10» pero su frontera inferior era
+ * un 4, y el primero se llamaba `<5` excluyendo justo el 5 que anunciaba el
+ * siguiente. Ahora cada rótulo dice **el rango que de verdad aplica**: `≤ 5` (el 5
+ * pertenece al primero) y `6–10` (empieza en 6). Con eso se lee sin conocer el
+ * motor, que es de lo que se trata.
+ *
+ * Consecuencia asumida y dicha en voz alta: **el minuto 5 pasó del segundo tramo al
+ * primero**. Es un cambio de comportamiento, no solo de rótulo.
+ *
+ * EL NOMBRE VIAJA EN LA DIRECCIÓN (`?dist=…`)
+ * ------------------------------------------
+ * Los valores son ASCII y seguros en una cadena de consulta. Un `>` se codifica
+ * como `%3E` al serializar y se lee igual sin codificar; un `≤` obligaría a llevar
+ * `%E2%89%A4` en la barra de direcciones. Lo que **no** puede aparecer es un `+`: se
+ * decodifica como espacio (`new URLSearchParams("dist=15+").get("dist")` devuelve
+ * `"15 "`), de modo que un enlace escrito a mano perdería el filtro en silencio.
  */
-export type RangoDistancia = "cualquiera" | "<5" | "5-10" | "11-15" | ">15";
+export type RangoDistancia = "cualquiera" | "hasta5" | "6-10" | "11-15" | "mas15";
 
 /**
  * Habitación tal como la captura el editor antes de guardarse.

@@ -56,13 +56,15 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-2xl border border-neutro-200 bg-white transition duration-150 hover:border-neutro-300 hover:shadow-card">
-      {/* El enlace al detalle vive dentro de cada foto del carrusel, no
-          envolviendo el carrusel: sus botones ya no quedan dentro de un <a>. */}
+      {/* El carrusel ya NO enlaza al detalle (tarea #56). Cada foto era un enlace
+          más al mismo destino —hasta dos por tarjeta— y todos eran paradas
+          distintas del teclado para el mismo sitio. Ahora la tarjeta tiene un solo
+          enlace, el del título, estirado con `after:inset-0`: la foto sigue
+          llevando al detalle al tocarla porque el enlace la cubre. */}
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
         <Carrusel
           imagenes={galeriaDe(pension)}
           altBase={pension.titulo}
-          href={`/pensiones/${pension.slug}`}
           priority={prioridadImagen}
           diferirImagenes
           className="h-full w-full"
@@ -71,9 +73,17 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             #51): un punto de color no comunica nada a quien no conoce el sitio.
             Ocupa el mismo anclaje que el círculo, así que la composición de la
             tarjeta no se mueve. El sello se rige por `pension.verificado`, que
-            sale de la base: solo lo concede el maestro. */}
+            sale de la base: solo lo concede el maestro.
+            La fecha de la visita es `pension.verificado_en` (tareas #57 y #61):
+            el tipo y el mapeo ya la entregan, y la columna la crea `oleada-13`.
+            Contra una base sin esa migración llega `null` y el sello se dibuja
+            sin fecha, como hasta ahora; con la migración aplicada aparece sola,
+            sin tocar el diseño. */}
         {mostrarSello(pension.verificado) && (
-          <EtiquetaVerificado className="absolute right-3 top-3" />
+          <EtiquetaVerificado
+            className="absolute right-3 top-3"
+            verificadoEn={pension.verificado_en}
+          />
         )}
       </div>
 
@@ -91,8 +101,18 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
           · {pension.barrio || "Santa Marta"}
         </p>
 
+        {/* Enlace estirado (tarea #56): este es el ÚNICO enlace de la tarjeta y su
+            `::after` cubre la tarjeta entera, así que tocar la foto, el título o el
+            hueco sigue navegando al detalle. Todo lo que deba seguir siendo
+            pulsable por su cuenta —lo de WhatsApp, el corazón de favoritos— vive por
+            encima con `relative z-10`; los controles del carrusel lo hacen dentro
+            de `Carrusel`. El `::after` se ancla al `<article>`, que es el ancestro
+            posicionado más cercano. */}
         <h3 className="font-display text-base font-semibold leading-snug text-neutro-800">
-          <Link href={`/pensiones/${pension.slug}`} className="hover:text-primary-700">
+          <Link
+            href={`/pensiones/${pension.slug}`}
+            className="after:absolute after:inset-0 hover:text-primary-700"
+          >
             {pension.titulo}
           </Link>
         </h3>
@@ -148,7 +168,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: true,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
+            className="relative z-10 mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Reservar por WhatsApp
@@ -156,7 +176,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
         ) : sinLibres ? (
           /* Todas las habitaciones están ocupadas: ni se ofrece reservar ni se
              muestra un precio que ya no aplica. Se ofrece preguntar al anfitrión. */
-          <div className="mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
+          <div className="relative z-10 mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
             <p className="text-sm font-bold text-neutro-700">Sin habitaciones libres ahora</p>
             <p className="mt-0.5 text-xs text-neutro-500">
               El anfitrión las marcó como ocupadas. Pregúntale por la próxima disponibilidad.
@@ -172,7 +192,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                   con_habitacion: false,
                 })
               }
-              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
+              className="relative z-10 mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
             >
               <WhatsAppIcon />
               Consultar por WhatsApp
@@ -190,7 +210,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
                 con_habitacion: false,
               })
             }
-            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
+            className="relative z-10 mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-airbnb-rausch-hover px-6 text-base font-semibold text-white transition hover:bg-primary-700"
           >
             <WhatsAppIcon />
             Consultar por WhatsApp
@@ -200,13 +220,13 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
              Antes esto era un párrafo inerte: el estudiante ya estaba mirando el
              anuncio —le interesó el barrio o el precio— y no podía hacer nada.
              Ahora la única salida útil está a un toque. */
-          <div className="mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
+          <div className="relative z-10 mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
             <p className="text-sm font-bold text-neutro-700">
               Sin habitaciones que cumplan tus filtros
             </p>
             <Link
               href={`/pensiones/${pension.slug}`}
-              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl border border-primary-600 bg-white px-4 text-base font-bold text-primary-700 transition hover:bg-primary-50"
+              className="relative z-10 mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl border border-primary-600 bg-white px-4 text-base font-bold text-primary-700 transition hover:bg-primary-50"
             >
               Ver todas las habitaciones
             </Link>
