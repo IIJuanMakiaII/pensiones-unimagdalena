@@ -17,19 +17,40 @@
 // completa el borrado en esta máquina.
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 
+/**
+ * La ficha de control se toma de lo que el propio sitio enlaza, no de un id
+ * escrito a mano.
+ *
+ * Un id fijo deja de servir como control en cuanto esa publicación se retira:
+ * el 404 pasa a ser la respuesta correcta y la comprobación se vuelve un fallo
+ * permanente que ya no significa nada. Ya ocurrió dos veces en este archivo —
+ * primero con `pension-mamatoco-1` (un identificador que no existía en la
+ * semilla) y después con el uuid del anuncio de prueba, que la tarea #58 retira.
+ * Aquí figuraban además dos casos atados al estado de la demo
+ * (`pension-costa-verde`, que solo responde 200 con la demostración encendida).
+ *
+ * Quien mide el efecto de una retirada es `verificar-retirada.mjs`; este archivo
+ * mide códigos de estado, así que su control tiene que salir del propio sitio.
+ */
+const inicio = await (
+  await fetch(BASE + "/", { headers: { "cache-control": "no-cache" } })
+).text();
+const enlazada = inicio.match(/href="(\/pensiones\/[^"#?]+)"/);
+
 const casos = [
   ["uuid inexistente", "/pensiones/00000000-0000-4000-8000-000000000000", 404],
-  // La demo sigue encendida, así que las fichas de la semilla son contenido
-  // válido. Cuando se apague la demo (M-08) pasarán a comprobarse contra la base.
-  //
-  // Aquí figuraba `pension-mamatoco-1`, un identificador que ya no existe en la
-  // semilla. Daba 200 porque el middleware servía el estado «no encontrada» con
-  // código de éxito (soft 404): la tarea #27 lo corrigió y de paso dejó a la vista
-  // que ese caso era un falso positivo. Se usa una ficha real de la semilla.
-  ["ficha de la semilla (demo encendida)", "/pensiones/pension-costa-verde", 200],
-  ["ficha real (control)", "/pensiones/f555e5b3-6629-402a-ae37-32c366c3f022", 200],
   ["ruta inexistente", "/ruta-inexistente", 404],
 ];
+
+if (enlazada) {
+  casos.push(["ficha enlazada por el sitio (control)", enlazada[1], 200]);
+} else {
+  console.log(
+    "OMITIDO  El sitio no enlaza ninguna ficha, así que no hay ficha real que controlar.\n" +
+      "         Los casos de 200 no se pueden ejercer: sin anuncios publicados no existe\n" +
+      "         la respuesta que se quiere comprobar.\n"
+  );
+}
 
 let fallos = 0;
 
@@ -47,7 +68,8 @@ for (const [nombre, ruta, esperado] of casos) {
 
 console.log(
   fallos === 0
-    ? "\nTodos los códigos de estado son los esperados."
+    ? `\nTodos los códigos de estado son los esperados (${casos.length} caso(s) ejercido(s)` +
+      `${enlazada ? "" : ", sin el control de ficha real"}).`
     : `\n${fallos} caso(s) con un código inesperado.`
 );
 
