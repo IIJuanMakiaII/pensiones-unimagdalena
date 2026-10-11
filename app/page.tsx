@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { catalogoDemo, obtenerPensiones } from "@/lib/datos";
+import { catalogoDemo, obtenerCatalogo } from "@/lib/datos";
+import { esFalloDeLectura } from "@/lib/catalogo-respaldo";
 import { DEMO_HABILITADA, SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
 import { mostrarListaDeEspera } from "@/lib/lista-espera";
@@ -7,6 +8,7 @@ import Hero from "@/components/Hero";
 import ComoFunciona from "@/components/ComoFunciona";
 import CatalogoInteractivo from "@/components/CatalogoInteractivo";
 import ListaDeEspera from "@/components/ListaDeEspera";
+import ErrorCatalogo from "@/components/ErrorCatalogo";
 import Footer from "@/components/Footer";
 
 /**
@@ -27,15 +29,29 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const pensiones = await obtenerPensiones();
+  /**
+   * El catálogo llega **con su motivo** (tarea #67), y con él la portada puede separar
+   * tres situaciones que antes se veían iguales: hay inventario, no hay inventario
+   * —un estado legítimo del negocio— y la lectura de la base falló —una avería—. Sin
+   * el motivo, las dos últimas llegan aquí como «cero anuncios» y la página no tiene
+   * con qué distinguirlas.
+   */
+  const catalogo = await obtenerCatalogo();
+  const { pensiones } = catalogo;
 
   /**
-   * Sin inventario, la portada no dibuja una parrilla sin nada dentro: muestra un
-   * estado que captura el contacto del estudiante. La decisión vive en
-   * `lib/lista-espera.ts` para poder comprobarse (aquí dentro, en JSX, no habría
-   * forma de probarla).
+   * La avería se resuelve **antes** que el vacío, y no al revés (tarea #68): si la base
+   * no respondió, no se puede afirmar que no haya nada publicado, así que el estado sin
+   * inventario no entra en juego. Por eso la lista de espera queda condicionada a que
+   * no haya fallo, y el hero también: con `sinInventario` prometía «te aviso cuando
+   * haya habitaciones» a quien en realidad estaba viendo una avería.
+   *
+   * Las dos decisiones siguen viviendo fuera del JSX —`esFalloDeLectura()` en
+   * `lib/catalogo-respaldo.ts` y `mostrarListaDeEspera()` en `lib/lista-espera.ts`—
+   * para poder comprobarse sin navegador.
    */
-  const listaDeEspera = mostrarListaDeEspera(pensiones.length, DEMO_HABILITADA);
+  const falloDeLectura = esFalloDeLectura(catalogo);
+  const listaDeEspera = !falloDeLectura && mostrarListaDeEspera(pensiones.length, DEMO_HABILITADA);
 
   // Datos estructurados del listado (SEO): cada pensión como elemento.
   const jsonLdListado = {
@@ -59,7 +75,9 @@ export default async function Home() {
       />
       <Hero sinInventario={listaDeEspera} />
       <ComoFunciona />
-      {listaDeEspera ? (
+      {falloDeLectura ? (
+        <ErrorCatalogo />
+      ) : listaDeEspera ? (
         <ListaDeEspera />
       ) : (
         /* El encabezado de esta sección —el H2 sin texto visible, que es lo que impide
