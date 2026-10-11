@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Lexend, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import {
   numeroWhatsAppValido,
@@ -17,27 +17,56 @@ import Cabecera from "@/components/Cabecera";
 import { Analytics } from "@vercel/analytics/next";
 
 /**
- * Fuentes autoalojadas con next/font: se descargan en el build y se sirven desde
- * el propio dominio. Así no hay peticiones a Google (más rápido), se elimina el
- * salto de maquetación (CLS) y el service worker las cachea: la app mantiene su
- * tipografía incluso sin conexión.
+ * Tipografía autoalojada con `next/font/local` (tarea #70).
+ *
+ * POR QUÉ CAMBIÓ DE `next/font/google`
+ * ------------------------------------
+ * `next/font/google` **descarga la fuente de Google durante la compilación**. Esa
+ * llamada tumbó dos compilaciones limpias en esta ronda y solo entró al tercer
+ * intento: un despliegue podía morir por una respuesta transitoria de un tercero
+ * que no controlamos. Con `next/font/local` la tipografía se resuelve desde
+ * archivos del propio repositorio, así que compilar ya no depende de la red.
+ *
+ * LOS ARCHIVOS NO SE ELIGIERON A MANO
+ * -----------------------------------
+ * Son exactamente los que el build anterior ya servía, copiados byte a byte
+ * desde `.next/static/media/` y comparados por huella SHA-256. En los dos casos
+ * es el subconjunto `latin`, que es el único que necesita el español: cubre
+ * `u+00??`, es decir la eñe, las tildes, la diéresis y los signos de apertura.
+ * Por eso la identidad visual no cambia: son los mismos bytes, la misma familia
+ * y los mismos pesos. El service worker las sigue cacheando igual.
+ *
+ * El peso se declara como rango (`500 800` y `400 700`) porque el archivo es la
+ * fuente variable de Google: allí los cuatro pesos ya apuntaban al mismo archivo,
+ * uno por subconjunto. Declarar el rango no cambia ningún trazo; describe lo que
+ * el archivo ya era.
  */
-const fuenteDisplay = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+const fuenteDisplay = localFont({
+  src: [
+    {
+      path: "../tipografia/plus-jakarta-sans-latin.woff2",
+      weight: "500 800",
+      style: "normal",
+    },
+  ],
   variable: "--fuente-display",
   display: "swap",
 });
 
 /**
- * Lexend para el cuerpo. Se eligio por sus tres numeros medidos, no por gusto:
+ * Lexend para el cuerpo. Se eligió por sus tres números medidos, no por gusto:
  * x-height 0,53 (a 1 punto de la anterior), el mayor contraste de negrita de las
- * ocho candidatas (6,3 %) y la unica pensada para legibilidad en pantalla. Es la
- * mas ancha de todas (105 %), asi que el reflujo de lineas se vigila aparte.
+ * ocho candidatas (6,3 %) y la única pensada para legibilidad en pantalla. Es la
+ * más ancha de todas (105 %), así que el reflujo de líneas se vigila aparte.
  */
-const fuenteCuerpo = Lexend({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const fuenteCuerpo = localFont({
+  src: [
+    {
+      path: "../tipografia/lexend-latin.woff2",
+      weight: "400 700",
+      style: "normal",
+    },
+  ],
   variable: "--fuente-cuerpo",
   display: "swap",
 });
