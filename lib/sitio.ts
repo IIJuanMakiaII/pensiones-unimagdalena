@@ -23,6 +23,16 @@ export const SITIO_URL = (process.env.NEXT_PUBLIC_SITE_URL || URL_POR_DEFECTO).r
 export const DEMO_HABILITADA =
   process.env.NEXT_PUBLIC_MOSTRAR_DEMO === "1" || process.env.NODE_ENV !== "production";
 
-/** Imagen compartida para Open Graph / Twitter card. */
-export const SITIO_IMAGEN =
-  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80";
+/**
+ * Imagen compartida para Open Graph / Twitter card y `image` del JSON-LD.
+ *
+ * Antes era una foto de stock servida por `images.unsplash.com`: la tarjeta
+ * dependía de un tercero que puede retirar la foto o cambiar la URL, y el enlace
+ * solo fijaba `w=1200`, así que no garantizaba el alto de 630 px que el propio
+ * HTML declaraba. Ahora se genera en el repositorio con
+ * `scripts/generar-imagen-compartir.mjs` (1200x630) y se sirve desde el dominio.
+ */
+export const SITIO_IMAGEN = `${SITIO_URL}/marca/compartir-nido.png`;
+
+/** Logotipo servido desde el dominio, para `Organization.logo`. */
+export const SITIO_LOGO = `${SITIO_URL}/marca/nido-logo.png`;

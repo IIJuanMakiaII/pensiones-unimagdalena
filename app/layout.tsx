@@ -8,7 +8,7 @@ import {
   WHATSAPP_NUMERO,
   WHATSAPP_NUMERO_CRUDO,
 } from "@/lib/formato";
-import { SITIO_IMAGEN, SITIO_URL } from "@/lib/sitio";
+import { SITIO_IMAGEN, SITIO_LOGO, SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
 import InstalarApp from "@/components/InstalarApp";
 import AvisoOffline from "@/components/AvisoOffline";
@@ -47,12 +47,45 @@ const fuenteCuerpo = Lexend({
  * coordenadas fijas— sería información inexacta. El `LodgingBusiness` se emite
  * en cada ficha de pensión, que sí es un alojamiento real.
  */
+/**
+ * Identificador estable de la organización. Se usa para **referenciarla** desde
+ * otros nodos en lugar de repetirla: repetir el mismo `Organization` completo en
+ * cada bloque de datos estructurados hace que los buscadores lean varias
+ * organizaciones distintas donde solo hay una.
+ */
+const ID_ORGANIZACION = `${SITIO_URL}/#organizacion`;
+
+/**
+ * La organización, como nodo propio del grafo.
+ *
+ * Antes viajaba **anidada** dentro de `WebSite.publisher`, que es válido pero
+ * deja a la organización sin identidad propia: cualquier otro bloque que quiera
+ * referirse a ella tendría que volver a copiarla entera. Como nodo con `@id` se
+ * puede citar.
+ */
+const jsonLdOrganizacion = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": ID_ORGANIZACION,
+  name: "Nido",
+  url: SITIO_URL,
+  logo: SITIO_LOGO,
+  image: SITIO_IMAGEN,
+  telephone: `+${WHATSAPP_NUMERO}`,
+  areaServed: "Santa Marta, Magdalena, Colombia",
+  knowsAbout: [
+    "Pensiones universitarias",
+    "Habitaciones para estudiantes",
+    "Universidad del Magdalena",
+  ],
+};
+
 const jsonLdSitio = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Nido",
   description:
-    "Marketplace de pensiones y habitaciones verificadas para estudiantes de la Universidad del Magdalena en Santa Marta, Magdalena, Colombia.",
+    "Habitaciones verificadas para estudiantes de la Universidad del Magdalena en Santa Marta, Magdalena, Colombia.",
   url: SITIO_URL,
   inLanguage: "es-CO",
   image: SITIO_IMAGEN,
@@ -65,18 +98,7 @@ const jsonLdSitio = {
       addressCountry: "CO",
     },
   },
-  publisher: {
-    "@type": "Organization",
-    name: "Nido",
-    url: SITIO_URL,
-    telephone: `+${WHATSAPP_NUMERO}`,
-    areaServed: "Santa Marta, Magdalena, Colombia",
-    knowsAbout: [
-      "Pensiones universitarias",
-      "Habitaciones para estudiantes",
-      "Universidad del Magdalena",
-    ],
-  },
+  publisher: { "@id": ID_ORGANIZACION },
 };
 
 /**
@@ -153,23 +175,30 @@ if (process.env.VERCEL_ENV) {
   }
 }
 
+/**
+ * Un solo título y una sola descripción para todo el sitio.
+ *
+ * Antes había tres textos distintos para la misma página: `<title>`, `og:title` y
+ * `twitter:title` decían cosas diferentes del mismo sitio. Y la descripción medía
+ * unos 220 caracteres, así que Google la cortaba hacia los 155 y el fragmento que
+ * se leía empezaba por «Marketplace de pensiones»: describía lo que hace la
+ * empresa, no lo que busca quien llega. Ahora se enuncia el beneficio y se
+ * declara en un único sitio.
+ *
+ * Tampoco se declara `keywords`: Google la ignora desde 2009 y solo servía para
+ * publicar la lista de términos objetivo a quien mirara el código.
+ */
+const TITULO_SITIO = "Nido | Pensiones verificadas a minutos de Unimagdalena";
+const DESCRIPCION_SITIO =
+  "Habitaciones verificadas a minutos de la Universidad del Magdalena, con precios mensuales claros y reserva acompañada.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITIO_URL),
   title: {
-    default:
-      "Nido | Pensiones y habitaciones cerca de Unimagdalena",
+    default: TITULO_SITIO,
     template: "%s · Nido",
   },
-  description:
-    "Marketplace de pensiones y habitaciones para estudiantes de la Universidad del Magdalena en Santa Marta. Habitaciones verificadas a minutos caminando del campus, con precios mensuales claros y reserva acompañada por Nido.",
-  keywords: [
-    "pensiones Santa Marta",
-    "habitaciones para estudiantes Unimagdalena",
-    "arriendo cerca de la Universidad del Magdalena",
-    "pensión universitaria Santa Marta",
-    "pensión para estudiantes foráneos",
-    "cuartos en arriendo Unimagdalena",
-  ],
+  description: DESCRIPCION_SITIO,
   authors: [{ name: "Nido" }],
   applicationName: "Nido",
   appleWebApp: {
@@ -187,15 +216,17 @@ export const metadata: Metadata = {
     apple: [{ url: "/iconos/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     shortcut: [{ url: "/iconos/favicon-48.png", type: "image/png" }],
   },
+  /**
+   * Las directivas de vista previa y de fragmento van en el `robots` general, no
+   * en un `googleBot` aparte: declararlas solo para Google emitía dos etiquetas
+   * donde basta una y dejaba al resto de rastreadores sin la directiva, aunque
+   * `max-image-preview` y `max-snippet` no son exclusivas de Google.
+   */
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
+    "max-image-preview": "large",
+    "max-snippet": -1,
   },
   alternates: {
     canonical: "/",
@@ -205,16 +236,21 @@ export const metadata: Metadata = {
     locale: "es_CO",
     url: SITIO_URL,
     siteName: "Nido",
-    title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
-    description:
-      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva acompañada por Nido.",
-    images: [{ url: SITIO_IMAGEN, width: 1200, height: 630, alt: "Habitación de pensión estudiantil en Santa Marta" }],
+    title: TITULO_SITIO,
+    description: DESCRIPCION_SITIO,
+    images: [
+      {
+        url: SITIO_IMAGEN,
+        width: 1200,
+        height: 630,
+        alt: "Nido: habitaciones verificadas para estudiantes en Santa Marta",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nido | Pensiones en Santa Marta cerca de Unimagdalena",
-    description:
-      "Habitaciones verificadas a minutos caminando de la Universidad del Magdalena. Reserva acompañada por Nido.",
+    title: TITULO_SITIO,
+    description: DESCRIPCION_SITIO,
     images: [SITIO_IMAGEN],
   },
 };
@@ -242,6 +278,10 @@ export default function RootLayout({
         {children}
         <AvisoOffline />
         <InstalarApp />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializarJsonLd(jsonLdOrganizacion) }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializarJsonLd(jsonLdSitio) }}
