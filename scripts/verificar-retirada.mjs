@@ -254,8 +254,45 @@ linea(
       : "no coincide con el estado"
 );
 
+/**
+ * Las direcciones de barrio que el índice **enlaza de verdad**.
+ *
+ * Se leen de los `href` del HTML y se normalizan con `new URL`, en vez de buscar
+ * el texto «/barrios/…» en cualquier parte del cuerpo. Aquel patrón suelto
+ * —`/\/barrios\/[a-z0-9-]+/g`— cazaba también los nombres de trozo internos de
+ * Next (`/_next/static/chunks/app/barrios/page-<hash>.js`), así que la línea
+ * informaba «1 página(s) revisadas» habiendo revisado un archivo de JavaScript y
+ * **sin pedir nunca una página de barrio**: justo donde podía estar la fuga que
+ * esta comprobación existe para atrapar.
+ *
+ * Que el mismo patrón no pudiera fallar en la portada tiene una razón que
+ * conviene dejar escrita: el trozo de la ruta dinámica se llama
+ * `pensiones/[id]/page-<hash>.js`, y los corchetes literales no casan con
+ * `[a-z0-9-]`. El de `/barrios` sí, porque su segmento es concreto.
+ */
+function rutasDeBarrioEnlazadas(cuerpo) {
+  const origen = new URL(BASE).origin;
+  const rutas = new Set();
+
+  for (const coincidencia of cuerpo.matchAll(/href="([^"]+)"/g)) {
+    let destino;
+    try {
+      destino = new URL(coincidencia[1], BASE);
+    } catch {
+      continue; // un href que no es una dirección no dice nada sobre los barrios
+    }
+    if (destino.origin !== origen) continue;
+    if (/^\/barrios\/[a-z0-9-]+\/?$/.test(destino.pathname)) {
+      rutas.add(destino.pathname.replace(/\/$/, ""));
+    }
+  }
+
+  return [...rutas];
+}
+
 /* --- 4. Los barrios -------------------------------------------------------- */
 const indice = await pagina("/barrios");
+const rutasDeBarrio = rutasDeBarrioEnlazadas(indice.cuerpo);
 
 if (indice.status === 404) {
   // Sin publicaciones activas el índice de barrios no existe. Eso es coherente
@@ -265,8 +302,11 @@ if (indice.status === 404) {
     "Los barrios coinciden con el estado",
     "HTTP 404, no hay ningún barrio"
   );
+} else if (indice.status !== 200) {
+  // Un índice que no se puede leer no es «sin barrios» ni «con barrios»: es una
+  // superficie que falta, y se cuenta como tal en vez de disimularse.
+  linea(false, "El índice de barrios responde 200 o 404", `HTTP ${indice.status}`);
 } else {
-  const rutasDeBarrio = [...new Set(indice.cuerpo.match(/\/barrios\/[a-z0-9-]+/g) ?? [])];
   const paginasDeBarrio = [];
 
   for (const ruta of rutasDeBarrio) {
@@ -278,10 +318,32 @@ if (indice.status === 404) {
     // pública indexable sigue siendo una decisión de producto abierta, así que
     // su ausencia no se cuenta como discrepancia. Se informa, no se aprueba:
     // un «OK» que sale siempre no comprueba nada.
+    if (rutasDeBarrio.length === 0) {
+      nota(
+        "el índice de barrios no enlaza ninguna página (su repaso queda OMITIDO): con la\n" +
+          "      demostración activa eso es una superficie que falta, no una mentira"
+      );
+    } else if (paginasDeBarrio.some(({ cuerpo }) => menciona(cuerpo, titulo))) {
+      nota(`los barrios anuncian la demostración (${rutasDeBarrio.length} página(s) revisadas)`);
+    } else {
+      nota(
+        `los barrios no la anuncian: con la demostración activa eso es una superficie que falta, no una mentira (${rutasDeBarrio.length} página(s) revisadas)`
+      );
+    }
+  } else if (rutasDeBarrio.length === 0) {
+    // Sin una sola página de barrio enlazada, la única evidencia disponible es
+    // el cuerpo del índice —que sí se ha pedido y se ha mirado—. Y el repaso de
+    // las páginas se declara OMITIDO: un «OK» aquí diría que se revisó algo que
+    // nunca se pidió, que es exactamente la evidencia falsa que fabricaba el
+    // patrón suelto que este apartado acaba de dejar atrás.
+    linea(
+      !menciona(indice.cuerpo, titulo),
+      "El índice de barrios no anuncia la demostración",
+      "HTTP 200, sin ninguna página de barrio enlazada"
+    );
     nota(
-      paginasDeBarrio.some(({ cuerpo }) => menciona(cuerpo, titulo))
-        ? `los barrios anuncian la demostración (${rutasDeBarrio.length} página(s) revisadas)`
-        : `los barrios no la anuncian: con la demostración activa eso es una superficie que falta, no una mentira (${rutasDeBarrio.length} página(s) revisadas)`
+      "OMITIDO el repaso de las páginas de barrio: el índice no enlaza ninguna, así que\n" +
+        "      no hay ninguna que pueda anunciar la demostración y nada se aprueba en su nombre."
     );
   } else {
     const sucios = paginasDeBarrio
@@ -298,13 +360,27 @@ if (indice.status === 404) {
 
 /* --- 5. La ficha ----------------------------------------------------------- */
 const ficha = await pagina(`/pensiones/${SLUG_DEMO}`);
-const declaraIndexable = /<meta[^>]+name="robots"[^>]*content="[^"]*index/i.test(ficha.cuerpo);
+// `noindex` CONTIENE `index`, así que el patrón anterior
+// (`content="[^"]*index`) daba positivo con `content="noindex"` y acusaba al 404
+// de declararse indexable cuando estaba haciendo justo lo contrario.
+//
+// El verde falso aquí está invertido respecto a los demás: la comprobación
+// fallaba **con el sitio correcto**, así que «arreglarla» habría consistido en
+// volver el 404 indexable de verdad. Por eso ahora se lee el contenido del meta
+// y se busca la directiva `noindex` por palabra completa: `\b` no deja que
+// `index` se cuele dentro de `noindex`, y un 404 sin ninguna directiva sigue
+// contando como indexable, que es lo que dice el estándar por omisión.
+const metaRobots = ficha.cuerpo.match(/<meta[^>]+name="robots"[^>]*content="([^"]*)"/i);
+const declaraIndexable = !/\bnoindex\b/i.test(metaRobots?.[1] ?? "");
 
 if (debeVerse) {
   linea(ficha.status === 200, "La ficha responde 200", `HTTP ${ficha.status}`);
 } else {
   linea(ficha.status === 404, "La ficha responde 404 (no un 200 con cuerpo vacío)", `HTTP ${ficha.status}`);
-  linea(!declaraIndexable, "El 404 no se declara indexable", declaraIndexable ? "index, follow" : "sin robots index");
+  // Se imprime la directiva real y no una etiqueta inventada: cuando pasa, el
+  // lector ve `noindex`, que es la prueba; cuando falla, ve lo que el sitio
+  // declaró de verdad, no una suposición sobre él.
+  linea(!declaraIndexable, "El 404 no se declara indexable", metaRobots?.[1] ?? "sin meta robots");
 }
 
 /* --- Resumen --------------------------------------------------------------- */

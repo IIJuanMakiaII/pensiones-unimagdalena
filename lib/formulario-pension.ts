@@ -99,3 +99,36 @@ export const claseInput =
   "mt-1 w-full rounded-xl border border-neutro-300 bg-neutro-50 px-3 py-3 text-neutro-900 outline-none transition focus:border-primary-600 focus:bg-white";
 
 export const claseEtiqueta = "block text-sm font-semibold text-neutro-700";
+
+/**
+ * El campo del WhatsApp privado del anfitrión (tarea #77).
+ *
+ * LAS TRES PIEZAS VIVEN AQUÍ, Y NO EN `lib/contacto-anfitrion.ts`
+ * ---------------------------------------------------------------
+ * Ese módulo es el que habla con la tabla, pero importa
+ * `@/utils/supabase/server`, que a su vez usa `next/headers`: un componente de
+ * **cliente** que lo importara arrastraría código de servidor al navegador. Estas
+ * cadenas las pintan los dos formularios, y los dos son de cliente, así que su
+ * sitio es el módulo que ya comparten (`SERVICIOS`, `BARRIOS`, `claseInput`).
+ *
+ * EL RÓTULO ES LITERAL
+ * --------------------
+ * Lo dio el propietario con estas palabras exactas y **no se reescribe**. Dice las
+ * dos cosas que el anfitrión necesita saber antes de escribirlo —quién lo ve y
+ * quién no— y esa segunda mitad es la que decide si deja el número o no.
+ *
+ * EL NOMBRE DEL CAMPO NO ES `whatsapp` A PROPÓSITO
+ * -----------------------------------------------
+ * `pensiones.whatsapp` existió y todavía existe en la base, congelada (nadie tiene
+ * `update` sobre ella). Llamar `whatsapp` a este campo invitaría a que un lector
+ * futuro —o un `mapeo` antiguo— lo confundiera con aquella columna. El número del
+ * anfitrión ya no es un dato del anuncio: es un dato de la persona, y el nombre
+ * del campo lo dice.
+ */
+export const CAMPO_WHATSAPP = "whatsappPrivado";
+
+export const ETIQUETA_WHATSAPP =
+  "Tu WhatsApp (solo lo ve el equipo de Nido; nunca se muestra a estudiantes)";
+
+export const AYUDA_WHATSAPP =
+  "Celular de 10 dígitos que empieza por 3 (3001234567), o fijo con indicativo (6050000000). Lo usamos solo si tenemos que coordinar contigo: no aparece en el anuncio, ni en la ficha, ni en el mensaje que recibe el estudiante.";

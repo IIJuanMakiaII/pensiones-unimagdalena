@@ -230,8 +230,15 @@ sin contexto.
 | **Horizontal** | Se recorta de forma elegante (`object-cover`), que es lo correcto |
 
 El fondo difuminado reutiliza **el mismo archivo ya optimizado**, así que no genera ninguna petición
-de red adicional. La portada de la ficha es además un poco más alta (`h-72` en móvil, `h-96` en
+de red adicional. En la ficha, la galería es además un poco más alta (`h-72` en móvil, `h-96` en
 escritorio) para dar más espacio a las fotos verticales.
 
-Verificación incluida en `scripts/verificar-seo.mjs` (comprueba que el marco, la altura y el respeto
-a los saltos de línea de la descripción estén presentes en el HTML compilado).
+La ficha tiene **una sola superficie de fotos**: un único carrusel en la parte superior. Antes había
+además una portada suelta alimentada por `imagenPrincipal()`, que devuelve la primera foto —la misma
+que la primera diapositiva del carrusel—, así que esa foto salía dos veces en cualquier anuncio con al
+menos una foto. El carrusel conserva la altura y el ancho que tenía la portada, y con ellos su papel de
+imagen principal (de ahí que reciba `priority` y declare sus propios `sizes`).
+
+Verificación incluida en `scripts/verificar-seo.mjs` (comprueba que el marco, la altura, el respeto a
+los saltos de línea de la descripción y la ausencia de la portada duplicada estén presentes en el HTML
+compilado) y en `pruebas/galeria-unica.prueba.ts` (la disposición, sobre el código sin compilar).

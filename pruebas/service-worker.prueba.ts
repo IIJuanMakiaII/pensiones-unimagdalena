@@ -35,6 +35,16 @@ interface PeticionFalsa {
 
 interface Entorno {
   navegar: (ruta: string, opciones?: { cookie?: string; destination?: string; metodo?: string }) => Promise<Escritura[]>;
+  /**
+   * Despacha una petición cualquiera y dice **si el Service Worker la
+   * interceptó**. La distinción es la que importa: cuando no intercepta, la
+   * petición sigue su camino normal y la resuelve el navegador con la política
+   * de la página.
+   */
+  despachar: (
+    url: string,
+    opciones?: { destination?: string; mode?: string; metodo?: string; cookie?: string }
+  ) => Promise<{ interceptada: boolean; escrituras: Escritura[]; respuesta: unknown }>;
   escrituras: Escritura[];
   borrados: string[];
   ejecutarActivate: () => Promise<void>;
@@ -90,12 +100,14 @@ function montarEntorno(respuestaRed: { ok: boolean; status: number } = { ok: tru
   const manejadorFetch = manejadores["fetch"];
   if (!manejadorFetch) throw new Error("El Service Worker no registró el manejador de fetch");
 
-  const navegar: Entorno["navegar"] = async (ruta, opciones = {}) => {
+  const despachar: Entorno["despachar"] = async (url, opciones = {}) => {
     const solicitud: PeticionFalsa = {
       method: opciones.metodo ?? "GET",
-      url: new URL(ruta, ORIGEN).toString(),
-      mode: "navigate",
-      destination: opciones.destination ?? "document",
+      // Con una URL absoluta, `new URL` se queda con ella y descarta la base: así
+      // se puede despachar una petición a otro origen, que es el caso del mapa.
+      url: new URL(url, ORIGEN).toString(),
+      mode: opciones.mode ?? "no-cors",
+      destination: opciones.destination ?? "image",
       headers: { get: (nombre: string) => (nombre.toLowerCase() === "cookie" ? opciones.cookie ?? null : null) },
     };
 
@@ -109,8 +121,22 @@ function montarEntorno(respuestaRed: { ok: boolean; status: number } = { ok: tru
       },
     });
 
-    if (respondida) await respondida.catch(() => undefined);
-    return escrituras.slice(antes);
+    let respuesta: unknown;
+    // Si la promesa rechaza, se traga: lo que se mide es si hubo o no respuesta,
+    // no el valor. Un rechazo sin manejar aquí tumbaría la suite entera.
+    if (respondida) respuesta = await respondida.catch(() => undefined);
+
+    return { interceptada: respondida !== undefined, escrituras: escrituras.slice(antes), respuesta };
+  };
+
+  const navegar: Entorno["navegar"] = async (ruta, opciones = {}) => {
+    const resultado = await despachar(ruta, {
+      cookie: opciones.cookie,
+      metodo: opciones.metodo,
+      mode: "navigate",
+      destination: opciones.destination ?? "document",
+    });
+    return resultado.escrituras;
   };
 
   const ejecutarActivate = async () => {
@@ -121,7 +147,7 @@ function montarEntorno(respuestaRed: { ok: boolean; status: number } = { ok: tru
     await Promise.all(pendientes);
   };
 
-  return { navegar, escrituras, borrados, ejecutarActivate };
+  return { navegar, despachar, escrituras, borrados, ejecutarActivate };
 }
 
 /** Rutas de cuenta: ninguna puede dejar rastro en el dispositivo. */
@@ -222,5 +248,73 @@ describe("Service Worker · al actualizarse, borra las cachés anteriores", () =
     assert.ok(entorno.borrados.includes("pensiones-app-v3"), "debe borrar la caché de aplicación anterior");
     assert.ok(entorno.borrados.includes("pensiones-estaticos-v3"));
     assert.ok(entorno.borrados.includes("pensiones-imagenes-v3"));
+  });
+});
+
+/**
+ * Las imágenes de otros orígenes no se interceptan (tarea #72).
+ *
+ * Este bloque existe por un defecto medido en producción, no por simetría. El mapa
+ * de la ficha no dibujaba los mosaicos: se veía el gris de Leaflet con el círculo,
+ * el marcador y la atribución, y ninguna calle.
+ *
+ * La causa no era la URL, ni la CSP de la página, ni el servidor de teselas
+ * —medido: las cuatro variantes de URL responden `200 image/png`, con y sin
+ * `Referer`, desde `localhost` y desde el dominio—. Era esta rama del Service
+ * Worker. Un worker solo puede pedir lo que autoriza **la CSP con la que se sirve
+ * su propio archivo** (`connect-src 'self' https://*.supabase.co`,
+ * `next.config.mjs:44`), y el dominio de las teselas no está ahí. El `fetch()` del
+ * worker moría en `net::ERR_FAILED`, el `.catch` lo resolvía a `undefined` —nada
+ * cacheado todavía—, y el mapa recibía una respuesta vacía: el mosaico nunca
+ * disparaba `load`, así que Leaflet lo dejaba invisible (`visibility: hidden`
+ * hasta que llega `.leaflet-tile-loaded`).
+ *
+ * Lo que se fija aquí es la decisión, no el síntoma: **si el worker no puede
+ * pedirla, no se la queda.** Que la intercepte o no es justo lo que se mide, y por
+ * eso la prueba despacha la petición y observa si hubo `respondWith`.
+ */
+describe("Service Worker · las imágenes de otros orígenes no se interceptan", () => {
+  /** Las cuatro formas de URL que usa el mapa: los tres subdominios y sin subdominio. */
+  const TESELAS = [
+    "https://a.tile.openstreetmap.org/15/9631/15355.png",
+    "https://b.tile.openstreetmap.org/15/9631/15355.png",
+    "https://c.tile.openstreetmap.org/15/9631/15355.png",
+    "https://tile.openstreetmap.org/15/9631/15355.png",
+  ];
+
+  it("deja pasar las teselas del mapa en vez de quedárselas", async () => {
+    for (const tesela of TESELAS) {
+      const entorno = montarEntorno();
+      const resultado = await entorno.despachar(tesela, { destination: "image" });
+
+      assert.equal(
+        resultado.interceptada,
+        false,
+        `${tesela} no debe interceptarse: el worker no puede pedirla y el navegador si`
+      );
+      assert.deepEqual(resultado.escrituras, [], `${tesela} no debe guardarse en ninguna cache`);
+    }
+  });
+
+  it("tampoco se queda con una foto remota de otro origen, como una de Unsplash", async () => {
+    // `lib/imagenes.ts` admite enlaces de `images.unsplash.com`, que tampoco está en
+    // el `connect-src` del worker: el mismo defecto, latente, en cuanto alguien
+    // publique una foto por enlace en lugar de subirla.
+    const entorno = montarEntorno();
+    const resultado = await entorno.despachar(
+      "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800",
+      { destination: "image" }
+    );
+
+    assert.equal(resultado.interceptada, false);
+  });
+
+  it("pero una imagen del propio origen si sigue su estrategia de cache", async () => {
+    const entorno = montarEntorno();
+    const resultado = await entorno.despachar("/fotos/habitacion-101.jpg", { destination: "image" });
+
+    assert.equal(resultado.interceptada, true, "una imagen propia debe seguir pasando por el worker");
+    assert.equal(resultado.escrituras.length, 1);
+    assert.ok(resultado.escrituras[0]!.cache.startsWith("pensiones-imagenes-"));
   });
 });

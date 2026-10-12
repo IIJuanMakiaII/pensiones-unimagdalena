@@ -22,15 +22,46 @@ import Footer from "@/components/Footer";
  */
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Barrios cerca de la Universidad del Magdalena",
-  description:
-    "Barrios de Santa Marta con pensiones y habitaciones para estudiantes cerca de la Universidad del Magdalena, con precios y distancia a pie.",
-  alternates: { canonical: `${SITIO_URL}/barrios` },
-};
+/**
+ * Los barrios que hoy tienen publicaciones.
+ *
+ * Se calcula en un unico sitio porque lo necesitan dos: la metadata, que decide
+ * si la pagina existe, y el cuerpo, que la dibuja.
+ */
+async function barriosPublicados() {
+  return resumenesDeBarrio(await obtenerPensionesReales());
+}
+
+/**
+ * La guarda del indice, como segunda defensa.
+ *
+ * **No** es lo que fija el codigo de estado, aunque sea el sitio natural para
+ * ponerla: se probo y no lo cambia. Medido con el catalogo sembrado, `/barrios`
+ * seguia respondiendo 200 con `index, follow` mientras la ficha inexistente
+ * respondia 404 en la misma compilacion. Quien corta de verdad es `middleware.ts`,
+ * que responde antes de que la pagina se renderice y cuya respuesta sobrevive a
+ * que Next reescriba el cuerpo — la razon esta escrita alli.
+ *
+ * Se conserva porque evita que el cuerpo dibuje una lista vacia si alguien mueve
+ * la guarda del middleware. Antes de esto, `/barrios/<cualquier cosa>` respondia
+ * 200 indexable: un numero no acotado de direcciones anunciandose a Google sin
+ * nada que ensenar.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  if ((await barriosPublicados()).length === 0) notFound();
+
+  return {
+    title: "Barrios cerca de la Universidad del Magdalena",
+    description:
+      "Barrios de Santa Marta con pensiones y habitaciones para estudiantes cerca de la Universidad del Magdalena, con precios y distancia a pie.",
+    alternates: { canonical: `${SITIO_URL}/barrios` },
+  };
+}
 
 export default async function PaginaBarrios() {
-  const resumenes = resumenesDeBarrio(await obtenerPensionesReales());
+  const resumenes = await barriosPublicados();
+  // Redundante con la metadata a proposito: si alguien mueve la guarda de arriba,
+  // el cuerpo sigue sin dibujar una lista vacia.
   if (resumenes.length === 0) notFound();
 
   return (

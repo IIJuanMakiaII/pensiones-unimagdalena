@@ -11,8 +11,11 @@ import EditorHabitaciones, {
   type HabitacionForm,
 } from "@/components/EditorHabitaciones";
 import {
+  AYUDA_WHATSAPP,
   BARRIO_OTRO,
   BARRIOS,
+  CAMPO_WHATSAPP,
+  ETIQUETA_WHATSAPP,
   NORMAS,
   SERVICIOS,
   claseEtiqueta,
@@ -179,6 +182,40 @@ export default function FormularioPension() {
           />
           <p className="mt-1 text-xs text-neutro-500">
             Los estudiantes filtran por distancia: este dato decide si apareces.
+          </p>
+        </div>
+
+        {/*
+          El WhatsApp del anfitrión (tarea #77). Va **aquí**, entre los datos del
+          inmueble y los de las habitaciones, por dos motivos: no se pierde al final
+          del formulario detrás del subidor de fotos, y el rótulo —que dice quién lo
+          ve y quién no— se lee junto a los demás datos obligatorios, que es donde
+          el anfitrión está prestando atención.
+
+          No es obligatorio y es deliberado: la tabla admite el estado «sin número»
+          (una ficha que se publicó antes de que este campo existiera, o alguien que
+          prefiere no dejarlo). Un campo obligatorio habría dejado fuera de la
+          edición a los anuncios que ya existen. Lo que sí es obligatorio es que, si
+          se escribe algo, tenga forma de número colombiano; eso lo decide el
+          servidor, no este `input`.
+        */}
+        <div>
+          <label htmlFor={CAMPO_WHATSAPP} className={claseEtiqueta}>
+            {ETIQUETA_WHATSAPP}
+          </label>
+          <input
+            id={CAMPO_WHATSAPP}
+            name={CAMPO_WHATSAPP}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            maxLength={16}
+            className={claseInput}
+            placeholder="3001234567"
+            aria-describedby={`${CAMPO_WHATSAPP}-ayuda`}
+          />
+          <p id={`${CAMPO_WHATSAPP}-ayuda`} className="mt-1 text-xs text-neutro-500">
+            {AYUDA_WHATSAPP}
           </p>
         </div>
 

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { AYUDA_IMAGENES, hostImagenPermitido, MAXIMO_FOTOS } from "@/lib/imagenes";
 import { formatearCOP } from "@/lib/formato";
 import { BARRIO_OTRO } from "@/lib/formulario-pension";
+import { revisarTextoLibre } from "@/lib/contacto-en-texto";
 import type {
   EntradaHabitacionEditada,
   GeneroHabitacion,
@@ -268,6 +269,42 @@ export function leerCamposDePension(formData: FormData): LecturaDeFormulario {
   if (distanciaInvalida) {
     errores.push(`Los minutos a pie deben ser un número entre 0 y ${DISTANCIA_MAX}.`);
   }
+
+  /**
+   * El texto libre no puede servir para desviar el contacto (tarea #77).
+   *
+   * POR QUÉ ESTA COMPROBACIÓN VIVE AQUÍ Y NO EN EL FORMULARIO
+   * --------------------------------------------------------
+   * Porque solo aquí se cumplen las dos condiciones que la hacen valer. La primera
+   * es que este es el **único** camino por el que entra un anuncio: el alta del
+   * anfitrión, su edición y la edición del maestro pasan los tres por
+   * `leerCamposDePension`, y los tres devuelven antes de escribir si `errores` no
+   * está vacío. Una regla del navegador se salta con una petición hecha a mano —y
+   * así fue como aparecieron los barrios «Mamatoco» que nadie eligió (tarea #50)—,
+   * de modo que un filtro en el formulario sería una puerta que se puede dejar
+   * abierta sin que nadie lo note. La segunda: la privacidad del campo nuevo no
+   * sirve de nada si el mismo número cabe en la descripción, y el número del
+   * anfitrión es justo el dato que esta tarea viene a proteger.
+   *
+   * LOS CUATRO CAMPOS DE TEXTO SE REVISAN IGUAL, Y POR QUÉ
+   * ----------------------------------------------------
+   * Los cuatro —título, descripción, dirección y barrio— se publican tal cual, así que
+   * los cuatro son una salida posible para el número. La dirección se revisa con la
+   * misma regla que el título por eso, y no porque sobre celo: un filtro apagado en un
+   * campo público es la puerta abierta que este módulo existe para cerrar.
+   *
+   * Y no produce los falsos positivos que se temían: no se cuenta una longitud
+   * cualquiera, hacen falta **diez dígitos con forma colombiana** (`3` + 9 o `60` + 8).
+   * «Calle 30 # 12-45» no la tiene, «$1.200.000» tampoco.
+   *
+   * El módulo que decide qué es un contacto (`lib/contacto-en-texto.ts`) es puro y
+   * tiene sus propios casos de prueba: aquí solo se le enchufa.
+   */
+  errores.push(...revisarTextoLibre("El título", titulo));
+  errores.push(...revisarTextoLibre("La descripción", descripcion));
+  errores.push(...revisarTextoLibre("La dirección", direccion));
+  errores.push(...revisarTextoLibre("El barrio", barrio));
+
   if (imagenesNoPermitidas.length > 0) {
     errores.push(
       `Estos enlaces de foto no están permitidos: ${imagenesNoPermitidas

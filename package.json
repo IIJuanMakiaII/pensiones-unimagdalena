@@ -25,7 +25,8 @@
     "verificar:exposicion-propietario": "node scripts/verificar-exposicion-propietario.mjs",
     "verificar:disponibilidad": "node scripts/verificar-disponibilidad.mjs",
     "verificar:storage": "node scripts/verificar-storage.mjs",
-    "verificar:retirada": "node scripts/verificar-retirada.mjs"
+    "verificar:retirada": "node scripts/verificar-retirada.mjs",
+    "verificar:contacto-privado": "node scripts/verificar-contacto-privado.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

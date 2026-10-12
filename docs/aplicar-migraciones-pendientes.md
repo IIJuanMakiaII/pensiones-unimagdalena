@@ -1,9 +1,10 @@
 # Migraciones de la base: estado, comprobación y lo que queda
 
-> Actualizado el **2026-10-11**. El usuario aplicó en el editor SQL `oleada-11`,
+> Actualizado el **2026-10-12**. El usuario aplicó en el editor SQL `oleada-11`,
 > `oleada-12` y `oleada-13`, y las tres están **verificadas** contra el proyecto
 > Supabase `ayznnqkacpdvvufclhon` con la clave anónima del sitio.
 > **`oleada-14` queda descartada**: no hay retirada permanente que aplicar.
+> **`oleada-15` es la única pendiente de aplicar** y su estado es `SIN APLICAR`.
 > Esta hoja sigue existiendo porque las migraciones **no se pueden aplicar desde
 > esta cuenta** (ver §5). Las aplica el propietario, como se ha hecho siempre.
 
@@ -17,6 +18,7 @@
 | 2 | `supabase/oleada-12-contactos-respaldo.sql` | #59 | Crea `public.contactos_respaldo` y `public.registrar_contacto_respaldo()`. | **aplicada — medida** |
 | 3 | `supabase/oleada-13-fecha-verificacion.sql` | #61 | Añade `pensiones.verificado_en`, ajusta el `grant select` a 19 columnas y sella la fecha con `sellar_fecha_verificacion()`. No rellena ninguna fecha a propósito. | **aplicada — medida** |
 | 4 | `supabase/oleada-14-retirar-anuncio-de-prueba.sql` | #58 | `update … set activa = false where slug = 'residencia-makia'`. | **descartada** — la tarea #58 fue **cancelada** por el usuario; la demostración es intencional |
+| 5 | `supabase/oleada-15-contacto-anfitrion-privado.sql` | #76, #77, #78 | Crea `public.contacto_anfitrion` (una fila por anfitrión) con RLS de **dos lectores**: el propio anfitrión y el rol maestro. `anon` queda sin ningún `grant`. **No toca `pensiones`**: las únicas menciones a esa tabla están dentro de comentarios. | **SIN APLICAR** — pendiente en el editor SQL (ver §3.5) |
 
 Tamaños y sellos de los archivos, medidos:
 
@@ -25,6 +27,7 @@ oleada-11-aplicar-seguridad-e-integridad.sql      30855 bytes  sha 73F1861D606C
 oleada-12-contactos-respaldo.sql                  10081 bytes  sha 5EE8593F8835
 oleada-13-fecha-verificacion.sql                  18789 bytes  sha 68C180C156B7
 oleada-14-retirar-anuncio-de-prueba.sql           10475 bytes  sha CE02E953E244  (descartada)
+oleada-15-contacto-anfitrion-privado.sql          29332 bytes  sha 7C0C44B0ECAC  (SIN APLICAR · 521 líneas)
 ```
 
 Antes de esta pasada, las sondas daban: `contactos_respaldo` → `404 PGRST205`
@@ -92,6 +95,34 @@ Si alguna vez aparece `42501` o `42703` sobre `pensiones`, es esta:
 curl -s "${CAB[@]}" "$U/pensiones?select=id,slug,anfitrion_id,titulo,descripcion,precio_mensual,direccion,barrio,distancia_a_pie_minutos,servicios,normas,calificacion,verificado,verificado_en,imagenes,activa,creada_en,latitud,longitud&activa=eq.true"
 ```
 Hoy: `200`, con el anuncio de demostración dentro.
+
+### 3.5 · oleada-15 — cómo saber si entró, sin abrir el panel
+
+Es la misma sonda de §3.2, y por el mismo motivo. `oleada-15` hace
+`revoke all on table public.contacto_anfitrion from public` (`:180`) y
+`from anon, authenticated` (`:181`), y después concede
+`select, insert, update, delete … to authenticated` (`:185`).
+**`anon` no aparece en ningún `grant`, a propósito.**
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" "${CAB[@]}" "$U/contacto_anfitrion?select=anfitrion_id&limit=1"
+```
+
+| Respuesta | Significa |
+|---|---|
+| `404` `PGRST205` «Could not find the table» | **la migración no ha entrado** — es el estado de hoy |
+| `401` `42501 permission denied for table contacto_anfitrion` | **entró** — es el diseño, el mismo `42501` que en §3.2, y **no hay que «arreglarlo»** |
+
+Que un anónimo reciba «permiso denegado» es exactamente el objetivo de la
+oleada: PostgREST solo responde eso sobre una tabla **que existe**, así que la
+transición de `404` a `42501` es la prueba. El número del anfitrión no se filtra
+ni por error, ni por descuido de una consulta, ni por un `select *`.
+
+La comprobación de punta a punta es `npm run verificar:contacto-privado`, que hoy
+emite **`SIN APLICAR`** — con la coletilla honesta de que «hoy no hay fuga porque
+no hay nada que fugarse, que no es lo mismo que estar cerrado». Cuando la
+migración entre, esa misma línea debe decir **`CERRADO`**; ese cambio de palabra
+es el criterio de aceptación.
 
 ## 4. La demostración
 

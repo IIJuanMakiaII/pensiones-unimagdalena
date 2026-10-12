@@ -18,8 +18,19 @@ interface Props {
    * pantalla.
    */
   href?: string;
-  /** Solo en la primera card (LCP del hero). */
+  /** Solo en la primera card (LCP del hero) y en el carrusel de la ficha. */
   priority?: boolean;
+  /**
+   * Ancho que ocupará cada foto, para que Next elija la resolución de la
+   * variante que descarga.
+   *
+   * Por defecto, el tercio de ancho de una tarjeta del catálogo. La ficha
+   * (tarea #75) usa un único carrusel como imagen principal y pasa el suyo,
+   * porque ahí la foto mide el ancho completo de la página y no un tercio: con
+   * el valor de las tarjetas el navegador descargaría una imagen más pequeña
+   * que la que luego muestra.
+   */
+  sizes?: string;
   className?: string;
   /**
    * En las tarjetas del grid: monta únicamente las imágenes ya alcanzadas
@@ -30,6 +41,12 @@ interface Props {
 }
 
 /**
+ * Ancho por defecto de cada foto: el de una tarjeta del catálogo (media en
+ * tableta, un tercio en escritorio), que es donde el carrusel nació.
+ */
+const TAMANOS_TARJETA = "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw";
+
+/**
  * Carrusel Mobile-First: scroll horizontal nativo con snap (sin flechas en
  * móvil), indicador de puntos y flechas en desktop (§4.3 del contrato).
  */
@@ -38,6 +55,7 @@ export default function Carrusel({
   altBase,
   href,
   priority = false,
+  sizes = TAMANOS_TARJETA,
   className = "",
   diferirImagenes = false,
 }: Props) {
@@ -97,7 +115,7 @@ export default function Carrusel({
                     <FotoMarco
                       src={src}
                       alt={`${altBase} — foto ${i + 1} de ${total}`}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      sizes={sizes}
                       priority={priority && i === 0}
                     />
                   </Link>
@@ -105,7 +123,7 @@ export default function Carrusel({
                   <FotoMarco
                     src={src}
                     alt={`${altBase} — foto ${i + 1} de ${total}`}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                    sizes={sizes}
                     priority={priority && i === 0}
                   />
                 )
