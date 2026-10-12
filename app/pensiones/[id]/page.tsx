@@ -8,7 +8,6 @@ import SelloVerificado from "@/components/SelloVerificado";
 import Estrellas from "@/components/Estrellas";
 import DetallePension from "@/components/DetallePension";
 import BotonFavorito from "@/components/BotonFavorito";
-import FotoMarco from "@/components/FotoMarco";
 import MapaUbicacion from "@/components/MapaUbicacion";
 import Footer from "@/components/Footer";
 import { SITIO_URL } from "@/lib/sitio";
@@ -112,7 +111,6 @@ export default async function DetallePensionPage({ params }: Props) {
    * estado por la frontera de streaming y serviría el mismo anuncio en dos
    * direcciones (contenido duplicado para los buscadores).
    */
-  const principal = imagenPrincipal(pension);
   const galeria = galeriaDe(pension);
   /**
    * Precio anunciable en los datos estructurados: `null` si el anfitrión marcó
@@ -192,18 +190,41 @@ export default async function DetallePensionPage({ params }: Props) {
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl">
-        <div className="relative h-72 w-full md:h-96">
-          {/* Las fotos verticales (lo más común desde el celular) se ven
-              completas sobre un fondo difuminado, en lugar de recortadas. */}
-          <FotoMarco
-            src={principal}
-            alt={`Fachada o sala principal de ${pension.titulo}`}
-            sizes="100vw"
-            priority
-          />
+        {/*
+          Única superficie de fotos de la ficha (tarea #75). Antes había además
+          una portada suelta que dibujaba `imagenPrincipal(pension)`, o sea **la
+          misma primera foto** que la primera diapositiva del carrusel: la foto 1
+          salía dos veces. El carrusel sube al hueco de la portada.
+
+          Conserva la altura que la página ya usaba para su imagen principal
+          (`h-72` en móvil, `h-96` en escritorio) y el ancho completo de `<main>`
+          —el mismo que tenía la portada—, así que el resto de la página no se
+          desplaza ni cambia de sitio.
+
+          `priority` viaja con él: sin esa marca la imagen grande de la ficha
+          dejaría de ser la candidata a LCP y de precargarse. `sizes` se declara
+          porque aquí la foto mide el ancho de `<main>` (100vw en móvil, 768 px
+          en escritorio), no el tercio de tarjeta que asume el valor por defecto
+          del carrusel; sin él el navegador elegiría una resolución menor que la
+          que se muestra.
+        */}
+        <div className="relative">
+          <section aria-label="Galería de fotos">
+            <Carrusel
+              imagenes={galeria}
+              altBase={pension.titulo}
+              priority
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="h-72 w-full overflow-hidden rounded-2xl md:h-96"
+            />
+          </section>
+          {/* El botón va fuera del carrusel, como estaba fuera de la portada:
+              dentro quedaría dentro de una región con etiqueta y, sobre todo,
+              encima de la capa que recibe el gesto de deslizar. `z-20` lo deja
+              por encima de las flechas y los puntos del carrusel (`z-10`). */}
           <Link
             href="/#resultados"
-            className="absolute left-4 top-4 inline-flex h-11 items-center gap-1.5 rounded-full bg-white/95 px-4 text-sm font-bold text-neutro-800 shadow-md backdrop-blur transition hover:bg-white"
+            className="absolute left-4 top-4 z-20 inline-flex h-11 items-center gap-1.5 rounded-full bg-white/95 px-4 text-sm font-bold text-neutro-800 shadow-md backdrop-blur transition hover:bg-white"
           >
             <span aria-hidden="true">←</span> Volver
           </Link>
@@ -271,14 +292,6 @@ export default async function DetallePensionPage({ params }: Props) {
               </p>
             </section>
           )}
-
-          <section className="mt-6" aria-label="Galería de fotos">
-            <Carrusel
-              imagenes={galeria}
-              altBase={pension.titulo}
-              className="h-48 w-full overflow-hidden rounded-2xl md:h-64"
-            />
-          </section>
 
           {pension.servicios.length > 0 && (
             <section className="mt-8" aria-label="Servicios incluidos">

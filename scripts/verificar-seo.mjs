@@ -77,6 +77,13 @@ const FICHA = [
   ["Galería del carrusel", "Galería de", "presente"],
   ["Favoritos en la ficha", "Guardar", "presente"],
   ["Marco adaptativo de foto (vertical se ve completa)", "bg-neutro-100", "presente"],
+  /**
+   * La ficha dibujaba una portada suelta con la MISMA primera foto que la
+   * primera diapositiva del carrusel, así que la foto 1 salía dos veces (tarea
+   * #75). El `alt` que la portada aportaba al marcado —«Fachada o sala principal
+   * de …»— es la firma que deja su reaparición: si vuelve, vuelve con él.
+   */
+  ["Sin portada suelta duplicada (tarea #75)", "Fachada o sala principal", "ausente"],
   ["Portada más alta para fotos verticales", "h-72", "presente"],
   ["Descripción respeta los saltos de línea", "whitespace-pre-line", "presente"],
 ];
