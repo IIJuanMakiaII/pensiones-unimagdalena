@@ -34,7 +34,8 @@
  *  - Rutas con sesión: SOLO red. Ni lectura ni escritura de caché.
  *  - Navegaciones públicas: red primero → caché → página /offline.
  *  - Estáticos propios (/_next/static, /iconos, /marca): caché primero.
- *  - Imágenes: stale-while-revalidate.
+ *  - Imágenes DEL PROPIO ORIGEN: stale-while-revalidate. Las de otros orígenes
+ *    no se tocan — ver la nota de la rama 3, más abajo. No es un olvido.
  *  - Resto del mismo origen: red con respaldo en caché.
  *
  * Todas las escrituras en caché verifican `respuesta.ok` para no guardar
@@ -222,8 +223,37 @@ self.addEventListener("fetch", (evento) => {
     return;
   }
 
-  // 3) Imágenes remotas: stale-while-revalidate.
-  if (solicitud.destination === "image") {
+  /**
+   * 3) Imágenes del propio origen: stale-while-revalidate.
+   *
+   * **Solo el propio origen, y esto arregla un defecto que llevaba ahí desde el
+   * principio (tarea #72).** Un Service Worker puede quedarse con una petición,
+   * pero lo que él pida por su cuenta no lo autoriza la política de la página:
+   * lo autoriza la CSP con la que se sirve **este mismo archivo**, y aquí eso es
+   * `connect-src 'self' https://*.supabase.co` (`next.config.mjs:44`).
+   *
+   * Consecuencia medida: el `fetch(solicitud)` de una tesela de OpenStreetMap
+   * —cruzada, y por tanto fuera de ese `connect-src`— quedaba bloqueado. La
+   * petición **sí** salía y moría en `net::ERR_FAILED`, y como el `.catch` la
+   * resolvía a `enCache` (sin nada cacheado, `undefined`), el mapa recibía una
+   * respuesta vacía: el mosaico no disparaba `load` y Leaflet lo dejaba invisible
+   * (`visibility: hidden` hasta `.leaflet-tile-loaded`). De ahí el gris con el
+   * círculo, el marcador y la atribución perfectamente dibujados.
+   *
+   * La política de la página ya autoriza esas imágenes (`img-src https:`), así que
+   * lo correcto es **no interceptarlas** y dejar que el navegador las pida con su
+   * propia política. Interceptarlas obligaría a mantener a mano una lista de
+   * orígenes de imagen dentro de `connect-src`, y una lista que se queda atrás no
+   * falla de forma visible: falla así, con una imagen que no aparece. La lista de
+   * `lib/imagenes.ts` ya admite `images.unsplash.com`, que tampoco está en ese
+   * `connect-src`: el mismo defecto, latente, para cualquier foto publicada con
+   * enlace en lugar de subida.
+   *
+   * Lo que se pierde es guardar en caché las imágenes remotas, que **nunca llegó a
+   * funcionar** (estaba bloqueado desde que existe la CSP). El navegador las
+   * guarda igual en su caché HTTP, que es de quien es la tarea.
+   */
+  if (solicitud.destination === "image" && url.origin === self.location.origin) {
     evento.respondWith(
       caches.open(CACHE_IMAGENES).then((cache) =>
         cache.match(solicitud).then((enCache) => {
