@@ -122,3 +122,116 @@ describe("las cifras coinciden con la tabla del documento legal", () => {
     }
   });
 });
+
+/**
+ * La presentación del desglose (tarea #74): lo que el estudiante lee en la ficha.
+ *
+ * Se prueba sobre el **texto del componente** y no sobre su salida, porque el
+ * bloque no tiene lógica propia: sus cifras salen de `desgloseReserva()` y de
+ * `formatearCOP()`. Lo que hay que proteger es justamente eso —que nadie escriba un
+ * importe a mano y que la ficha empiece a mentir en el próximo cambio de precio—,
+ * más la suma dicha en voz alta, quién asume la tarifa, y que la aclaración que el
+ * propietario pidió retirar no vuelva por la puerta de atrás.
+ */
+describe("la presentación del desglose · la suma y quién asume la tarifa", () => {
+  const componente = readFileSync(join(raiz, "components", "DesgloseReserva.tsx"), "utf8");
+
+  it("el total se compone con formatearCOP y no está escrito a mano", () => {
+    assert.match(componente, /Pagas en total \{formatearCOP\(canon\)\}/);
+    assert.doesNotMatch(
+      sinComentarios(componente),
+      /\$\s?\d/,
+      "ninguna cifra en pesos puede estar escrita en el componente: sale de formatearCOP()"
+    );
+  });
+
+  it("los dos momentos se componen con las cifras de la función y se leen como una suma", () => {
+    assert.match(componente, /\{formatearCOP\(deposito\)\} hoy \+/);
+    assert.match(componente, /\{formatearCOP\(saldoAlLlegar\)\} al llegar =/);
+  });
+
+  it("dice que no hay ningún pago adicional", () => {
+    assert.match(componente, /no pagas ningún valor adicional/);
+  });
+
+  it("dice quién asume la tarifa, sin afirmar que el estudiante no la pague", () => {
+    assert.match(componente, /la asume el propietario/);
+    assert.match(componente, /recibe el 90 %/);
+    assert.doesNotMatch(
+      componente,
+      /no la paga|es gratis|no paga la tarifa/i,
+      "contradiría §3.1 de las condiciones, que dice que la tarifa se recauda del estudiante"
+    );
+  });
+
+  it("las dos filas de la tabla legal siguen, con su destino", () => {
+    assert.match(componente, /etiqueta="Tarifa de Servicio de la Plataforma"/);
+    assert.match(componente, /destino="Remuneración de la plataforma"/);
+    assert.match(componente, /etiqueta="Anticipo del Arriendo"/);
+    assert.match(componente, /destino="Al propietario, abonado al primer mes"/);
+  });
+
+  it("la aclaración retirada no vuelve, ni en la ficha que lo monta", () => {
+    const detalle = readFileSync(join(raiz, "components", "DetallePension.tsx"), "utf8");
+    for (const [nombre, texto] of [
+      ["DesgloseReserva.tsx", componente],
+      ["DetallePension.tsx", detalle],
+    ] as const) {
+      assert.doesNotMatch(texto, /no es el arriendo/i, nombre);
+      assert.doesNotMatch(texto, /el dinero de hoy/i, nombre);
+    }
+  });
+});
+
+/**
+ * Quita comentarios de línea y de bloque respetando las cadenas, para poder
+ * preguntar por el código sin que un ejemplo escrito en un comentario conteste por
+ * él. Es el mismo criterio —y casi el mismo cuerpo— que usan
+ * `pruebas/contacto-respaldo.prueba.ts`, `pruebas/sello.prueba.ts` y
+ * `pruebas/panel-maestro.prueba.ts`; se repite aquí para no editar el archivo de
+ * otra tarea mientras su dueño lo está tocando.
+ */
+function sinComentarios(codigoFuente: string): string {
+  let salida = "";
+  let comilla: string | null = null;
+  let i = 0;
+
+  while (i < codigoFuente.length) {
+    const caracter = codigoFuente[i];
+    const siguiente = codigoFuente[i + 1];
+
+    if (comilla) {
+      salida += caracter;
+      if (caracter === "\\") {
+        salida += siguiente ?? "";
+        i += 2;
+        continue;
+      }
+      if (caracter === comilla) comilla = null;
+      i += 1;
+      continue;
+    }
+
+    if (caracter === "/" && siguiente === "/") {
+      while (i < codigoFuente.length && codigoFuente[i] !== "\n") i += 1;
+      continue;
+    }
+
+    if (caracter === "/" && siguiente === "*") {
+      i += 2;
+      while (
+        i < codigoFuente.length &&
+        !(codigoFuente[i] === "*" && codigoFuente[i + 1] === "/")
+      )
+        i += 1;
+      i += 2;
+      continue;
+    }
+
+    if (caracter === '"' || caracter === "'" || caracter === "`") comilla = caracter;
+    salida += caracter;
+    i += 1;
+  }
+
+  return salida;
+}
