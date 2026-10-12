@@ -337,3 +337,79 @@ export async function guardarContactoDelAnfitrion(
     return { estado: "error" };
   }
 }
+
+/**
+ * Corrige el número de **otra persona**, y por eso es una función aparte.
+ *
+ * POR QUÉ NO SE AÑADIÓ UN PARÁMETRO A LA ANTERIOR
+ * ----------------------------------------------
+ * `guardarContactoDelAnfitrion` escribe el número de quien tiene la sesión, y su
+ * comentario prohíbe explícitamente recibir un destino por parámetro: «si lo
+ * recibiera, un día alguien lo llamaría con un `anfitrion_id` que viajó en un
+ * formulario». Añadirle un `anfitrionId` opcional habría creado exactamente esa
+ * función, con la diferencia de que el día del error parecería correcta.
+ *
+ * La solución es que la capacidad peligrosa tenga **nombre propio** y no pueda
+ * confundirse con la inocente al leer una llamada: `guardarContactoDelAnfitrion`
+ * escribe el de la sesión; `corregirContactoDeOtroAnfitrion` escribe el de un
+ * tercero, y quien la lea sabe de inmediato que ahí hay un destinatario elegido
+ * por alguien. Las dos viven aquí porque este es el único módulo que sabe de la
+ * tabla, y separarlas en dos archivos solo habría escondido la segunda.
+ *
+ * QUIÉN PUEDE LLAMARLA NO SE DECIDE AQUÍ
+ * --------------------------------------
+ * La RLS ya lo dice: la política de `insert` y la de `update` aceptan la fila
+ * cuando `auth.uid() = anfitrion_id` **o** `public.es_maestro()`. Esta función no
+ * comprueba el rol, igual que la anterior no lo comprueba: la puerta está en la
+ * base, y quien la llama desde una acción de servidor ya pasó por `exigirMaestro()`.
+ * Repetir aquí la comprobación daría dos sitios donde puede desincronizarse.
+ *
+ * Lo que sí es responsabilidad del llamante, y está escrito en la acción: **el
+ * `anfitrionId` se resuelve en el servidor a partir del anuncio**, nunca se toma
+ * de un campo del formulario. Esta función no puede comprobarlo —recibe un id y
+ * lo usa—, y es la razón por la que su nombre deja claro que alguien lo eligió.
+ */
+export async function corregirContactoDeOtroAnfitrion(
+  anfitrionId: string,
+  valor: string,
+  cliente?: SupabaseClient
+): Promise<GuardadoDeContacto> {
+  const numero = normalizarNumeroDeAnfitrion(valor);
+
+  if (!PATRON_WHATSAPP.test(numero)) return { estado: "invalido" };
+
+  if (!anfitrionId) {
+    console.error("Corrección del contacto privado sin destinatario.");
+    return { estado: "error" };
+  }
+
+  try {
+    const supabase = cliente ?? (await crearClienteServidor());
+
+    const { data, error } = await supabase
+      .from(TABLA_CONTACTO)
+      .upsert({ anfitrion_id: anfitrionId, whatsapp: numero }, { onConflict: "anfitrion_id" })
+      .select("whatsapp")
+      .maybeSingle();
+
+    if (error) {
+      if (esTablaAusente(error)) return { estado: "sin-tabla" };
+      console.error(
+        "Error corrigiendo el contacto privado de un anfitrión:",
+        error.code,
+        error.message
+      );
+      return { estado: "error" };
+    }
+
+    if (!data?.whatsapp) {
+      console.error("La corrección del contacto no devolvió la fila escrita.");
+      return { estado: "error" };
+    }
+
+    return { estado: "ok", whatsapp: data.whatsapp };
+  } catch (error) {
+    console.error("Fallo de conexión corrigiendo el contacto privado:", error);
+    return { estado: "error" };
+  }
+}
