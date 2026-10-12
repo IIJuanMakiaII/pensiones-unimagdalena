@@ -5,6 +5,8 @@ import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerPensionPorIdConSesion } from "@/lib/datos";
 import { esMaestroConCliente } from "@/lib/maestro";
+import { leerContactoDelAnfitrion } from "@/lib/contacto-anfitrion";
+import { resolverContactoDePanelDesdeLectura } from "@/lib/contacto-panel";
 import { actualizarPensionMaestro } from "@/app/actions/maestro";
 import FormularioEditarPension from "@/components/FormularioEditarPension";
 import Footer from "@/components/Footer";
@@ -73,6 +75,31 @@ export default async function MaestroEditarPensionPage({ params }: Props) {
 
   if (!pension) notFound();
 
+  /*
+   * El WhatsApp privado **del propietario del anuncio**, para que el maestro pueda
+   * escribirle (tarea #79).
+   *
+   * SE LEE CON `pension.anfitrion_id`, NO CON `user.id`
+   * --------------------------------------------------
+   * Es el error que más fácil sería cometer aquí: en esta ruta `user` es el maestro,
+   * así que `leerContactoDelAnfitrion(user.id)` pediría **su** número —que no tiene,
+   * porque quien publica el anuncio es otra persona— y el panel diría «este anfitrión
+   * todavía no ha registrado su WhatsApp» sobre un anfitrión que sí lo dejó. La RLS
+   * lo autoriza igual: la política de lectura permite la fila al dueño y, por la
+   * cláusula `or public.es_maestro()`, también al maestro.
+   *
+   * AQUÍ SE DISTINGUE «NO HAY» DE «NO SE PUDO COMPROBAR»
+   * ---------------------------------------------------
+   * Al contrario que el campo del anfitrión —donde da igual, porque puede volver a
+   * escribirlo—, aquí el maestro **solo mira**: si la consulta falla y se le dice
+   * «no tiene número», concluirá lo contrario de lo cierto y no volverá a mirar. Por
+   * eso los cuatro estados llegan intactos a la pantalla, y la tarjeta dice «no
+   * pudimos comprobar» cuando corresponde.
+   */
+  const contactoDelAnfitrion = resolverContactoDePanelDesdeLectura(
+    await leerContactoDelAnfitrion(pension.anfitrion_id)
+  );
+
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
@@ -93,6 +120,7 @@ export default async function MaestroEditarPensionPage({ params }: Props) {
               panel maestro.
             </>
           }
+          contactoDelAnfitrion={contactoDelAnfitrion}
         />
       </main>
       <Footer />

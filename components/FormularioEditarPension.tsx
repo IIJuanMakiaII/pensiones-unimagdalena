@@ -6,10 +6,12 @@ import Link from "next/link";
 import { actualizarPension } from "@/app/actions/pensiones";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
 import type { PensionConHabitaciones } from "@/types";
+import type { ContactoDePanel } from "@/lib/contacto-panel";
 import { formatearCOP } from "@/lib/formato";
 import { IMAGEN_RESPALDO, imagenesDe } from "@/lib/pension";
 import { MAXIMO_FOTOS } from "@/lib/imagenes";
 import SubidorFotos from "@/components/SubidorFotos";
+import ContactoAnfitrionPrivado from "@/components/ContactoAnfitrionPrivado";
 import EditorHabitaciones, {
   HABITACION_INICIAL,
   type HabitacionForm,
@@ -81,6 +83,29 @@ interface Props {
   mostrarWhatsapp?: boolean;
   /** El número que el anfitrión ya había dejado. Solo se usa para mostrarlo. */
   whatsappActual?: string | null;
+  /**
+   * El WhatsApp del propietario, para que el maestro lo **vea sin poder tocarlo**
+   * (tarea #79).
+   *
+   * POR QUÉ ES UNA PROP DISTINTA DE `whatsappActual`, Y NO LA MISMA
+   * -----------------------------------------------------------------
+   * Porque son dos cosas opuestas con un nombre parecido. `whatsappActual` alimenta
+   * un `<input>`: existe para que su valor viaje de vuelta al servidor. Esto otro
+   * **no monta ningún campo**: pinta la tarjeta compartida de solo lectura y no se
+   * envía a ningún sitio. Si se reutilizara `whatsappActual` para las dos cosas, el
+   * día que alguien pase `mostrarWhatsapp` en la ruta del maestro el número se
+   * volvería editable otra vez, sin que nada lo delatara.
+   *
+   * Se tipa con la forma ya resuelta (`ContactoDePanel`) y no con un `string`
+   * suelto porque «no hay número» y «no se pudo comprobar» tienen que seguir siendo
+   * distinguibles también aquí: el maestro no puede leer que el anfitrión no dejó su
+   * número cuando lo que ocurrió es que la consulta falló.
+   *
+   * Puede venir `null` —cuando la ruta no pudo ni intentar la lectura— y entonces no
+   * se pinta nada, que es lo correcto: un panel de edición no es el sitio para dar
+   * noticias sobre un dato privado.
+   */
+  contactoDelAnfitrion?: ContactoDePanel | null;
 }
 
 /**
@@ -98,6 +123,7 @@ export default function FormularioEditarPension({
   avisoRetirada,
   mostrarWhatsapp = false,
   whatsappActual = null,
+  contactoDelAnfitrion = null,
 }: Props) {
   const [estado, accion] = useFormState(accionRecibida ?? actualizarPension, ESTADO_INICIAL);
 
@@ -322,6 +348,28 @@ export default function FormularioEditarPension({
                 : "Déjalo vacío si prefieres no dejarlo; el anuncio se publica igual."}
             </p>
           </div>
+        )}
+
+        {/*
+          El WhatsApp del propietario, para el maestro que edita el anuncio (tarea
+          #79). Va exactamente donde el anfitrión tiene su campo —la sexta posición,
+          entre «Minutos a pie de Unimagdalena» y «Habitaciones que ofreces»—, para
+          que los dos caminos cuenten lo mismo en el mismo sitio.
+
+          No es un `<input>` y no puede serlo: el número es de la persona, no del
+          anuncio, y el maestro no tiene ninguno propio que enseñar. Un campo aquí
+          aparecería vacío y, al guardar cualquier cambio, borraría el del anfitrión
+          sin que nadie se enterara. Se ve y se escribe, pero no se toca.
+
+          `mt-0` y no el `mt-4` del panel: aquí manda el `space-y-5` del envoltorio de
+          campos, y sumar los dos daría 36 px de hueco en vez de 20.
+        */}
+        {contactoDelAnfitrion && (
+          <ContactoAnfitrionPrivado
+            contacto={contactoDelAnfitrion}
+            titulo={pension.titulo}
+            className="mt-0"
+          />
         )}
 
         <div>

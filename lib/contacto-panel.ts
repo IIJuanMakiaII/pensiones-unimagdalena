@@ -1,4 +1,4 @@
-import type { MotivoSinContacto } from "@/lib/contacto-anfitrion";
+import type { ContactoLeido, MotivoSinContacto } from "@/lib/contacto-anfitrion";
 import { enlaceParaEscribirAlAnfitrion } from "@/lib/contacto-anfitrion";
 
 /**
@@ -73,4 +73,30 @@ export function resolverContactoDePanel(
   if (motivo === "error") return { estado: "error" };
 
   return { estado: "sin-numero" };
+}
+
+/**
+ * Lo mismo, pero partiendo de la lectura directa (`ContactoLeido`).
+ *
+ * POR QUÉ EXISTE ESTA FUNCIÓN EN VEZ DE ADAPTAR EN CADA PÁGINA
+ * -----------------------------------------------------------
+ * El panel del maestro lee **varios** números a la vez y por eso recibe un mapa y un
+ * motivo; la página de edición del maestro lee **uno** y recibe la unión de cuatro
+ * estados. Son dos formas de llegada distintas y la regla para resolverlas es la
+ * misma: manda el número si lo hay y solo después se mira el motivo.
+ *
+ * Esa regla escrita dos veces es exactamente cómo una de las dos copias acaba
+ * diciendo algo que ya no es verdad —el mismo motivo por el que la tarjeta es una
+ * sola—, así que la traducción vive aquí, junto al tipo que la define, y las dos
+ * pantallas la comparten.
+ *
+ * Recibe la unión completa y no dos argumentos sueltos para que quien la llame no
+ * tenga que desarmar el estado a mano: ese `estado === "ok" ? whatsapp : null`, con
+ * su `o` de motivos, es justo el trozo que se copiaría mal.
+ */
+export function resolverContactoDePanelDesdeLectura(leido: ContactoLeido): ContactoDePanel {
+  return resolverContactoDePanel(
+    leido.estado === "ok" ? leido.whatsapp : null,
+    leido.estado === "sin-tabla" || leido.estado === "error" ? leido.estado : null
+  );
 }
