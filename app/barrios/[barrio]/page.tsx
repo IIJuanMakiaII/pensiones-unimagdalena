@@ -38,7 +38,26 @@ async function buscarResumen(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { barrio } = await params;
   const resumen = await buscarResumen(barrio);
-  if (!resumen) return {};
+
+  /**
+   * Un barrio sin publicaciones activas, o una direccion inventada, que para el
+   * caso es lo mismo, no tiene pagina. Antes esto devolvia `{}` en lugar de cortar.
+   *
+   * Que la guarda este aqui **no** es lo que fija el codigo de estado, aunque sea
+   * el sitio natural para ponerla: se probo y no lo cambia. Medido con el catalogo
+   * sembrado, `/barrios/otro` seguia respondiendo 200 con `index, follow` mientras
+   * `/pensiones/<uuid inexistente>` respondia 404 en la misma compilacion.
+   *
+   * Quien corta de verdad es `middleware.ts`, y la razon esta escrita alli: la
+   * ruta es ISR con `dynamicParams` abierto, asi que Next genera las rutas
+   * desconocidas bajo demanda y materializa el HTML del estado "no encontrada" con
+   * codigo 200; la respuesta del middleware, en cambio, viaja antes de que la
+   * pagina se renderice.
+   *
+   * Se conserva a proposito como segunda defensa: evita que el cuerpo dibuje un
+   * barrio sin nada dentro si alguien moviera la guarda del middleware.
+   */
+  if (!resumen) notFound();
 
   const partes = [
     resumen.pensiones.length === 1
