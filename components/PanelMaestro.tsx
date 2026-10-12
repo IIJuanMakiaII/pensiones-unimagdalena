@@ -8,8 +8,10 @@ import {
   borrarPensionMaestro,
   cambiarDisponibilidadMaestro,
   cambiarEstadoPublicacionMaestro,
+  sellarVerificacionMaestro,
 } from "@/app/actions/maestro";
 import { PALABRA_DE_BORRADO } from "@/lib/borrado";
+import { formatearFechaVerificacion } from "@/lib/sello";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
 import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
 
@@ -56,6 +58,19 @@ export default function PanelMaestro({ pension }: { pension: PensionConHabitacio
           </span>
           <span className="rounded-full bg-neutro-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-neutro-600">
             {libres.length} de {habitaciones.length} libres
+          </span>
+          {/* El estado del sello, a la vista junto a «Publicada/Retirada»: quien
+              administra tiene que poder ver de un vistazo qué anuncios llevan la
+              insignia pública sin abrir cada uno. Reutiliza el par de colores de
+              «Publicada», que ya está verificado para contraste. */}
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
+              pension.verificado
+                ? "bg-primary-50 text-primary-800 ring-1 ring-primary-100"
+                : "bg-neutro-100 text-neutro-600 ring-1 ring-neutro-200"
+            }`}
+          >
+            {pension.verificado ? "Verificado" : "Sin verificar"}
           </span>
         </div>
       </div>
@@ -199,6 +214,8 @@ function AccionesMaestro({ pension }: { pension: PensionConHabitaciones }) {
 
       <MensajeAccion estado={estado} />
 
+      <ControlSello pension={pension} />
+
       <div className="mt-4 border-t border-dashed border-neutro-200 pt-4">
         {confirmandoBorrado ? (
           <ConfirmarBorrado
@@ -216,6 +233,73 @@ function AccionesMaestro({ pension }: { pension: PensionConHabitaciones }) {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * El sello de verificación: su estado y su llave.
+ *
+ * QUÉ ES ESTE BOTÓN, EN UNA FRASE
+ * -------------------------------
+ * Es la manija que le faltaba a la cerradura. La base ya tenía montado todo lo
+ * demás —`verificado` fuera de las columnas que `authenticated` puede escribir,
+ * y la función `maestro_actualizar_campos_pension` con `es_maestro()` dentro y
+ * `verificado` en su lista blanca—, y la portada ya afirmaba que «lo otorga el
+ * equipo de Nido desde el panel». Hasta hoy esa frase describía una capacidad
+ * que existía en la base pero no en la interfaz.
+ *
+ * POR QUÉ NO LLEVA CONFIRMACIÓN DE TEXTO, AL CONTRARIO QUE EL BORRADO
+ * ------------------------------------------------------------------
+ * Porque es reversible con el mismo clic. El borrado exige escribir una palabra
+ * porque no tiene vuelta atrás; esto es un interruptor, y retirarlo deja el
+ * anuncio como estaba. Poner la misma ceremonia en las dos cosas enseñaría a
+ * escribir la palabra sin leerla, que es justo lo contrario de lo que se busca.
+ *
+ * LO QUE ESTE COMPONENTE NO DECIDE
+ * -------------------------------
+ * Si quien mira puede pulsar. Eso lo resuelven el servidor —`exigirMaestro()` en
+ * la acción— y la base, dentro de la propia función. Aquí no se recibe el rol
+ * como prop: si se recibiera, parecería que el navegador tiene voz en la
+ * decisión, y los componentes de este panel no toman decisiones de permiso.
+ */
+function ControlSello({ pension }: { pension: PensionConHabitaciones }) {
+  const [estado, accion] = useFormState(sellarVerificacionMaestro, ESTADO_INICIAL);
+  const fecha = formatearFechaVerificacion(pension.verificado_en);
+  const siguiente = !pension.verificado;
+
+  return (
+    <div className="mt-4 rounded-xl border border-neutro-200 bg-neutro-50 p-4">
+      <p className="text-sm font-bold text-neutro-800">Sello «Verificado por Nido ✓»</p>
+
+      <p className="mt-1 text-sm leading-relaxed text-neutro-600">
+        {pension.verificado
+          ? fecha
+            ? `Concedido y fechado el ${fecha}. El catálogo y la ficha muestran la insignia.`
+            : "Concedido, sin constancia de cuándo: el anuncio ya estaba verificado antes de que existiera la fecha."
+          : "Sin conceder. El anuncio aparece en el catálogo sin la insignia."}
+      </p>
+
+      <p className="mt-1 text-xs leading-relaxed text-neutro-500">
+        La fecha la pone la base en el momento en que se concede, y se borra si el sello se
+        retira. No se puede escribir a mano.
+      </p>
+
+      <form action={accion} className="mt-3">
+        <input type="hidden" name="pensionId" value={pension.id} />
+        <input type="hidden" name="verificado" value={siguiente ? "1" : "0"} />
+        <BotonAccion
+          etiqueta={siguiente ? "Activar sello" : "Retirar sello"}
+          ariaLabel={
+            siguiente
+              ? `Conceder el sello «Verificado por Nido» a «${pension.titulo}»`
+              : `Retirar el sello «Verificado por Nido» a «${pension.titulo}»`
+          }
+          tono={siguiente ? "confirmar" : "neutral"}
+        />
+      </form>
+
+      <MensajeAccion estado={estado} />
     </div>
   );
 }

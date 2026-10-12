@@ -3,8 +3,15 @@ import { SITIO_URL } from "@/lib/sitio";
 import { obtenerPensionesReales } from "@/lib/datos";
 import { resumenesDeBarrio } from "@/lib/barrios";
 
-/** Páginas de contenido que existen siempre y no dependen del catálogo. */
-const GUIAS = ["/guias/como-elegir-pension-unimagdalena"];
+/**
+ * Páginas de contenido que existen siempre y no dependen del catálogo.
+ *
+ * «Quiénes somos» entra aquí por la misma razón que la guía: es contenido
+ * permanente —no una vista del inventario— y existe aunque hoy no haya una sola
+ * pensión publicada. Una página que se anuncia en el mapa del sitio y luego
+ * desaparece deja enlaces muertos en los resultados de búsqueda.
+ */
+const GUIAS = ["/guias/como-elegir-pension-unimagdalena", "/quienes-somos"];
 
 /**
  * Mapa del sitio (`/sitemap.xml`).

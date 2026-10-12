@@ -42,6 +42,18 @@ export default function Footer() {
                 Cómo verificamos cada anuncio
               </Link>
             </p>
+            {/* La segunda mitad de la misma pregunta. «Cómo verificamos» dice qué
+                se comprueba; esto dice quién lo comprueba. El texto evita a
+                propósito las palabras que la prueba del mensaje único reserva
+                para la sección de la portada (ver `lista-espera.prueba.ts`). */}
+            <p className="mt-2 text-sm">
+              <Link
+                href="/quienes-somos"
+                className="font-normal text-neutro-600 underline-offset-2 hover:text-neutro-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+              >
+                Quiénes somos
+              </Link>
+            </p>
           </div>
 
           <div>

@@ -76,7 +76,20 @@ const PRECACHE = [
  * contra las rutas reales del build: si aparece una ruta que no esté en
  * ninguna de las dos, la comprobación falla.
  */
-const RUTAS_CACHEABLES = ["/", "/pensiones", "/barrios", "/guias", "/legal", "/contacto", "/offline"];
+const RUTAS_CACHEABLES = [
+  "/",
+  "/pensiones",
+  "/barrios",
+  "/guias",
+  // «Quiénes somos» entra aquí por la misma razón que las guías: es contenido
+  // permanente que no depende de la sesión ni del inventario. Al servirla desde
+  // la caché tras la primera visita, la página que existe para dar confianza
+  // sigue abriendo aunque la red falle.
+  "/quienes-somos",
+  "/legal",
+  "/contacto",
+  "/offline",
+];
 
 /**
  * Rutas de cuenta: nunca entran en ninguna caché, ni como respaldo sin

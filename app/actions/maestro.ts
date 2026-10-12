@@ -231,6 +231,112 @@ export async function cambiarEstadoPublicacionMaestro(
 }
 
 /**
+ * Server Action: concede o retira el sello «Verificado por Nido ✓».
+ *
+ * POR QUÉ ESTA ACCIÓN LLAMA A UNA FUNCIÓN DE LA BASE Y NO HACE UN `update`
+ * -----------------------------------------------------------------------
+ * Porque no puede: `verificado` **no está** entre las columnas que
+ * `authenticated` tiene permiso de escribir. La lista se revocó y se volvió a
+ * conceder por columna (oleada-10, reafirmada en la oleada 11 y otra vez en la
+ * 13), y esa lista deja fuera, a propósito, `verificado`, `calificacion`,
+ * `precio_mensual`, `anfitrion_id`, `id` y `creada_en`. Un `update` desde aquí
+ * fallaría con `42501` aunque quien lo enviara fuera el maestro.
+ *
+ * La puerta que sí existe es `maestro_actualizar_campos_pension(uuid, jsonb)`,
+ * `SECURITY DEFINER` y concedida a `authenticated`: comprueba `es_maestro()` por
+ * dentro y admite **solo** `calificacion`, `verificado`, `latitud` y `longitud`.
+ * Es decir, la base ya tenía la cerradura montada y lo que faltaba era la
+ * manija. Esta acción es la manija: no añade permisos, usa los que ya había.
+ *
+ * LA FECHA NO SE ENVÍA, Y NO SE PUEDE ENVIAR
+ * ------------------------------------------
+ * `verificado_en` lo escribe el disparador `antes_de_sellar_verificacion` en la
+ * transición de falso a verdadero, y borra la fecha si el sello se retira. Aquí
+ * solo viaja el booleano. Si algún día se quisiera declarar la fecha de la
+ * inspección —distinta de la de registro—, la función la rechazaría con `22023`:
+ * habría que abrir esa llave primero, y es una decisión de producto que sigue
+ * tomada en su valor por defecto (ver `supabase/oleada-13-fecha-verificacion.sql`).
+ *
+ * LO QUE ESTA ACCIÓN NO TOCA
+ * --------------------------
+ * Ni el precio (derivado de las habitaciones), ni la identidad del anunciante,
+ * ni los datos privados. La lista blanca de la función lo impide en la base, no
+ * el hecho de que aquí no se envíen.
+ */
+export async function sellarVerificacionMaestro(
+  _estadoPrevio: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  if (!esSupabaseConfigurado()) {
+    return {
+      ok: false,
+      mensaje:
+        "El modo dinámico no está activo: agrega las credenciales de Supabase en .env.local (ver docs/integracion-supabase.md).",
+    };
+  }
+
+  const pensionId = String(formData.get("pensionId") ?? "").trim();
+  const verificado = String(formData.get("verificado") ?? "") === "1";
+
+  if (!pensionId) {
+    return {
+      ok: false,
+      mensaje: "No pudimos identificar la publicación. Recarga el panel e inténtalo de nuevo.",
+    };
+  }
+
+  const guardia = await exigirMaestro();
+  if (!guardia.ok) return guardia.estado;
+
+  const { data, error } = await guardia.supabase.rpc("maestro_actualizar_campos_pension", {
+    p_pension_id: pensionId,
+    p_cambios: { verificado },
+  });
+
+  if (error) {
+    console.error("Error cambiando el sello de verificación:", error.code, error.message);
+
+    if (error.code === "42501") {
+      return { ok: false, mensaje: NO_ES_MAESTRO };
+    }
+
+    if (error.code === "P0002") {
+      return {
+        ok: false,
+        mensaje: "Esa publicación ya no existe: puede que la haya borrado alguien más.",
+      };
+    }
+
+    return {
+      ok: false,
+      mensaje:
+        "No pudimos cambiar el sello. Vuelve a intentarlo en unos segundos; si el problema sigue, avísanos.",
+    };
+  }
+
+  // El mismo criterio que el resto del panel: la función devuelve el `id` que
+  // modificó, así que un éxito sin identificador no es un éxito comprobable.
+  if (!data) {
+    console.error("La función del sello no devolvió la publicación modificada:", data);
+    return {
+      ok: false,
+      mensaje:
+        "No pudimos confirmar el cambio del sello. Recarga el panel y comprueba el estado antes de repetir la operación.",
+    };
+  }
+
+  revalidarCatalogo();
+  revalidarPanelMaestro();
+
+  return {
+    ok: true,
+    mensaje: verificado
+      ? "Sello concedido: la ficha y la tarjeta del catálogo lo muestran ya, con la fecha de hoy."
+      : "Sello retirado: el anuncio vuelve a aparecer sin la insignia, y su fecha de verificación se borró.",
+  };
+}
+
+/**
  * Server Action: guarda los cambios de contenido de cualquier anuncio, retirado
  * incluido.
  *

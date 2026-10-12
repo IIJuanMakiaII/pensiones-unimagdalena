@@ -140,6 +140,23 @@ export default function ComoFunciona() {
             </Link>
             .
           </p>
+
+          {/* La pregunta que sigue a «cómo verifican» es «quién verifica». Se
+              responde una sola vez, en la página donde está la cara y el nombre,
+              y desde aquí solo se enlaza: repetir la promesa de confianza en la
+              portada fue justo lo que la tarea #57 vino a deshacer. El texto
+              evita a propósito las palabras que la prueba del mensaje único
+              reserva para esta sección (ver `lista-espera.prueba.ts`). */}
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-neutro-600">
+            Quien comprueba cada anuncio responde con su nombre:{" "}
+            <Link
+              href="/quienes-somos"
+              className="font-semibold text-primary-700 underline underline-offset-2 hover:text-primary-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+            >
+              conoce quién está detrás de Nido
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </section>
