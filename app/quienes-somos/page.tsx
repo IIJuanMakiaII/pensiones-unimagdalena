@@ -21,18 +21,23 @@ import Footer from "@/components/Footer";
  * responde no son un adorno: son el dato que permite decidir con tranquilidad
  * desde otra ciudad.
  *
- * DE DÓNDE SALE EL TEXTO, Y QUÉ SE DEJÓ FUERA A PROPÓSITO
- * ------------------------------------------------------
- * El texto es el del borrador del fundador, en su orden y en su voz. El borrador
- * traía cuatro huecos marcados para completar —una anécdota personal, qué pasa si
- * algo sale mal, la foto de una visita real y un Instagram— y **ninguno se ha
- * rellenado aquí**: publicar una promesa que nadie ha confirmado es peor que no
- * publicarla, y es exactamente lo que la auditoría externa señaló del sello. Los
- * huecos se añadirán cuando su autor los escriba.
+ * DE DÓNDE SALE EL TEXTO
+ * ----------------------
+ * El texto es del fundador, literal, en su orden y en su voz: lo reescribió él y
+ * este archivo no lo mejora, no lo resume y no lo reordena. La única corrección
+ * es una errata suya —«7 dias» → «7 días»—, y está declarada.
  *
- * Los tres pasos de «Cómo funciona Nido» están contados en primera persona, que
- * es lo que los distingue de la sección de la portada: allí se describe el
- * recorrido del estudiante; aquí, lo que el fundador hace en persona.
+ * En el borrador anterior había cuatro huecos marcados para completar. Dos de
+ * ellos ya están escritos por su autor y viven aquí: por qué lo hace —la estafa a
+ * un amigo cercano— y qué pasa si algo sale mal. Los otros dos siguen sin
+ * rellenar, y siguen sin rellenarse: publicar una promesa que nadie ha confirmado
+ * es peor que no publicarla.
+ *
+ * LA MAQUETACIÓN QUE PIDIÓ
+ * ------------------------
+ * «Por qué lo hago» va **a la derecha de la foto**, no debajo. Se resuelve con una
+ * fila que en móvil se apila en el orden natural de lectura —foto arriba, texto
+ * abajo— y a partir de 768 px pone la foto a la izquierda y el bloque a su derecha.
  *
  * LO QUE ESTA PÁGINA **NO** HACE
  * ------------------------------
@@ -43,6 +48,13 @@ import Footer from "@/components/Footer";
 
 const MIGAS: Miga[] = [MIGA_INICIO, { nombre: "Quiénes somos", ruta: "/quienes-somos" }];
 
+/** Las condiciones de uso. Existe (`app/legal/condiciones`) y la promesa del reembolso vive ahí. */
+const RUTA_CONDICIONES = "/legal/condiciones";
+
+/** El mismo mensaje que llevan los CTA de esta página: quien escribe no tiene que explicarse. */
+const MENSAJE_WHATSAPP =
+  "Hola, quiero información sobre una pensión cerca de la Universidad del Magdalena.";
+
 export const metadata: Metadata = {
   title: "Quiénes somos: la persona detrás de Nido",
   description:
@@ -50,24 +62,63 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITIO_URL}/quienes-somos` },
 };
 
-/** Los tres pasos, en primera persona: lo que hace el fundador, no lo que hace el sitio. */
+/**
+ * Los cuatro pasos, en primera persona: lo que hace el fundador, no lo que hace
+ * el sitio. Antes eran tres y contaban el proceso de publicación; estos cuatro son
+ * los del texto nuevo y cuentan el recorrido completo hasta la reserva.
+ */
 const PASOS = [
   {
-    titulo: "Visito la pensión",
-    detalle:
-      "Voy en persona a cada inmueble: reviso la habitación, los baños, el WiFi y los servicios, y tomo las fotos yo mismo para que lo que ves sea lo que hay.",
+    titulo: "Buscas por barrio y precio",
+    detalle: "Filtras y ves a cuántos minutos a pie queda del campus.",
   },
   {
-    titulo: "Publico con precios claros",
+    titulo: "Me escribes por WhatsApp",
     detalle:
-      "Solo se publica lo que pasó la visita. Cada anuncio muestra el precio mensual en pesos y qué incluye.",
+      "Me cuentas qué buscas. Hablo yo con el propietario para confirmar qué hay disponible y conocerlo.",
   },
   {
-    titulo: "Te acompaño en la reserva",
+    titulo: "Visito y sello",
     detalle:
-      "Me escribes por WhatsApp y hablo con el dueño, confirmo la habitación y te acompaño hasta que llegues.",
+      "Voy en persona al inmueble. Compruebo que quien publica es el propietario o tiene su autorización, y que todo coincide con las fotos y con lo que me dijo. Si es así, el anuncio recibe el sello «Verificado por Nido ✓» con su fecha.",
+  },
+  {
+    titulo: "Reservas el primer mes",
+    detalle:
+      "Pagas la reserva con mi acompañamiento, y el saldo restante se lo entregas al propietario al llegar.",
   },
 ];
+
+/**
+ * El canal, dentro de una frase.
+ *
+ * El texto nuevo invita a escribir dos veces, y una invitación que no lleva a
+ * ningún sitio promete de más. Se usa la misma compuerta que el resto del sitio
+ * —la que decide `WHATSAPP_DISPONIBLE`— para no nombrar un canal que pueda estar
+ * caído: si no está, se ofrece el formulario.
+ */
+function EnlaceCanal() {
+  const clase = "font-semibold text-primary-700 underline underline-offset-2";
+
+  if (!WHATSAPP_DISPONIBLE) {
+    return (
+      <Link href={RUTA_CONTACTO} className={clase}>
+        Escríbeme
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={enlaceWhatsAppPlataforma(MENSAJE_WHATSAPP)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={clase}
+    >
+      Escríbeme por WhatsApp
+    </a>
+  );
+}
 
 export default function PaginaQuienesSomos() {
   const jsonLdPersona = {
@@ -104,9 +155,7 @@ export default function PaginaQuienesSomos() {
         <div className="mt-5 flex flex-wrap items-center gap-3">
           {WHATSAPP_DISPONIBLE ? (
             <a
-              href={enlaceWhatsAppPlataforma(
-                "Hola, quiero información sobre una pensión cerca de la Universidad del Magdalena."
-              )}
+              href={enlaceWhatsAppPlataforma(MENSAJE_WHATSAPP)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-12 items-center justify-center rounded-xl bg-airbnb-rausch-hover px-6 text-sm font-semibold text-white transition hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700"
@@ -132,30 +181,46 @@ export default function PaginaQuienesSomos() {
           </Link>
         </div>
 
-        {/* Retrato vertical 4:5. Se sirve desde el dominio (nunca de un tercero)
-            y con `fill` sobre un marco de relación fija, para que la reserva de
-            espacio no dependa de que la imagen cargue. */}
-        <div className="relative mt-6 aspect-[4/5] w-full max-w-[18rem] overflow-hidden rounded-2xl bg-neutro-100 ring-1 ring-neutro-200">
-          <Image
-            src={FUNDADOR.foto}
-            alt={`${FUNDADOR.nombre}, fundador de Nido`}
-            fill
-            sizes="(max-width: 768px) 100vw, 288px"
-            className="object-cover"
-          />
+        {/* Foto y «Por qué lo hago» en la misma fila: en móvil se apila (foto
+            arriba), y a partir de 768 px el bloque queda a la derecha, que es la
+            maquetación que pidió el fundador. El retrato es vertical 4:5 y se sirve
+            desde el dominio (nunca de un tercero), con `fill` sobre un marco de
+            relación fija para que la reserva de espacio no dependa de que la imagen
+            cargue. */}
+        <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+          <div className="relative aspect-[4/5] w-full max-w-[18rem] shrink-0 overflow-hidden rounded-2xl bg-neutro-100 ring-1 ring-neutro-200">
+            <Image
+              src={FUNDADOR.foto}
+              alt={`${FUNDADOR.nombre}, fundador de Nido`}
+              fill
+              sizes="(max-width: 768px) 100vw, 288px"
+              className="object-cover"
+            />
+          </div>
+
+          <section aria-labelledby="titulo-por-que-lo-hago" className="md:min-w-0 md:flex-1">
+            <h2
+              id="titulo-por-que-lo-hago"
+              className="font-display text-lg font-bold text-neutro-800"
+            >
+              Por qué lo hago
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-neutro-700">
+              A un amigo cercano lo estafaron buscando pensión en Santa Marta: pagó por una
+              habitación que no era como se la habían mostrado. Ver lo que le pasó me hizo entender
+              que el problema es real y que le puede pasar a cualquier estudiante que llega de otra
+              ciudad.
+            </p>
+            <p className="mt-3 text-base leading-relaxed text-neutro-700">
+              Mi meta es sencilla: que los estudiantes encuentren una pensión de forma segura, y que
+              sus familias puedan decidir con tranquilidad aunque estén lejos.
+            </p>
+          </section>
         </div>
 
         <section className="mt-10">
-          <h2 className="font-display text-lg font-bold text-neutro-800">Por qué lo hago</h2>
-          <p className="mt-3 text-base leading-relaxed text-neutro-700">
-            Mi meta es sencilla: que los estudiantes encuentren una pensión de forma segura, y que
-            sus familias puedan decidir con tranquilidad aunque estén lejos.
-          </p>
-        </section>
-
-        <section className="mt-10">
           <h2 className="font-display text-lg font-bold text-neutro-800">Cómo funciona Nido</h2>
-          <ol className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <ol className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {PASOS.map((paso, indice) => (
               <li
                 key={paso.titulo}
@@ -174,13 +239,34 @@ export default function PaginaQuienesSomos() {
               </li>
             ))}
           </ol>
+          <p className="mt-4 text-base leading-relaxed text-neutro-700">
+            Si te interesa un anuncio que aún no tiene sello, no pasa nada: me escribes, lo visito
+            primero y te aviso. Solo se puede reservar cuando ya lo verifiqué. Te respondo en
+            máximo 24h y hago la visita en 7 días.
+          </p>
+        </section>
+
+        <section className="mt-10 rounded-2xl border border-neutro-200 bg-white p-5">
+          <h2 className="font-display text-lg font-bold text-neutro-800">Si algo sale mal</h2>
+          <p className="mt-2 text-base leading-relaxed text-neutro-700">
+            <EnlaceCanal />{" "}
+            y te respondo en máximo 24h. Si el propietario cancela o la habitación no es como la
+            mostré, te devuelvo tu reserva completa.{" "}
+            <Link
+              href={RUTA_CONDICIONES}
+              className="font-semibold text-primary-700 underline underline-offset-2"
+            >
+              Consulta la política de reembolso completa.
+            </Link>
+          </p>
         </section>
 
         <section className="mt-10 rounded-2xl bg-primary-50 p-5">
           <h2 className="font-display text-base font-bold text-primary-900">Quién está detrás</h2>
           <p className="mt-2 text-base leading-relaxed text-primary-900/80">
             Nido es un proyecto que estoy arrancando como estudiante. Yo diseñé y programé la
-            plataforma, y yo visito cada inmueble. Si tienes dudas, hablas directamente conmigo.
+            plataforma, y yo visito cada inmueble que lleva el sello. Si tienes dudas, hablas
+            directamente conmigo.
           </p>
           <p className="mt-3 text-sm">
             <a
@@ -197,56 +283,31 @@ export default function PaginaQuienesSomos() {
         <section className="mt-10">
           <h2 className="font-display text-lg font-bold text-neutro-800">Hablemos</h2>
           <p className="mt-3 text-base leading-relaxed text-neutro-700">
-            ¿Buscas pensión o tienes una para publicar? Escríbeme por el canal que prefieras.
-          </p>
-
-          <ul className="mt-4 space-y-2 text-base leading-relaxed">
-            <li className="text-neutro-600">
-              {WHATSAPP_DISPONIBLE ? (
-                <a
-                  href={enlaceWhatsAppPlataforma("Hola, quiero información sobre Nido.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-primary-700 underline underline-offset-2"
-                >
-                  WhatsApp
-                </a>
-              ) : (
-                <Link
-                  href={RUTA_CONTACTO}
-                  className="font-semibold text-primary-700 underline underline-offset-2"
-                >
-                  El formulario de contacto
-                </Link>
-              )}
-            </li>
-            <li className="text-neutro-600">
+            ¿Buscas pensión o tienes una para publicar? Escríbeme por{" "}
+            {WHATSAPP_DISPONIBLE ? (
               <a
-                href={`mailto:${FUNDADOR.correo}`}
+                href={enlaceWhatsAppPlataforma(MENSAJE_WHATSAPP)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-semibold text-primary-700 underline underline-offset-2"
               >
-                {FUNDADOR.correo}
+                WhatsApp
               </a>
-            </li>
-          </ul>
-        </section>
-
-        <section className="mt-10 rounded-2xl border border-neutro-200 bg-white p-5">
-          <h2 className="font-display text-base font-bold text-neutro-800">
-            Cómo verificamos cada anuncio
-          </h2>
-          <p className="mt-2 text-base leading-relaxed text-neutro-600">
-            El sello «Verificado por Nido ✓» lo otorga el equipo desde el panel, y ningún
-            anunciante puede ponérselo por su cuenta. Lo recibe un inmueble después de una visita
-            en la que se comprueban las condiciones básicas y los servicios.
-          </p>
-          <p className="mt-3 text-sm">
-            <Link
-              href="/#como-funciona"
-              className="font-bold text-primary-700 underline-offset-2 hover:underline"
+            ) : (
+              <Link
+                href={RUTA_CONTACTO}
+                className="font-semibold text-primary-700 underline underline-offset-2"
+              >
+                el formulario de contacto
+              </Link>
+            )}{" "}
+            o a{" "}
+            <a
+              href={`mailto:${FUNDADOR.correo}`}
+              className="font-semibold text-primary-700 underline underline-offset-2"
             >
-              Ver qué se comprueba en la visita
-            </Link>
+              {FUNDADOR.correo}
+            </a>
           </p>
         </section>
 
