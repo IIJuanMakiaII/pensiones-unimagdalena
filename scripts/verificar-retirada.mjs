@@ -298,13 +298,27 @@ if (indice.status === 404) {
 
 /* --- 5. La ficha ----------------------------------------------------------- */
 const ficha = await pagina(`/pensiones/${SLUG_DEMO}`);
-const declaraIndexable = /<meta[^>]+name="robots"[^>]*content="[^"]*index/i.test(ficha.cuerpo);
+// `noindex` CONTIENE `index`, así que el patrón anterior
+// (`content="[^"]*index`) daba positivo con `content="noindex"` y acusaba al 404
+// de declararse indexable cuando estaba haciendo justo lo contrario.
+//
+// El verde falso aquí está invertido respecto a los demás: la comprobación
+// fallaba **con el sitio correcto**, así que «arreglarla» habría consistido en
+// volver el 404 indexable de verdad. Por eso ahora se lee el contenido del meta
+// y se busca la directiva `noindex` por palabra completa: `\b` no deja que
+// `index` se cuele dentro de `noindex`, y un 404 sin ninguna directiva sigue
+// contando como indexable, que es lo que dice el estándar por omisión.
+const metaRobots = ficha.cuerpo.match(/<meta[^>]+name="robots"[^>]*content="([^"]*)"/i);
+const declaraIndexable = !/\bnoindex\b/i.test(metaRobots?.[1] ?? "");
 
 if (debeVerse) {
   linea(ficha.status === 200, "La ficha responde 200", `HTTP ${ficha.status}`);
 } else {
   linea(ficha.status === 404, "La ficha responde 404 (no un 200 con cuerpo vacío)", `HTTP ${ficha.status}`);
-  linea(!declaraIndexable, "El 404 no se declara indexable", declaraIndexable ? "index, follow" : "sin robots index");
+  // Se imprime la directiva real y no una etiqueta inventada: cuando pasa, el
+  // lector ve `noindex`, que es la prueba; cuando falla, ve lo que el sitio
+  // declaró de verdad, no una suposición sobre él.
+  linea(!declaraIndexable, "El 404 no se declara indexable", metaRobots?.[1] ?? "sin meta robots");
 }
 
 /* --- Resumen --------------------------------------------------------------- */
