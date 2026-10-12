@@ -24,6 +24,18 @@ interface Props {
  * línea todavía no existe, así que prometer que se puede pagar aquí sería peor que
  * no ofrecerlo. La reserva se cierra como hasta ahora —por WhatsApp con la
  * plataforma— y este bloque solo explica qué se paga y a quién.
+ *
+ * La presentación dice **la suma en voz alta** (tarea #74): «Total a pagar hoy» y
+ * «Saldo al llegar» se leen como las dos partes de una misma cuenta, que cierra en
+ * el canon completo, y el bloque termina afirmando que no hay ningún pago
+ * adicional. La aclaración anterior sobre el arriendo se retiró a propósito: leída
+ * deprisa sugería que la tarifa se cobra por fuera del canon.
+ *
+ * Quién asume la tarifa se escribe como lo dice `condiciones-de-uso.md` §3.1: se
+ * **recauda** del estudiante —el dinero sale de su reserva— pero se **financia con
+ * el primer mes del propietario**, porque el propietario recibe el 90 %. Por eso
+ * aquí se dice que la asume él, y **nunca** que el estudiante no la pague: eso
+ * sería falso y contradiría el contrato que firma.
  */
 export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: Props) {
   const { canon, deposito, tarifaServicio, anticipo, saldoAlLlegar } = desgloseReserva(precioMensual);
@@ -83,10 +95,23 @@ export default function DesgloseReserva({ precioMensual, etiquetaHabitacion }: P
         />
       </dl>
 
-      <p className="mt-3 rounded-xl bg-neutro-50 px-3 py-2.5 text-xs leading-relaxed text-neutro-600">
-        El dinero de hoy <strong className="text-neutro-700">no es el arriendo</strong>: son dos
-        rubros distintos —la tarifa de la plataforma y el anticipo, que va al propietario y se abona al
-        primer mes—. La reserva se cierra con nosotros por WhatsApp.
+      {/* La suma, dicha como una suma: los dos momentos son las dos partes del canon,
+          y el resultado se lee como «Pagas en total …». La cifra sale del precio de
+          la habitación elegida, no de un literal escrito aquí. */}
+      <div className="mt-3 rounded-xl bg-primary-50 px-3 py-2.5 ring-1 ring-primary-100">
+        <p className="text-sm leading-relaxed text-primary-800">
+          {formatearCOP(deposito)} hoy + {formatearCOP(saldoAlLlegar)} al llegar =
+        </p>
+        <p className="mt-0.5 font-display text-base font-bold text-primary-800">
+          Pagas en total {formatearCOP(canon)}
+        </p>
+      </div>
+
+      <p className="mt-2 rounded-xl bg-neutro-50 px-3 py-2.5 text-xs leading-relaxed text-neutro-600">
+        Es el canon completo del primer mes y{" "}
+        <strong className="text-neutro-700">no pagas ningún valor adicional</strong>. La tarifa de
+        servicio ({formatearCOP(tarifaServicio)}) la asume el propietario: se financia con su primer
+        mes, porque él recibe el 90 % del canon. La reserva se cierra con nosotros por WhatsApp.
       </p>
     </section>
   );
