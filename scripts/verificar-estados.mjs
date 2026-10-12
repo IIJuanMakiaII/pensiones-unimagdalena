@@ -52,6 +52,19 @@
 // él. Si las señales no coinciden, aborta sin medir.
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 
+/**
+ * Cabeceras de la petición. La clave de omisión de Deployment Protection entra por
+ * `VERCEL_PROTECTION_BYPASS` **solo desde el entorno del proceso**: hace falta para
+ * medir dentro de un Preview protegido, y el valor no se imprime nunca ni se escribe
+ * en ningún archivo del repositorio. Sin ella, todo sigue funcionando como antes.
+ */
+const CABECERAS = {
+  "cache-control": "no-cache",
+  ...(process.env.VERCEL_PROTECTION_BYPASS
+    ? { "x-vercel-protection-bypass": process.env.VERCEL_PROTECTION_BYPASS }
+    : {}),
+};
+
 /** Estados que este guion sabe reconocer. Cualquier otra cosa es un fallo. */
 const ESTADOS = ["con-ficha", "sin-inventario", "demostracion", "desconocido"];
 
@@ -74,9 +87,7 @@ const ESPERADO = (process.env.ESTADO_ESPERADO ?? "auto").trim().toLowerCase();
  * es `verificar-retirada.mjs`; este archivo mide códigos de estado y el estado de
  * la portada, así que su control tiene que salir del propio sitio.
  */
-const inicio = await (
-  await fetch(BASE + "/", { headers: { "cache-control": "no-cache" } })
-).text();
+const inicio = await (await fetch(BASE + "/", { headers: CABECERAS })).text();
 
 /**
  * Guardia de identidad: ¿quien contesta en `BASE` es Nido de verdad?
@@ -128,7 +139,7 @@ if (enlazada) {
 let fallos = 0;
 
 for (const [nombre, ruta, esperado] of casos) {
-  const respuesta = await fetch(BASE + ruta, { headers: { "cache-control": "no-cache" } });
+  const respuesta = await fetch(BASE + ruta, { headers: CABECERAS });
   await respuesta.text();
 
   const ok = respuesta.status === esperado;
