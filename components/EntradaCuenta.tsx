@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /**
@@ -52,10 +53,38 @@ function hayCookieDeSesion(): boolean {
 }
 
 export default function EntradaCuenta() {
+  const ruta = usePathname();
   const [identidad, setIdentidad] = useState<Identidad | null>(null);
 
+  /**
+   * La sesión se vuelve a mirar **en cada cambio de ruta**, no solo al montar.
+   *
+   * Con las dependencias vacías, este efecto se quedaba con la foto del primer
+   * render. El layout raíz **no se vuelve a montar** al navegar dentro de la
+   * aplicación, así que quien entraba desde `/login` seguía viendo el bloque de
+   * visitante —«Inicia sesión»— sobre su propia cuenta, y quien cerraba sesión
+   * seguía viendo «Cerrar sesión». Medido en producción: la cabecera mostraba
+   * «Inicia sesión» en `/publicar` con la sesión de `juansmakia@gmail.com` viva.
+   *
+   * `router.refresh()` no resuelve esto: refresca el árbol del servidor pero
+   * **conserva el estado del cliente**, que es donde vive esta foto.
+   *
+   * El coste queda acotado a propósito: la consulta a Supabase solo se hace si hay
+   * cookie **y** todavía no hay identidad, así que navegar con la sesión ya
+   * resuelta no añade ni una petición; y sin cookie no se importa nada, que es la
+   * promesa de los 0 kB para el visitante anónimo.
+   */
   useEffect(() => {
-    if (!hayCookieDeSesion()) return;
+    const hayCookie = hayCookieDeSesion();
+
+    // Sesión cerrada (o nunca hubo): la cabecera vuelve a «visitante».
+    if (!hayCookie) {
+      if (identidad) setIdentidad(null);
+      return;
+    }
+
+    // Sesión ya resuelta: navegar no repite la consulta.
+    if (identidad) return;
 
     let cancelado = false;
 
@@ -95,7 +124,7 @@ export default function EntradaCuenta() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [ruta, identidad]);
 
   return identidad ? <BloqueSesion identidad={identidad} /> : <BloqueVisitante />;
 }
