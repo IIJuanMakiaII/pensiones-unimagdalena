@@ -1,6 +1,6 @@
 # Condiciones de Uso de Nido
 
-**Última actualización:** 10 de octubre de 2026.
+**Última actualización:** 11 de octubre de 2026.
 
 > **En una frase.** Nido gestiona el contacto y **la reserva del primer mes**. La
 > reserva equivale al **20 % del primer canon**, en dos rubros jurídicamente
@@ -245,6 +245,18 @@ pueden arrendar; incluyan datos falsos; ofrezcan alojamiento a cambio de algo di
 del pago del arriendo; incluyan contenido discriminatorio, sexual, violento o ilegal;
 o reproduzcan contenido de otras personas sin autorización.
 
+También está **prohibido** compartir, pedir o publicar datos de contacto directo
+—teléfono, WhatsApp, correo electrónico o redes sociales— entre el anfitrión y quien
+busca alojamiento **para evadir el servicio de la plataforma**: para saltarse el cierre
+de la reserva del primer mes, para negociar por fuera los cánones siguientes o para
+eludir la Tarifa de Servicio. El contacto y el cierre los lleva la plataforma, en los
+términos de la sección 2.
+
+El WhatsApp que el anfitrión registra al publicar es un dato **privado**: lo ven él y
+el equipo de Nido, nunca quien busca alojamiento. Publicarlo dentro del anuncio,
+copiarlo en el título o en la descripción, o inducir a que se comparta por cualquier
+otra vía incumple estas condiciones igual que desviar el contacto.
+
 **La plataforma puede retirar un anuncio o suspender una cuenta** que incumpla estas
 condiciones, sin perjuicio de las acciones legales que correspondan.
 
@@ -299,7 +311,7 @@ Superintendencia de Industria y Comercio.
 
 ---
 
-**Última actualización:** 10 de octubre de 2026.
-**Versión:** 1.0 — incluye el responsable del tratamiento, la política de cancelación y
-desistimiento por tramos, el traslado del anticipo al propietario y la verificación
-diferenciada.
+**Última actualización:** 11 de octubre de 2026.
+**Versión:** 1.1 — incluye el responsable del tratamiento, la política de cancelación y
+desistimiento por tramos, el traslado del anticipo al propietario, la verificación
+diferenciada y la prohibición de desviar el contacto fuera de la plataforma.
