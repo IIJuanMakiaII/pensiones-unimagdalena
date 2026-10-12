@@ -23,7 +23,7 @@ interface Props {
 }
 
 export default async function PublicarPage({ searchParams }: Props) {
-  const { creada, editada } = await searchParams;
+  const { creada, editada, sinNumero } = await searchParams;
 
   if (!esSupabaseConfigurado()) return <ConfiguracionPendiente />;
 
@@ -75,6 +75,24 @@ export default async function PublicarPage({ searchParams }: Props) {
             className="mt-5 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-800"
           >
             ✓ Cambios guardados. El catálogo y la ficha ya los muestran.
+          </p>
+        )}
+
+        {/* El anuncio se guardó pero el WhatsApp privado no (tarea #77). El aviso
+            viaja en la dirección porque esta es la página a la que vuelve la acción
+            después de guardar, y porque la decisión de no deshacer la publicación
+            por un campo opcional tiene que contarse en algún sitio.
+            Los dos casos no dicen lo mismo: «falta un paso de configuración» (la
+            migración todavía no está aplicada, y reintentar no sirve de nada) no es
+            «no lo sabemos» (y ahí sí tiene sentido volver a intentarlo). */}
+        {sinNumero && (
+          <p
+            role="status"
+            className="mt-5 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-4 py-3 text-sm leading-relaxed text-neutro-800"
+          >
+            {sinNumero === "tabla"
+              ? "Tu anuncio se guardó, pero tu WhatsApp todavía no se puede guardar: al sistema le falta un paso de configuración que hace el equipo de Nido. El anuncio no se vio afectado."
+              : "Tu anuncio se guardó, pero no pudimos guardar tu WhatsApp. Vuelve a intentarlo desde «Editar anuncio»; si sigue fallando, avísanos."}
           </p>
         )}
 

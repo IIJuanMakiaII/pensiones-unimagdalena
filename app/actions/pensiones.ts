@@ -10,6 +10,12 @@ import {
   reconciliarHabitaciones,
   type EstadoFormulario,
 } from "@/lib/pension-escritura";
+import {
+  guardarContactoDelAnfitrion,
+  normalizarNumeroDeAnfitrion,
+  numeroDeAnfitrionValido,
+} from "@/lib/contacto-anfitrion";
+import { AYUDA_WHATSAPP, CAMPO_WHATSAPP } from "@/lib/formulario-pension";
 
 // Nota: en un módulo "use server" solo deben exportarse funciones asíncronas.
 // El estado inicial del formulario vive en el componente de cliente (antes se
@@ -33,6 +39,73 @@ import {
  * acción, con la sesión por delante.
  */
 const MAX_PUBLICACIONES_24H = 5;
+
+/**
+ * Lee el WhatsApp privado que envía el formulario del anfitrión (tarea #77).
+ *
+ * POR QUÉ SE VALIDA AQUÍ Y NO SOLO EN EL NAVEGADOR
+ * -----------------------------------------------
+ * Por el mismo motivo que los barrios (tarea #50): lo que se comprueba en el
+ * navegador se salta con una petición hecha a mano. La base tiene su propia
+ * restricción —`^(3[0-9]{9}|60[0-9]{8})$`, la misma que usa
+ * `numeroDeAnfitrionValido()`—, pero un `23514` llega al anfitrión como un error
+ * sin contexto. Se comprueba antes para poder decirle **qué** escribir.
+ *
+ * EL CAMPO VACÍO NO ES UN ERROR, Y NO BORRA NADA
+ * ----------------------------------------------
+ * La tabla admite el estado «sin número»: hay anuncios publicados antes de que este
+ * campo existiera y hay quien prefiere no dejarlo. Vacío significa «no lo cambio»,
+ * no «bórralo»: no hay camino de borrado en la aplicación, y esa decisión está
+ * escrita también en el pie del campo del formulario, para que el anfitrión no
+ * tenga que adivinarla.
+ *
+ * La identidad no viaja por aquí: el número se guarda después, y
+ * `guardarContactoDelAnfitrion()` saca el `anfitrion_id` de la sesión del servidor.
+ */
+function leerWhatsappPrivado(formData: FormData): { whatsapp: string; error: string | null } {
+  const crudo = String(formData.get(CAMPO_WHATSAPP) ?? "").trim();
+
+  if (!crudo) return { whatsapp: "", error: null };
+
+  if (!numeroDeAnfitrionValido(crudo)) {
+    return {
+      whatsapp: "",
+      error: `«Tu WhatsApp» no tiene un formato que podamos usar. ${AYUDA_WHATSAPP} Si prefieres no dejarlo, deja el campo vacío.`,
+    };
+  }
+
+  return { whatsapp: normalizarNumeroDeAnfitrion(crudo), error: null };
+}
+
+/**
+ * Guarda el número privado **si el formulario trajo uno**, y devuelve el aviso que
+ * hay que añadir a la dirección de vuelta (`""` si no hay nada que contar).
+ *
+ * POR QUÉ EL GUARDADO VA DESPUÉS DE CREAR O EDITAR EL ANUNCIO
+ * ---------------------------------------------------------
+ * Porque son dos escrituras en dos sitios distintos y el anuncio es lo que el
+ * anfitrión vino a hacer. Si el número no se puede guardar —lo más probable hoy:
+ * la migración que crea la tabla todavía **no está aplicada**—, lo correcto no es
+ * deshacer la publicación, sino publicarla y decirlo. Lo contrario dejaría al
+ * anfitrión sin anuncio por un campo opcional.
+ *
+ * POR QUÉ SE DISTINGUEN LOS DOS AVISOS
+ * ------------------------------------
+ * `tabla` es «esta función todavía no está disponible» y `error` es «no lo sé».
+ * Son cosas distintas y el anfitrión puede hacer cosas distintas con ellas: en el
+ * primer caso no tiene sentido reintentar, en el segundo sí. Meterlos en el mismo
+ * mensaje sería la misma confusión que esta ronda ya corrigió en el panel del
+ * maestro.
+ */
+async function guardarWhatsappSiLlega(numero: string): Promise<string> {
+  if (!numero) return "";
+
+  const guardado = await guardarContactoDelAnfitrion(numero);
+
+  if (guardado.estado === "ok") return "";
+
+  return guardado.estado === "sin-tabla" ? "&sinNumero=tabla" : "&sinNumero=error";
+}
 
 /**
  * Server Action: publica una pensión a nombre del anfitrión autenticado.
@@ -102,6 +175,16 @@ export async function crearPension(
     return { ok: false, mensaje: errores.join(" ") };
   }
 
+  // El número privado se valida **antes** de escribir nada: si no tiene forma de
+  // número colombiano, el anuncio no se publica a medias ni se publica con el
+  // campo perdido. No se escribe en `pensiones`: va a `contacto_anfitrion`, y solo
+  // después de que el anuncio exista.
+  const { whatsapp, error: errorWhatsapp } = leerWhatsappPrivado(formData);
+
+  if (errorWhatsapp) {
+    return { ok: false, mensaje: errorWhatsapp };
+  }
+
   const {
     titulo,
     descripcion,
@@ -146,9 +229,13 @@ export async function crearPension(
     };
   }
 
+  // El WhatsApp privado, ya con el anuncio creado. Si no se puede guardar, el
+  // anuncio se queda publicado y el panel lo cuenta: ver `guardarWhatsappSiLlega`.
+  const aviso = await guardarWhatsappSiLlega(whatsapp);
+
   // Descarta la caché del catálogo: la pensión nueva se ve sin esperar los 60 s.
   revalidarCatalogo();
-  redirect("/publicar?creada=1");
+  redirect(`/publicar?creada=1${aviso}`);
 }
 
 /**
@@ -451,6 +538,15 @@ export async function actualizarPension(
     return { ok: false, mensaje: errores.join(" ") };
   }
 
+  // El número privado se valida antes de tocar la base, igual que en el alta. Un
+  // campo vacío aquí significa «no lo cambio»: el anuncio se guarda y el número
+  // que hubiera sigue donde estaba.
+  const { whatsapp, error: errorWhatsapp } = leerWhatsappPrivado(formData);
+
+  if (errorWhatsapp) {
+    return { ok: false, mensaje: errorWhatsapp };
+  }
+
   const {
     titulo,
     descripcion,
@@ -503,6 +599,9 @@ export async function actualizarPension(
     return { ok: false, mensaje: reconciliacion.mensaje };
   }
 
+  // El WhatsApp privado, ya con el anuncio guardado (ver `guardarWhatsappSiLlega`).
+  const aviso = await guardarWhatsappSiLlega(whatsapp);
+
   revalidarCatalogo();
-  redirect("/publicar?editada=1");
+  redirect(`/publicar?editada=1${aviso}`);
 }

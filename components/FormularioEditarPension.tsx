@@ -15,8 +15,11 @@ import EditorHabitaciones, {
   type HabitacionForm,
 } from "@/components/EditorHabitaciones";
 import {
+  AYUDA_WHATSAPP,
   BARRIO_OTRO,
   BARRIOS,
+  CAMPO_WHATSAPP,
+  ETIQUETA_WHATSAPP,
   NORMAS,
   SERVICIOS,
   claseEtiqueta,
@@ -58,6 +61,26 @@ interface Props {
    * panel maestro— y las dos versiones llevan énfasis en medio de la frase.
    */
   avisoRetirada?: ReactNode;
+  /**
+   * Pinta el campo del WhatsApp privado (tarea #77).
+   *
+   * POR QUÉ EL VALOR POR DEFECTO ES «NO», Y ES LO IMPORTANTE DE ESTA PROP
+   * --------------------------------------------------------------------
+   * Este editor lo comparten dos caminos: el anfitrión
+   * (`/publicar/[id]/editar`) y el maestro (`/maestro/[id]/editar`, que pasa su
+   * propia acción). El número es de la persona, no del anuncio, y **el maestro no
+   * debe poder pisarlo**: si el campo se pintara en los dos caminos, el maestro
+   * vería un campo vacío —él no tiene número que mostrar— y al guardar cualquier
+   * cambio lo sobrescribiría con nada, sin que nadie se enterara.
+   *
+   * Con el defecto en «no», un camino nuevo que olvide declarar la prop no puede
+   * destruir el dato, y el servidor del maestro ni siquiera lee ese campo del
+   * formulario. Es la misma idea del `accionRecibida ?? actualizarPension`: el
+   * defecto es el lado seguro.
+   */
+  mostrarWhatsapp?: boolean;
+  /** El número que el anfitrión ya había dejado. Solo se usa para mostrarlo. */
+  whatsappActual?: string | null;
 }
 
 /**
@@ -73,6 +96,8 @@ export default function FormularioEditarPension({
   accion: accionRecibida,
   volverA = "/publicar",
   avisoRetirada,
+  mostrarWhatsapp = false,
+  whatsappActual = null,
 }: Props) {
   const [estado, accion] = useFormState(accionRecibida ?? actualizarPension, ESTADO_INICIAL);
 
@@ -260,6 +285,44 @@ export default function FormularioEditarPension({
             Los estudiantes filtran por distancia: este dato decide si apareces.
           </p>
         </div>
+
+        {/*
+          El WhatsApp privado (tarea #77). Solo lo pinta el camino del anfitrión:
+          `mostrarWhatsapp` llega desde `/publicar/[id]/editar` y **no** desde
+          `/maestro/[id]/editar`, porque el número es de la persona y el maestro no
+          tiene por qué reescribirlo. Ver la prop para el razonamiento entero.
+
+          Llega ya escrito (`whatsappActual`) para que el anfitrión vea lo que hay
+          antes de tocarlo, igual que el barrio guardado. Y se dice lo que pasa si lo
+          deja vacío, porque es la única forma de que «vacío» signifique algo: no hay
+          camino de borrado en la aplicación, así que vaciar el campo no destruye el
+          número, simplemente no lo cambia.
+        */}
+        {mostrarWhatsapp && (
+          <div>
+            <label htmlFor={CAMPO_WHATSAPP} className={claseEtiqueta}>
+              {ETIQUETA_WHATSAPP}
+            </label>
+            <input
+              id={CAMPO_WHATSAPP}
+              name={CAMPO_WHATSAPP}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              maxLength={16}
+              defaultValue={whatsappActual ?? ""}
+              className={claseInput}
+              placeholder="3001234567"
+              aria-describedby={`${CAMPO_WHATSAPP}-ayuda`}
+            />
+            <p id={`${CAMPO_WHATSAPP}-ayuda`} className="mt-1 text-xs text-neutro-500">
+              {AYUDA_WHATSAPP}{" "}
+              {whatsappActual
+                ? "Ya tenemos un número tuyo: si lo dejas como está, no cambia."
+                : "Déjalo vacío si prefieres no dejarlo; el anuncio se publica igual."}
+            </p>
+          </div>
+        )}
 
         <div>
           <span className={claseEtiqueta}>Habitaciones que ofreces</span>

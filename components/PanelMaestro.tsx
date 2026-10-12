@@ -13,6 +13,8 @@ import {
 import { PALABRA_DE_BORRADO } from "@/lib/borrado";
 import { formatearFechaVerificacion } from "@/lib/sello";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
+import type { ContactoDePanel } from "@/lib/contacto-panel";
+import { WhatsAppIcon } from "@/components/CardPension";
 import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
 
 /**
@@ -29,7 +31,20 @@ import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
  */
 const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
 
-export default function PanelMaestro({ pension }: { pension: PensionConHabitaciones }) {
+/**
+ * La tarjeta de administración de una publicación.
+ *
+ * `contacto` llega **ya resuelto** desde el servidor (`app/maestro/page.tsx`), y no
+ * se calcula aquí: el enlace de WhatsApp se construye con el módulo que habla con
+ * la tabla privada, que es de servidor. Ver `lib/contacto-panel.ts`.
+ */
+export default function PanelMaestro({
+  pension,
+  contacto,
+}: {
+  pension: PensionConHabitaciones;
+  contacto: ContactoDePanel;
+}) {
   const habitaciones = pension.habitaciones ?? [];
   const libres = habitaciones.filter((habitacion) => habitacion.disponible);
   const preciosLibres = libres.map((habitacion) => habitacion.precio_mensual_cop);
@@ -106,7 +121,7 @@ export default function PanelMaestro({ pension }: { pension: PensionConHabitacio
       )}
 
       <div className="mt-4 border-t border-neutro-200 pt-4">
-        <AccionesMaestro pension={pension} />
+        <AccionesMaestro pension={pension} contacto={contacto} />
       </div>
     </article>
   );
@@ -168,7 +183,13 @@ function FilaHabitacionMaestro({
 }
 
 /** Retirar, reactivar, editar y borrar el anuncio completo. */
-function AccionesMaestro({ pension }: { pension: PensionConHabitaciones }) {
+function AccionesMaestro({
+  pension,
+  contacto,
+}: {
+  pension: PensionConHabitaciones;
+  contacto: ContactoDePanel;
+}) {
   const [estado, accion] = useFormState(cambiarEstadoPublicacionMaestro, ESTADO_INICIAL);
   const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
 
@@ -214,6 +235,8 @@ function AccionesMaestro({ pension }: { pension: PensionConHabitaciones }) {
 
       <MensajeAccion estado={estado} />
 
+      <ContactoDelAnfitrion pension={pension} contacto={contacto} />
+
       <ControlSello pension={pension} />
 
       <div className="mt-4 border-t border-dashed border-neutro-200 pt-4">
@@ -233,6 +256,85 @@ function AccionesMaestro({ pension }: { pension: PensionConHabitaciones }) {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * El WhatsApp privado del anfitrión y el botón para escribirle (tarea #77).
+ *
+ * POR QUÉ LOS CUATRO ESTADOS SE PINTAN DISTINTO
+ * --------------------------------------------
+ * Porque el maestro toma decisiones con esto. Si el panel dijera «sin número»
+ * cuando en realidad la consulta falló, el maestro concluiría que ese anfitrión no
+ * quiere que lo contacten y no lo intentaría más; y si dijera lo mismo cuando la
+ * migración todavía no está aplicada —que es el estado de hoy—, parecería que el
+ * panel está roto cuando lo único que pasa es que la función aún no existe.
+ *
+ *   - `sin-tabla` → **no se pinta nada.** No es un error ni una falta del
+ *     anfitrión: es una función que todavía no está disponible.
+ *   - `sin-numero` → se dice, en voz baja y sin alarma, que aún no lo ha dejado.
+ *     Tampoco es un error.
+ *   - `error` → aquí sí se dice «no pudimos comprobar», y se dice **qué no
+ *     significa**: que no lo tenga.
+ *   - `ok` → el número y el botón.
+ *
+ * EL ENLACE LLEGA HECHO DESDE EL SERVIDOR, no se arma aquí: ver
+ * `lib/contacto-panel.ts`. La única cosa que este componente decide sobre él es que
+ * se abre en otra pestaña y sin `referrer`.
+ *
+ * El número se muestra, además del botón, porque el maestro tiene que poder
+ * comprobar que va a escribirle a quien cree: un botón sin número deja la duda de si
+ * el anfitrión de este anuncio es el que registró ese teléfono.
+ */
+function ContactoDelAnfitrion({
+  pension,
+  contacto,
+}: {
+  pension: PensionConHabitaciones;
+  contacto: ContactoDePanel;
+}) {
+  if (contacto.estado === "sin-tabla") return null;
+
+  if (contacto.estado === "sin-numero") {
+    return (
+      <p className="mt-4 text-xs leading-relaxed text-neutro-500">
+        Este anfitrión todavía no ha registrado su WhatsApp. Puede dejarlo al publicar o al editar
+        su anuncio; en cuanto lo haga, el botón para escribirle aparece aquí.
+      </p>
+    );
+  }
+
+  if (contacto.estado === "error") {
+    return (
+      <p className="mt-4 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-3 py-2 text-xs leading-relaxed text-neutro-700">
+        <strong>No pudimos comprobar</strong> el WhatsApp de este anfitrión. Eso no significa que no
+        lo tenga: vuelve a cargar el panel en unos segundos.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-neutro-200 bg-neutro-50 p-4">
+      <p className="text-sm font-bold text-neutro-800">WhatsApp privado del anfitrión</p>
+      <p className="mt-0.5 text-base font-semibold tracking-wide text-neutro-900">
+        {contacto.whatsapp}
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-neutro-500">
+        Solo lo ve el equipo de Nido: no aparece en el anuncio, ni en la ficha, ni en el mensaje que
+        recibe el estudiante.
+      </p>
+
+      <a
+        href={contacto.enlace}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Escribir por WhatsApp al anfitrión de «${pension.titulo}»`}
+        className="mt-3 inline-flex h-11 items-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-bold text-white transition hover:bg-primary-700"
+      >
+        <WhatsAppIcon className="h-5 w-5" />
+        Escribir al anfitrión
+      </a>
     </div>
   );
 }

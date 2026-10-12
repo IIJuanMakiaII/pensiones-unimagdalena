@@ -5,6 +5,8 @@ import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerTodasLasPensiones } from "@/lib/datos";
 import { esMaestroConCliente } from "@/lib/maestro";
+import { leerContactosDeAnfitriones } from "@/lib/contacto-anfitrion";
+import { resolverContactoDePanel } from "@/lib/contacto-panel";
 import PanelMaestro from "@/components/PanelMaestro";
 import Footer from "@/components/Footer";
 
@@ -84,6 +86,22 @@ export default async function MaestroPage({ searchParams }: Props) {
   const activas = pensiones.filter((pension) => pension.activa).length;
   const retiradas = pensiones.length - activas;
 
+  /*
+   * El WhatsApp privado de cada anunciante (tarea #77), en **una** consulta para
+   * toda la lista: con veinte anuncios, una consulta por tarjeta serían veinte
+   * viajes a la base para pintar un botón. El lector deduplica los identificadores
+   * por su cuenta, así que veinte anuncios de cinco anfitriones viajan como cinco.
+   *
+   * Y NO PUEDE TUMBAR EL PANEL: los anuncios ya están leídos y pintados arriba. Si
+   * la tabla todavía no existe —la migración la aplica el propietario a mano—, el
+   * lector devuelve `sin-tabla` y aquí simplemente no se dibuja el botón. Un 404 de
+   * PostgREST no se convierte en un error de la página, que es lo que permitiría
+   * desplegar en cualquier orden.
+   */
+  const { contactos, motivo } = await leerContactosDeAnfitriones(
+    pensiones.map((pension) => pension.anfitrion_id)
+  );
+
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
@@ -139,7 +157,14 @@ export default async function MaestroPage({ searchParams }: Props) {
           ) : (
             <div className="mt-4 space-y-3">
               {pensiones.map((pension) => (
-                <PanelMaestro key={pension.id} pension={pension} />
+                <PanelMaestro
+                  key={pension.id}
+                  pension={pension}
+                  contacto={resolverContactoDePanel(
+                    contactos.get(pension.anfitrion_id) ?? null,
+                    motivo
+                  )}
+                />
               ))}
             </div>
           )}

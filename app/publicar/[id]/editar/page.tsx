@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerPensionPorIdConSesion } from "@/lib/datos";
+import { leerContactoDelAnfitrion } from "@/lib/contacto-anfitrion";
 import FormularioEditarPension from "@/components/FormularioEditarPension";
 import Footer from "@/components/Footer";
 
@@ -73,6 +74,27 @@ export default async function EditarPensionPage({ params }: Props) {
 
   if (!pension || pension.anfitrion_id !== user.id) notFound();
 
+  /*
+   * El número privado del anfitrión, para que este pueda ver lo que ya dejó (tarea
+   * #77). Se lee con la sesión de la petición, y la RLS de `contacto_anfitrion`
+   * solo entrega la fila propia: aquí solo se llega siendo el dueño del anuncio.
+   *
+   * SÍ APARECE EN EL HTML DE ESTA PÁGINA, Y ES LO CORRECTO
+   * -----------------------------------------------------
+   * Lo que la petición prohíbe es que el número viaje al **público**: la portada,
+   * la ficha, su JSON, sus datos estructurados y el mapa del sitio. Esta pantalla
+   * no es nada de eso: exige sesión, responde 404 a quien no sea el dueño, está
+   * marcada `noindex` y se renderiza en cada visita (`force-dynamic`), así que no
+   * se guarda en ninguna caché. Sin verlo, el anfitrión no tendría forma de saber
+   * qué número tiene registrado ni de corregirlo.
+   *
+   * Los estados que no son «ok» —`sin-tabla` (migración sin aplicar), `sin-numero`
+   * y `error`— dejan el campo vacío y el pie del campo ya explica qué hacer. Aquí
+   * no se distingue «no hay» de «no se pudo comprobar» a propósito: en este
+   * formulario, el efecto es el mismo y el anfitrión puede volver a escribirlo.
+   */
+  const contacto = await leerContactoDelAnfitrion(user.id);
+
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
@@ -82,7 +104,11 @@ export default async function EditarPensionPage({ params }: Props) {
           </Link>
         </p>
 
-        <FormularioEditarPension pension={pension} />
+        <FormularioEditarPension
+          pension={pension}
+          mostrarWhatsapp
+          whatsappActual={contacto.estado === "ok" ? contacto.whatsapp : null}
+        />
       </main>
       <Footer />
     </>

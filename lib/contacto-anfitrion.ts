@@ -231,3 +231,109 @@ export async function leerContactosDeAnfitriones(
     return { contactos, motivo: "error" };
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* La escritura (tarea #77)                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Lo que se puede decir del guardado del número.
+ *
+ * Los mismos cuatro estados que la lectura, más `invalido` y `sin-sesion`, que
+ * solo puede producir una escritura. Ninguno significa lo mismo que otro:
+ * `sin-tabla` es «esta función todavía no está disponible», `error` es «no lo sé»,
+ * y quien dibuja tiene que poder decir cosas distintas.
+ */
+export type GuardadoDeContacto =
+  | { estado: "ok"; whatsapp: string }
+  | { estado: "invalido" }
+  | { estado: "sin-sesion" }
+  | { estado: "sin-tabla" }
+  | { estado: "error" };
+
+/**
+ * Guarda el número privado del anfitrión **de la sesión**, no de quien llame.
+ *
+ * POR QUÉ ESTA FUNCIÓN FALTABA Y AHORA ESTÁ AQUÍ
+ * ----------------------------------------------
+ * La tarea #76 dejó el módulo con la mitad de lectura —y su encargo pedía no
+ * tocarlo sin preguntar—, pero sin escritura la petición del propietario no se
+ * puede cumplir: el formulario no tiene forma de guardar nada. Se añade aquí, y
+ * solo aquí, porque la regla de la #76 sigue en pie: **este es el único módulo del
+ * código que sabe de `contacto_anfitrion`**. La alternativa —consultar la tabla
+ * desde la acción— habría repartido ese conocimiento, que es justo lo que la #76
+ * quiso evitar. La adición es **puramente aditiva**: no se cambió ninguna línea de
+ * lo que ya existía.
+ *
+ * TRES DECISIONES QUE NO SON DE ESTILO
+ * ------------------------------------
+ *  1. **La identidad sale de la sesión, dentro del módulo.** No recibe un
+ *     identificador por parámetro: si lo recibiera, un día alguien lo llamaría con
+ *     un `anfitrion_id` que viajó en un formulario, y esa es la forma exacta en que
+ *     este proyecto ya cerró dos agujeros. La RLS volvería a decirlo, pero la
+ *     consulta no debe depender de que la última puerta esté bien.
+ *  2. **`upsert` con `onConflict: "anfitrion_id"`, no `insert`.** La tabla tiene
+ *     una fila por anfitrión: quien publica su segundo anuncio no crea una segunda
+ *     fila, actualiza la suya. Un `insert` daría un `23505` que el anfitrión leería
+ *     como un fallo del formulario.
+ *  3. **Nunca se responde «ok» sin la fila devuelta.** Es el mismo criterio que las
+ *     cuatro escrituras del panel: un éxito sin comprobación es un éxito que no se
+ *     sabe si ocurrió. Y si el formato no cuadra se devuelve `invalido` **sin
+ *     consultar**, porque la restricción de la base respondería `23514` sin
+ *     decirle a nadie qué escribir.
+ *
+ * LO QUE ESTA FUNCIÓN NO HACE, Y NO DEBE HACER
+ * --------------------------------------------
+ * No escribe `pensiones.whatsapp`. Esa columna es del modelo viejo, está congelada
+ * y el número del anfitrión ya no es un dato del anuncio. Tampoco borra: no hay
+ * camino de `delete` desde la aplicación, porque vaciar el campo no tiene por qué
+ * destruir un dato.
+ *
+ * El número viaja a la base tal cual lo devuelve `normalizarNumeroDeAnfitrion()`
+ * —diez dígitos, sin `+57`—, y **no se registra en ningún `console.error`**: los
+ * registros de un servidor no son sitio para un teléfono ajeno.
+ */
+export async function guardarContactoDelAnfitrion(
+  valor: string,
+  cliente?: SupabaseClient
+): Promise<GuardadoDeContacto> {
+  const numero = normalizarNumeroDeAnfitrion(valor);
+
+  if (!PATRON_WHATSAPP.test(numero)) return { estado: "invalido" };
+
+  try {
+    const supabase = cliente ?? (await crearClienteServidor());
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { estado: "sin-sesion" };
+
+    const { data, error } = await supabase
+      .from(TABLA_CONTACTO)
+      .upsert({ anfitrion_id: user.id, whatsapp: numero }, { onConflict: "anfitrion_id" })
+      .select("whatsapp")
+      .maybeSingle();
+
+    if (error) {
+      if (esTablaAusente(error)) return { estado: "sin-tabla" };
+      console.error(
+        "Error guardando el contacto privado del anfitrión:",
+        error.code,
+        error.message
+      );
+      return { estado: "error" };
+    }
+
+    if (!data?.whatsapp) {
+      console.error("El guardado del contacto no devolvió la fila escrita.");
+      return { estado: "error" };
+    }
+
+    return { estado: "ok", whatsapp: data.whatsapp };
+  } catch (error) {
+    console.error("Fallo de conexión guardando el contacto privado:", error);
+    return { estado: "error" };
+  }
+}
