@@ -44,6 +44,24 @@ const ACCION_MAESTRO = "app/actions/maestro.ts";
 const TARJETA = "components/ContactoAnfitrionPrivado.tsx";
 const PANEL = "components/PanelMaestro.tsx";
 const FORMULARIO = "components/FormularioEditarPension.tsx";
+const CORREGIR = "components/CorregirWhatsappAnfitrion.tsx";
+const CONTACTO_DEL_ANUNCIO = "lib/contacto-del-anuncio.ts";
+
+/**
+ * El cuerpo de una acción concreta dentro de un archivo con varias.
+ *
+ * Hace falta desde la tarea #80: `app/actions/maestro.ts` ahora contiene una acción
+ * que **sí** lee el número —`corregirWhatsappDelAnfitrion`, cuyo único trabajo es
+ * ese— y otra cuyo defecto es no leerlo nunca. Comprobar «el archivo no menciona el
+ * campo» dejaría de significar lo que importa: la garantía es sobre **la acción que
+ * guarda el anuncio**, no sobre el archivo.
+ */
+const bloqueDe = (codigo: string, funcion: string): string => {
+  const desde = codigo.indexOf(`export async function ${funcion}`);
+  assert.ok(desde !== -1, `no se encontró la acción ${funcion}: ¿se renombró?`);
+  const siguiente = codigo.indexOf("export async function ", desde + 1);
+  return codigo.slice(desde, siguiente === -1 ? undefined : siguiente);
+};
 
 describe("el maestro ve el WhatsApp del anfitrión sin poder pisarlo", () => {
   it("la ruta del maestro no pide el campo editable", () => {
@@ -85,16 +103,19 @@ describe("el maestro ve el WhatsApp del anfitrión sin poder pisarlo", () => {
     );
   });
 
-  it("la acción del maestro no lee el número del formulario", () => {
+  it("la acción que guarda el anuncio sigue sin leer el número", () => {
     // La segunda mitad de la garantía, y la que de verdad impide la pérdida: aunque
     // el campo se pintara por error, si el servidor no lo lee, no hay nada que
     // sobrescribir. `CAMPO_WHATSAPP` es «whatsappPrivado»; se comprueban las dos
     // formas para no depender de cuál se use.
-    const accion = sinComentarios(leer(ACCION_MAESTRO));
+    //
+    // Se mira **solo esta acción**, y no el archivo entero, desde la #80: esa
+    // garantía es del guardado del anuncio, no de todo `maestro.ts`.
+    const accion = bloqueDe(sinComentarios(leer(ACCION_MAESTRO)), "actualizarPensionMaestro");
     assert.doesNotMatch(
       accion,
       /CAMPO_WHATSAPP|whatsappPrivado/,
-      "la acción del maestro lee el WhatsApp del formulario: el maestro guardaría el número del anfitrión como vacío"
+      "la acción que guarda el anuncio lee el WhatsApp del formulario: guardaría el número del anfitrión como vacío"
     );
   });
 
@@ -171,6 +192,137 @@ describe("el maestro ve el WhatsApp del anfitrión sin poder pisarlo", () => {
       formulario,
       /contactoDelAnfitrion\s*&&/,
       "el editor pinta la tarjeta sin comprobar que la ruta se la haya entregado"
+    );
+  });
+
+  /**
+   * A partir de aquí, la corrección del número (tarea #80).
+   *
+   * Lo que se protege es la diferencia entre **corregir y falsificar**: que el
+   * maestro pueda arreglar el número del anfitrión de un anuncio, y no pueda
+   * escribirle un número a cualquier anfitrión eligiéndolo desde el formulario.
+   */
+  it("la corrección resuelve el destinatario desde el anuncio, en su propio módulo", () => {
+    /*
+     * El destinatario se resuelve en `lib/contacto-del-anuncio.ts`, no en la acción,
+     * porque la superficie del maestro tiene prohibido nombrar al propietario y esa
+     * prohibición la vigila otra prueba (`panel-maestro.prueba.ts`). Aquí se
+     * comprueba lo que ese módulo sí tiene que hacer: buscar el propietario del
+     * anuncio y escribirle **a ese**, no a otro.
+     */
+    const modulo = sinComentarios(leer(CONTACTO_DEL_ANUNCIO));
+
+    assert.match(
+      modulo,
+      /\.from\("pensiones"\)[\s\S]{0,120}?anfitrion_id/,
+      "la corrección no busca el propietario del anuncio: ¿de dónde saca a quién escribirle?"
+    );
+    assert.match(
+      modulo,
+      /corregirContactoDeOtroAnfitrion\(\s*data\.anfitrion_id/,
+      "la corrección no pasa a la función que escribe el propietario que acaba de resolver"
+    );
+  });
+
+  it("la corrección del panel delega, y no recibe el destinatario por ningún lado", () => {
+    // Lo que se protege es la forma de la llamada: la acción entrega **el anuncio** y
+    // nada más. Si aquí apareciera un id de propietario, vendría de un formulario.
+    const accion = bloqueDe(sinComentarios(leer(ACCION_MAESTRO)), "corregirWhatsappDelAnfitrion");
+
+    assert.match(
+      accion,
+      /corregirWhatsappDelAnuncio\(\s*pensionId,\s*valor,\s*guardia\.supabase\s*\)/,
+      "la corrección no entrega el anuncio al módulo que resuelve el destinatario"
+    );
+    assert.doesNotMatch(
+      accion,
+      /anfitrion_id/,
+      "la acción del maestro nombra al propietario: administra por `id`, y aquí no tiene nada que hacer con dueños"
+    );
+  });
+
+  it("un número mal formado se rechaza sin consultar la base", () => {
+    // La restricción de la tabla respondería `23514` sin decirle a nadie qué escribir.
+    // El orden importa: validar primero, preguntar después.
+    const modulo = sinComentarios(leer(CONTACTO_DEL_ANUNCIO));
+
+    const validacion = modulo.indexOf("numeroDeAnfitrionValido(");
+    const consulta = modulo.indexOf('.from("pensiones")');
+
+    assert.ok(validacion !== -1, "la corrección no valida el número antes de escribir");
+    assert.ok(
+      validacion < consulta,
+      "la corrección consulta la tabla antes de validar el número: un valor inválido llegaría a la base"
+    );
+  });
+
+  it("la corrección exige el perfil maestro antes de tocar nada", () => {
+    // Igual que las otras cuatro escrituras del panel. La RLS también lo exige, pero
+    // una acción que no pregunta por el rol deja el permiso delegado por completo en
+    // la base, y esto escribe el teléfono de otra persona.
+    const accion = bloqueDe(sinComentarios(leer(ACCION_MAESTRO)), "corregirWhatsappDelAnfitrion");
+
+    const guardia = accion.indexOf("exigirMaestro()");
+    const escritura = accion.indexOf("corregirWhatsappDelAnuncio(");
+
+    assert.ok(guardia !== -1, "la corrección no comprueba que quien la envía sea maestro");
+    assert.ok(
+      guardia < escritura,
+      "la corrección escribe antes de comprobar el perfil: la guardia tiene que ir primero"
+    );
+  });
+
+  it("el formulario de corrección manda al anuncio, nunca al anfitrión", () => {
+    // Si aquí apareciera un campo con el id del anfitrión, cualquiera con el perfil
+    // maestro podría reescribirle el número a quien eligiera: la RLS lo aceptaría,
+    // porque al maestro le concede cualquier fila.
+    const componente = sinComentarios(leer(CORREGIR));
+
+    assert.match(
+      componente,
+      /name="pensionId"/,
+      "el formulario de corrección no manda el anuncio que se está corrigiendo"
+    );
+    assert.doesNotMatch(
+      componente,
+      /anfitrion_id|anfitrionId/,
+      "el formulario de corrección manda el destinatario: el maestro podría escribirle el número a cualquier anfitrión"
+    );
+  });
+
+  it("la corrección llega precargada con el número vigente", () => {
+    // El defecto seguro de esta acción es el contrario que el del guardado: aquí el
+    // campo **no** puede llegar vacío, porque guardar lo sustituiría por nada.
+    const componente = sinComentarios(leer(CORREGIR));
+    assert.match(
+      componente,
+      /defaultValue=\{whatsappActual\}/,
+      "el campo de corrección no llega con el número actual: guardar sin escribir podría dejarlo vacío"
+    );
+  });
+
+  it("la tarjeta no sabe qué le cuelga cada pantalla", () => {
+    // La tarjeta recibe un nodo hecho y no monta nada por su cuenta. Si conociera al
+    // componente de edición, tendría un campo dentro —justo lo que la hace segura
+    // dentro del `<form>` de la pantalla de edición—, y la primera prueba de este
+    // archivo saltaría.
+    const tarjeta = sinComentarios(leer(TARJETA));
+    assert.doesNotMatch(
+      tarjeta,
+      /CorregirWhatsappAnfitrion/,
+      "la tarjeta acopló el bloque de corrección en vez de recibirlo hecho"
+    );
+  });
+
+  it("solo se ofrece corregir cuando hay un número que corregir", () => {
+    // El caso que describió el propietario es «el anfitrión me dice que cambió de
+    // número», y eso exige que antes hubiera uno. Sin esta condición, el panel
+    // ofrecería inventarle un teléfono a un anfitrión que no ha dejado ninguno.
+    const panel = sinComentarios(leer(PANEL));
+    assert.match(
+      panel,
+      /contacto\.estado === "ok"[\s\S]{0,200}?CorregirWhatsappAnfitrion/,
+      "el panel ofrece corregir el número aunque no haya ninguno registrado"
     );
   });
 });

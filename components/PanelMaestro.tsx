@@ -15,6 +15,7 @@ import { formatearFechaVerificacion } from "@/lib/sello";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
 import type { ContactoDePanel } from "@/lib/contacto-panel";
 import ContactoAnfitrionPrivado from "@/components/ContactoAnfitrionPrivado";
+import CorregirWhatsappAnfitrion from "@/components/CorregirWhatsappAnfitrion";
 import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
 
 /**
@@ -235,7 +236,29 @@ function AccionesMaestro({
 
       <MensajeAccion estado={estado} />
 
-      <ContactoAnfitrionPrivado contacto={contacto} titulo={pension.titulo} />
+      {/*
+        La corrección del número solo se ofrece cuando hay un número que corregir
+        (tarea #80). El caso que el propietario describió es «el anfitrión me dice
+        que cambió de número», y eso exige que antes hubiera uno. Si el anfitrión
+        no ha dejado ninguno, el sitio para ponerlo es su propio formulario, no el
+        panel del maestro: aquí nadie tendría que estar inventando un teléfono.
+
+        Solo se pasa `pensionId`. El destinatario del cambio —el anfitrión— lo
+        resuelve la acción en el servidor a partir del anuncio, y por eso no hay
+        ningún campo que diga a quién se le escribe.
+      */}
+      <ContactoAnfitrionPrivado
+        contacto={contacto}
+        titulo={pension.titulo}
+        accion={
+          contacto.estado === "ok" ? (
+            <CorregirWhatsappAnfitrion
+              pensionId={pension.id}
+              whatsappActual={contacto.whatsapp}
+            />
+          ) : null
+        }
+      />
 
       <ControlSello pension={pension} />
 

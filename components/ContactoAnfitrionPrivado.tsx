@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { ContactoDePanel } from "@/lib/contacto-panel";
 import { WhatsAppIcon } from "@/components/CardPension";
 
@@ -50,6 +51,7 @@ export default function ContactoAnfitrionPrivado({
   contacto,
   titulo,
   className = "mt-4",
+  accion,
 }: {
   contacto: ContactoDePanel;
   /** Título del anuncio. Solo se usa para el nombre accesible del enlace. */
@@ -64,6 +66,15 @@ export default function ContactoAnfitrionPrivado({
    * haga su trabajo.
    */
   className?: string;
+  /**
+   * Lo que cada pantalla quiera colgar de la tarjeta, al final. Opcional.
+   *
+   * Es un nodo y no una bandera a propósito: si esta tarjeta supiera **qué**
+   * montar, tendría campos, y su valor entero está en no tenerlos. Así el panel
+   * le pasa el bloque de corrección y la pantalla de edición no le pasa nada,
+   * sin que la tarjeta tenga que decidir quién puede qué.
+   */
+  accion?: ReactNode;
 }) {
   if (contacto.estado === "sin-tabla") return null;
 
@@ -95,8 +106,8 @@ export default function ContactoAnfitrionPrivado({
       </p>
       <p className="mt-1 text-xs leading-relaxed text-neutro-500">
         Solo lo ve el equipo de Nido: no aparece en el anuncio, ni en la ficha, ni en el mensaje que
-        recibe el estudiante. El número lo registra el anfitrión desde su propia cuenta, así que
-        aquí se ve pero no se edita.
+        recibe el estudiante. El número lo registra el anfitrión desde su propia cuenta, y el equipo
+        de Nido puede corregirlo si él avisa de un cambio.
       </p>
 
       <a
@@ -109,6 +120,18 @@ export default function ContactoAnfitrionPrivado({
         <WhatsAppIcon className="h-5 w-5" />
         Escribir al anfitrión
       </a>
+
+      {/*
+        Aquí van las acciones que cada pantalla quiera colgar de la tarjeta. Hoy el
+        panel del maestro le pasa el bloque para corregir el número (tarea #80), y
+        la pantalla de edición no le pasa nada.
+
+        Se recibe hecho, como un nodo, y no como una bandera del tipo «se puede
+        editar»: si esta tarjeta tuviera que saber qué campos montar, dejaría de
+        ser la que **no tiene campos** —y hay una prueba que lo vigila—, que es
+        justo lo que la hace segura dentro del `<form>` de la pantalla de edición.
+      */}
+      {accion}
     </div>
   );
 }

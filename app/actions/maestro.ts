@@ -7,6 +7,8 @@ import { revalidarCatalogo } from "@/lib/revalidar-catalogo";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { esMaestroConCliente } from "@/lib/maestro";
 import { confirmacionDeBorradoValida } from "@/lib/borrado";
+import { CAMPO_WHATSAPP } from "@/lib/formulario-pension";
+import { corregirWhatsappDelAnuncio } from "@/lib/contacto-del-anuncio";
 import {
   leerCamposDePension,
   mensajeDeErrorDeBase,
@@ -554,4 +556,120 @@ export async function borrarPensionMaestro(
    * se muestra en el panel, que es donde sobrevive a la recarga.
    */
   redirect(`/maestro?borrada=${encodeURIComponent(direccion)}`);
+}
+
+/**
+ * Server Action: corrige el WhatsApp privado del anfitrión (tarea #80).
+ *
+ * PARA QUÉ SIRVE, EN UNA FRASE
+ * ---------------------------
+ * Para cuando el anfitrión llama al equipo y dice «cambié de número». Hasta ahora
+ * la única forma de actualizarlo era que él volviera a entrar a su formulario; si
+ * había perdido el acceso o simplemente no lo hacía, el equipo se quedaba con un
+ * número muerto y sin manera de arreglarlo.
+ *
+ * LA DECISIÓN QUE SOSTIENE TODO ESTO: EL DESTINATARIO NO SE RECIBE
+ * --------------------------------------------------------------
+ * El formulario manda **qué anuncio** se está corrigiendo (`pensionId`), y **no hay
+ * ningún campo del formulario que diga a quién se le escribe el número.** El
+ * destinatario lo resuelve `lib/contacto-del-anuncio.ts` a partir de ese anuncio.
+ *
+ * Es la diferencia entre corregir y falsificar. Si el id del propietario viajara en
+ * el formulario, cualquiera con el perfil maestro podría mandar el id de un
+ * anfitrión cualquiera —o el suyo— y escribirle el número a quien quisiera: la RLS
+ * lo aceptaría, porque la política concede al maestro cualquier fila. El daño no
+ * sería leer un número ajeno, sería **cambiárselo a alguien**, que es peor porque
+ * el anfitrión no se enteraría hasta que un estudiante no lo encontrara.
+ *
+ * No es una precaución teórica: es la forma exacta en que este proyecto ya cerró
+ * dos agujeros (el predicado de propiedad de la #16 y la identidad de sesión de
+ * `guardarContactoDelAnfitrion`).
+ *
+ * ESTE ARCHIVO NO NOMBRA A LOS PROPIETARIOS, Y HAY UNA GUARDA QUE LO VIGILA
+ * -----------------------------------------------------------------------
+ * La consulta que traduce anuncio a propietario **no está aquí** y no debe estarlo:
+ * `pruebas/panel-maestro.prueba.ts` exige que la superficie del maestro no nombre
+ * jamás la columna del propietario, porque el maestro administra por `id` y copiar
+ * el predicado del anfitrión dejaría dos autorizaciones que pueden desincronizarse.
+ * La primera versión de esta acción hacía la consulta aquí y la guarda la paró, con
+ * razón. Por eso esto llama a una función cuyo nombre dice lo que hace —«corrige el
+ * WhatsApp del anuncio»— en vez de hablar de dueños.
+ *
+ * EL DEFECTO DE ESTA ACCIÓN NO ES EL MISMO QUE EL DE `actualizarPensionMaestro`
+ * ---------------------------------------------------------------------------
+ * Aquella **no lee** el número a propósito, porque un campo vacío que viaja de
+ * vuelta borra el del anfitrión sin que nadie lo pida. Esta hace justo lo
+ * contrario y **solo** lee ese campo: es su único trabajo. Son dos acciones
+ * distintas precisamente para que cada una pueda tener un defecto seguro
+ * diferente, en vez de una sola acción que a veces sí y a veces no.
+ *
+ * Un valor inválido se rechaza **antes** de consultar la base: la restricción de
+ * la tabla respondería `23514` sin decirle a nadie qué escribir. Y el número no se
+ * registra en ningún `console.error`, igual que en el resto del módulo.
+ */
+export async function corregirWhatsappDelAnfitrion(
+  _estadoPrevio: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  if (!esSupabaseConfigurado()) {
+    return {
+      ok: false,
+      mensaje:
+        "El modo dinámico no está activo: agrega las credenciales de Supabase en .env.local (ver docs/integracion-supabase.md).",
+    };
+  }
+
+  const pensionId = String(formData.get("pensionId") ?? "").trim();
+  const valor = String(formData.get(CAMPO_WHATSAPP) ?? "").trim();
+
+  if (!pensionId) {
+    return {
+      ok: false,
+      mensaje: "No pudimos identificar la publicación. Recarga el panel e inténtalo de nuevo.",
+    };
+  }
+
+  const guardia = await exigirMaestro();
+  if (!guardia.ok) return guardia.estado;
+
+  const resultado = await corregirWhatsappDelAnuncio(pensionId, valor, guardia.supabase);
+
+  if (resultado.estado === "invalido") {
+    return {
+      ok: false,
+      mensaje:
+        "Ese número no tiene el formato: 10 dígitos que empiezan por 3, o fijo con indicativo (605…). No se cambió nada.",
+    };
+  }
+
+  if (resultado.estado === "sin-destinatario") {
+    return {
+      ok: false,
+      mensaje: "No pudimos identificar al anfitrión de esa publicación, así que no se cambió nada.",
+    };
+  }
+
+  if (resultado.estado === "sin-tabla") {
+    return {
+      ok: false,
+      mensaje:
+        "El contacto privado todavía no está disponible en esta instalación, así que no se guardó.",
+    };
+  }
+
+  if (resultado.estado === "error") {
+    return {
+      ok: false,
+      mensaje:
+        "No pudimos guardar el número. Vuelve a intentarlo en unos segundos; si sigue fallando, no se ha cambiado nada.",
+    };
+  }
+
+  revalidarPanelMaestro();
+
+  return {
+    ok: true,
+    mensaje:
+      "Número actualizado. El botón «Escribir al anfitrión» ya escribe al número nuevo.",
+  };
 }
