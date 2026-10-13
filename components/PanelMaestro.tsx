@@ -56,6 +56,17 @@ export default function PanelMaestro({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display text-base font-bold text-neutro-800">{pension.titulo}</h3>
+          {/* El código visible (tarea #88), entre el título y la línea de barrio: es
+              el asa con la que se nombra un anuncio por teléfono. Se imprime **tal
+              como lo entregó la base**, sin rellenarlo ni recalcularlo, y mientras no
+              haya ninguno —la migración de la columna la aplica el propietario a
+              mano— la línea simplemente no se dibuja: mejor nada que un código
+              inventado, que podría repetirse o cambiar de un listado a otro. */}
+          {pension.codigo_visible ? (
+            <p className="font-display text-sm font-bold tabular-nums text-neutro-800">
+              {pension.codigo_visible}
+            </p>
+          ) : null}
           <p className="mt-0.5 text-xs text-neutro-500">
             {pension.barrio || "Santa Marta"} ·{" "}
             <span className="break-all">/pensiones/{pension.slug}</span>
