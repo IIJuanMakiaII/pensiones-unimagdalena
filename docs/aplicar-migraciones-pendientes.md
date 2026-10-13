@@ -4,7 +4,10 @@
 > `oleada-12`, `oleada-13` y `oleada-15`, y las cuatro están **verificadas** contra
 > el proyecto Supabase `ayznnqkacpdvvufclhon` con la clave anónima del sitio.
 > **`oleada-14` queda descartada**: no hay retirada permanente que aplicar.
-> **No queda ninguna migración pendiente de aplicar.**
+> **Queda UNA migración pendiente de aplicar: `oleada-16`**, el código visible de
+> pensión (`NID-0001`, tarea #87). Es aditiva y aún no está aplicada; su nota de
+> despliegue está en [`oleada-16-codigo-visible-pension.md`](oleada-16-codigo-visible-pension.md).
+> Lo que explican las secciones siguientes vale para las que ya entraron.
 > Esta hoja sigue existiendo porque las migraciones **no se pueden aplicar desde
 > esta cuenta** (ver §5). Las aplica el propietario, como se ha hecho siempre.
 
@@ -20,6 +23,8 @@
 | 4 | `supabase/oleada-14-retirar-anuncio-de-prueba.sql` | #58 | `update … set activa = false where slug = 'residencia-makia'`. | **descartada** — la tarea #58 fue **cancelada** por el usuario; la demostración es intencional |
 | 5 | `supabase/oleada-15-contacto-anfitrion-privado.sql` | #76, #77, #78 | Crea `public.contacto_anfitrion` (una fila por anfitrión) con RLS de **dos lectores**: el propio anfitrión y el rol maestro. `anon` queda sin ningún `grant`. **No toca `pensiones`**: las únicas menciones a esa tabla están dentro de comentarios. | **aplicada — medida** |
 
+| 6 | `supabase/oleada-16-codigo-visible-pension.sql` | #87 | Añade `pensiones.codigo_visible` (`NID-0001`), lo rellena por orden de creación, lo sella en el alta con un disparador, reafirma los privilegios y deja el `grant select` en 20 columnas. No toca ninguna función existente. | **pendiente de aplicar** |
+
 Tamaños y sellos de los archivos, medidos:
 
 ```
@@ -28,6 +33,7 @@ oleada-12-contactos-respaldo.sql                  10081 bytes  sha 5EE8593F8835
 oleada-13-fecha-verificacion.sql                  18789 bytes  sha 68C180C156B7
 oleada-14-retirar-anuncio-de-prueba.sql           10475 bytes  sha CE02E953E244  (descartada)
 oleada-15-contacto-anfitrion-privado.sql          29332 bytes  sha 7C0C44B0ECAC  (aplicada · 521 líneas)
+oleada-16-codigo-visible-pension.sql              25407 bytes  sha 692B8A645DBA  (pendiente · 471 líneas)
 ```
 
 Antes de esta pasada, las sondas daban: `contactos_respaldo` → `404 PGRST205`
@@ -138,6 +144,23 @@ credenciales es que la ruta no pide el campo editable y que la acción del maest
 no lee ese dato del formulario; eso lo fija
 `pruebas/contacto-maestro-solo-lectura.prueba.ts`.
 
+### 3.6 · oleada-16 — la columna del código visible, y el permiso que la hace legible
+
+Es la misma familia de sonda que §3.3 y la misma trampa: `oleada-16` vuelve a hacer
+`revoke select` y a re-otorgar **columna por columna**. Si el `grant` se dejara fuera
+`codigo_visible`, no aparecería ningún error al leer una columna suelta: aparecería un
+`42501` **solo al pedir el catálogo**, que es la consulta que pide las 20 columnas.
+
+| Sonda | Antes de aplicar (medido el 2026-10-12) | Después de aplicar (esperado) |
+|---|---|---|
+| `pensiones?select=id,codigo_visible&limit=1` | `400` `42703` «column pensiones.codigo_visible does not exist» | `200` |
+| La proyección completa de la aplicación, ya con **20** columnas y `&activa=eq.true` | `400` `42703` (la columna todavía no existe) | `200`, con `"codigo_visible":"NID-0001"` dentro |
+
+La consulta que decide —la que hay que mirar **antes** de desplegar el código que lee el
+campo— es la sección 7 de la migración, y en particular **E.6** (`t | t`): la lectura
+concedida a `anon` y a `authenticated`. El detalle está en
+[`oleada-16-codigo-visible-pension.md`](oleada-16-codigo-visible-pension.md).
+
 ## 4. La demostración
 
 `residencia-makia` | uuid `f555e5b3-6629-402a-ae37-32c366c3f022` | título
@@ -148,6 +171,11 @@ no lee ese dato del formulario; eso lo fija
 **Es el único anuncio público.** Ocultarla deja el catálogo en cero, y por eso el
 estado sin inventario no es un caso de borde. No se retira: el usuario la oculta y
 la reactiva con su rol de maestro cuando quiere. No hay nada que revertir aquí.
+
+Con `oleada-16` aplicada, a este anuncio le corresponde el **`NID-0001`**: es el más
+antiguo de los que se ven sin sesión (`creada_en = 2026-09-18T01:47:46.707833+00:00`) y el
+relleno numera por orden de creación. La consulta E.3 de la migración lo confirma sobre la
+base real, retiradas incluidas —que la clave anónima no ve.
 
 ## 5. Por qué no las aplico desde aquí
 

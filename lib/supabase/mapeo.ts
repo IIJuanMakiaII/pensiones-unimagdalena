@@ -17,6 +17,20 @@ export interface PensionFila {
    * producir enlaces rotos (`/pensiones/undefined`).
    */
   slug?: string | null;
+  /**
+   * Código visible y dictable del anuncio (Oleada 16, tarea #87): `NID-0001`.
+   * Lo asigna la base (disparador `antes_de_asignar_codigo` en el alta y el
+   * relleno por orden de creación para lo que ya existía), nunca el formulario.
+   *
+   * Opcional por el mismo motivo que `verificado_en`: contra una base a la que
+   * todavía no se le aplicó `oleada-16`, el campo llega ausente. Para la COLUMNA
+   * eso no basta —la proyección de abajo la pide y una columna que falte hace
+   * fallar la consulta con `42703`—, y por eso la migración se aplica ANTES de
+   * desplegar este cambio. Aquí la opcionalidad cubre el VALOR: `null` es «esta
+   * base todavía no tiene códigos», y se conserva como `null` en lugar de
+   * fabricar uno con el `id` o el `slug`.
+   */
+  codigo_visible?: string | null;
   anfitrion_id: string;
   titulo: string;
   descripcion: string | null;
@@ -89,6 +103,7 @@ export interface HabitacionFila {
 export const COLUMNAS_PENSION = [
   "id",
   "slug",
+  "codigo_visible",
   "anfitrion_id",
   "titulo",
   "descripcion",
@@ -144,6 +159,12 @@ export function filaAPension(fila: PensionFila, habitaciones: Habitacion[]): Pen
     // `id`: un enlace con UUID sigue funcionando, y siempre es mejor que un
     // enlace con «undefined».
     slug: fila.slug?.trim() ? fila.slug : fila.id,
+    // El código visible viaja TAL CUAL lo escribió la base: la interfaz no lo
+    // reformatea, no le cambia las mayúsculas y **no lo deduce** de otro campo.
+    // Un identificador fabricado aquí —con el `id`, con el `slug`, con la
+    // posición en la lista— podría repetirse o moverse, y entonces dejaría de
+    // identificar; `null` es la verdad cuando la base todavía no reparte códigos.
+    codigo_visible: fila.codigo_visible ?? null,
     anfitrion_id: fila.anfitrion_id,
     titulo: fila.titulo,
     descripcion: fila.descripcion ?? "",
