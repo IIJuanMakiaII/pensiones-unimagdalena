@@ -14,7 +14,7 @@
 - **Operador:** Juan Sebastián Otero Cerchar, persona natural que actúa bajo la
   denominación comercial **«Nido»**.
 - **Identificación:** C.C. 1004364753.
-- **Domicilio:** Santa Marta / Ciénaga, Magdalena, Colombia.
+- **Domicilio:** Santa Marta - Magdalena - Colombia.
 - **Correo electrónico de contacto y soporte:** oterojuan15@gmail.com.
 
 ---

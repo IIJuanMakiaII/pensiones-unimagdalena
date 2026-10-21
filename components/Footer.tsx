@@ -107,7 +107,7 @@ export default function Footer() {
             veía. La variable se decide al compilar, así que esto es correcto sin
             depender de qué haya configurado en el despliegue. */}
         <p className="mt-4 text-xs text-neutro-600">
-          © {new Date().getFullYear()} Nido · Santa Marta, Magdalena, Colombia.
+          © {new Date().getFullYear()} Nido · Santa Marta - Magdalena - Colombia.
           {DEMO_HABILITADA && " Datos de demostración para el proyecto académico."}
         </p>
       </div>

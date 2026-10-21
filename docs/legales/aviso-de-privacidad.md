@@ -9,7 +9,7 @@
 
 **Juan Sebastián Otero Cerchar**, persona natural que actúa bajo la denominación
 comercial **«Nido»**, identificado con **C.C. 1004364753**, con domicilio en **Santa
-Marta / Ciénaga, Magdalena (Colombia)** y correo para asuntos de datos personales
+Marta - Magdalena - Colombia** y correo para asuntos de datos personales
 **oterojuan15@gmail.com**, es el responsable del tratamiento de los datos que se recogen
 en este sitio.
 
