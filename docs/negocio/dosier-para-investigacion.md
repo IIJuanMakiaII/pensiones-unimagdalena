@@ -36,7 +36,7 @@ pie del campus**. Esas tres variables son el corazón del producto.
 - Para el **estudiante**: filtrar por género, alimentación y distancia real al campus,
   ver el precio exacto de la habitación que se puede reservar hoy, y contactar por
   WhatsApp en un toque. Sin registro para buscar.
-- Para el **anfitrión**: publicar gratis, marcar habitaciones como ocupadas o libres
+- Para el **anfitrión**: publicar gratis, marcar habitaciones como reservadas o libres
   cuando cambien, y recibir estudiantes ya filtrados en su propio WhatsApp.
 
 **Estado actual (resumen brutal):** producto funcional, **1 anuncio real**,
@@ -61,7 +61,7 @@ financiero parte de ahí.
   / masculino), precio propio y si incluye alimentación. El precio «desde» que se
   muestra es el de la habitación **libre** más barata; el sistema no puede mostrar un
   precio de algo que no se puede reservar.
-- **El anfitrión gestiona su disponibilidad** (marcar ocupada/libre) y puede
+- **El anfitrión gestiona su disponibilidad** (marcar reservada/libre) y puede
   **retirar o republicar** su anuncio.
 - **Puede editar** un anuncio ya publicado: nombre, descripción, fotos, ubicación,
   servicios, normas y habitaciones.

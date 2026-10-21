@@ -222,9 +222,12 @@ Al publicar, el propietario declara y garantiza que:
    mantiene disponible para el estudiante que reservó y al precio publicado.
 5. **Las fotos son suyas o tiene permiso para usarlas.** No se suben fotos tomadas de
    internet ni de otros anuncios.
-6. **Mantiene la disponibilidad al día.** Si una habitación se ocupa, la marca como
-   ocupada. Un anuncio que ofrece algo que ya no está disponible perjudica a quien lo
-   busca y al propietario que sí tiene cupo.
+6. **Mantiene la disponibilidad al día.** En cuanto una habitación deja de estar libre,
+   la marca como **reservada** en su panel. Cubre los dos casos: la habitación reservada
+   con el pago ya confirmado y la habitación que ya ocupa un huésped. Es el mismo botón
+   para ambos, y es el que retira la habitación de la oferta. Un anuncio que ofrece algo
+   que ya no está disponible perjudica a quien lo busca y al propietario que sí tiene
+   cupo.
 7. **Cumple la ley** aplicable al arrendamiento, incluida la normativa de convivencia
    y, si corresponde, la de propiedad horizontal.
 
