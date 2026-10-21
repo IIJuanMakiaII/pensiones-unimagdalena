@@ -7,6 +7,7 @@ import { obtenerPensionPorIdConSesion } from "@/lib/datos";
 import { esMaestroConCliente } from "@/lib/maestro";
 import { leerContactoDelAnfitrion } from "@/lib/contacto-anfitrion";
 import { resolverContactoDePanelDesdeLectura } from "@/lib/contacto-panel";
+import { leerReservas, reservasDeLaPension } from "@/lib/reservas";
 import { actualizarPensionMaestro } from "@/app/actions/maestro";
 import FormularioEditarPension from "@/components/FormularioEditarPension";
 import Footer from "@/components/Footer";
@@ -100,6 +101,17 @@ export default async function MaestroEditarPensionPage({ params }: Props) {
     await leerContactoDelAnfitrion(pension.anfitrion_id)
   );
 
+  /*
+   * Las reservas vigentes de este anuncio (tarea #119), por la función de la
+   * oleada 18. Se piden también en esta ruta porque el editor es el mismo: si aquí
+   * faltaran, el maestro vería la casilla «Disponible ahora» activa en una
+   * habitación reservada y el guardado fallaría con el mismo `23514`.
+   *
+   * La función ya resuelve el permiso —el maestro ve todas las reservas— así que
+   * aquí no se añade ningún predicado nuevo.
+   */
+  const { reservas } = await leerReservas();
+
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
@@ -121,6 +133,10 @@ export default async function MaestroEditarPensionPage({ params }: Props) {
             </>
           }
           contactoDelAnfitrion={contactoDelAnfitrion}
+          reservas={reservasDeLaPension(
+            reservas,
+            pension.habitaciones.map((habitacion) => habitacion.id)
+          )}
         />
       </main>
       <Footer />

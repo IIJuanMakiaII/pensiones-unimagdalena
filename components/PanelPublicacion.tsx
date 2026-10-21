@@ -102,11 +102,17 @@ export default function PanelPublicacion({ pension }: Props) {
   );
 }
 
-/** Una habitación con su acción de disponibilidad y su propio estado de envío. */
+/**
+ * Una habitación con su acción de disponibilidad y su propio estado de envío.
+ *
+ * La acción que ofrece esta fila es una sola: marcar como reservada la que está
+ * libre. La contraria —«Marcar libre» sobre una reservada— desapareció con la
+ * tarea #119 porque la base la rechaza por diseño; el porqué está escrito en el
+ * bloque de abajo.
+ */
 function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
   const [estado, accion] = useFormState(cambiarDisponibilidadHabitacion, ESTADO_INICIAL);
   const descripcion = `${etiquetaTipo(habitacion.tipo)} · ${etiquetaGenero(habitacion.genero)}`;
-  const siguienteDisponible = !habitacion.disponible;
 
   return (
     <li className="rounded-xl border border-neutro-200 p-3">
@@ -130,19 +136,41 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
           </p>
         </div>
 
-        <form action={accion}>
-          <input type="hidden" name="habitacionId" value={habitacion.id} />
-          <input type="hidden" name="disponible" value={siguienteDisponible ? "1" : "0"} />
-          <BotonAccion
-            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar reservada"}
-            ariaLabel={
-              siguienteDisponible
-                ? `Marcar como libre la habitación ${descripcion}`
-                : `Marcar como reservada la habitación ${descripcion}`
-            }
-            tono={siguienteDisponible ? "confirmar" : "neutral"}
-          />
-        </form>
+        {/*
+          LA HABITACIÓN RESERVADA NO LLEVA FORMULARIO (tarea #119)
+
+          Esta acción escribe `disponible` por un `update` directo, y desde la
+          oleada 17 eso ya no describe el estado de una habitación: el estado
+          «reservada» es una marca con fecha y autor que solo escriben las
+          funciones de la base. Si el anfitrión pulsaba «Marcar libre» sobre una
+          reservada, la restricción `habitaciones_reservada_no_se_ofrece`
+          (`reservada_en is null or disponible = false`) lo rechazaba —correcto—
+          pero el aviso hablaba de longitudes del título y la descripción.
+
+          Ofrecer un botón que la base va a rechazar siempre es peor que no
+          ofrecerlo. Aquí no se le da ningún poder nuevo al anfitrión: se le dice
+          quién gestiona la reserva. Que pueda liberarla o no es una decisión de
+          producto de Juan, no de esta pantalla.
+
+          El caso **no reservado** queda exactamente como estaba: mismo formulario,
+          mismos campos ocultos, mismo botón.
+        */}
+        {habitacion.disponible ? (
+          <form action={accion}>
+            <input type="hidden" name="habitacionId" value={habitacion.id} />
+            <input type="hidden" name="disponible" value="0" />
+            <BotonAccion
+              etiqueta="Marcar reservada"
+              ariaLabel={`Marcar como reservada la habitación ${descripcion}`}
+              tono="neutral"
+            />
+          </form>
+        ) : (
+          <p className="max-w-[16rem] rounded-xl bg-neutro-100 px-3 py-2 text-xs leading-relaxed text-neutro-600">
+            Esta habitación está reservada. Las reservas las gestiona la coordinación de Nido:
+            escríbenos para liberarla.
+          </p>
+        )}
       </div>
 
       <MensajeAccion estado={estado} />

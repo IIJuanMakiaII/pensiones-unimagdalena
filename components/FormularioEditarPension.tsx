@@ -106,6 +106,19 @@ interface Props {
    * noticias sobre un dato privado.
    */
   contactoDelAnfitrion?: ContactoDePanel | null;
+  /**
+   * Las reservas vigentes de este anuncio, con su fecha (tarea #119).
+   *
+   * El editor las necesita para no ofrecer la casilla «Disponible ahora» en una
+   * habitación que la base rechazaría por estar reservada. Se leen en el servidor
+   * por `public.listar_reservas()`: la columna `reservada_en` no tiene `SELECT`
+   * para `authenticated`, y pedirla daría `42501` en toda la lectura.
+   *
+   * Por defecto vacío, por la misma razón que las demás props opcionales de este
+   * formulario: un camino que se olvide de declararla se comporta como antes de la
+   * oleada 17, en vez de inventar reservas.
+   */
+  reservas?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -124,6 +137,7 @@ export default function FormularioEditarPension({
   mostrarWhatsapp = false,
   whatsappActual = null,
   contactoDelAnfitrion = null,
+  reservas = {},
 }: Props) {
   const [estado, accion] = useFormState(accionRecibida ?? actualizarPension, ESTADO_INICIAL);
 
@@ -390,7 +404,11 @@ export default function FormularioEditarPension({
             barata. Marca «Disponible ahora» solo en las que puedas alquilar hoy.
           </p>
 
-          <EditorHabitaciones habitaciones={habitaciones} onChange={setHabitaciones} />
+          <EditorHabitaciones
+            habitaciones={habitaciones}
+            onChange={setHabitaciones}
+            reservadas={reservas}
+          />
 
           <input type="hidden" name="habitaciones" value={JSON.stringify(habitaciones)} />
 

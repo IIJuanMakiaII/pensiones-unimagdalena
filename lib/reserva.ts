@@ -34,3 +34,46 @@ export const ESTADO_RESERVA_INICIAL: EstadoReserva = {
   mensaje: null,
   reservadaEn: null,
 };
+
+/**
+ * Fecha de reserva por identificador de habitación (`habitacion_id → ISO 8601`),
+ * tal como la entrega `public.listar_reservas()` (oleada 18).
+ *
+ * El tipo vive aquí y no en `lib/reservas.ts` a propósito: aquel módulo es de
+ * servidor —habla con Supabase y con las cookies—, y los componentes de cliente
+ * necesitan esta forma para sus props. Un `import type` se borra al compilar, pero
+ * tenerla en el módulo neutro evita que alguien importe el lector desde una
+ * pantalla de cliente y arrastre `next/headers` al navegador.
+ */
+export type ReservasPorHabitacion = Readonly<Record<string, string>>;
+
+/**
+ * El trozo del mapa que le toca a un anuncio concreto.
+ *
+ * No es una optimización: es que cada tarjeta reciba solo lo suyo. Las fechas de
+ * reserva son datos de administración y no tienen por qué viajar al navegador
+ * dentro del componente de un anuncio que no las muestra, aunque hoy las dos
+ * pantallas que las piden sean privadas.
+ *
+ * POR QUÉ ESTÁ AQUÍ Y NO EN `lib/reservas.ts`
+ * ------------------------------------------
+ * Porque es una función pura y tiene que poder probarse sin Supabase. El módulo
+ * `lib/reservas.ts` habla con las cookies (`next/headers`) y arrastrarlo a una
+ * prueba de `node:test` obliga a simular media aplicación. Aquí solo se recorre un
+ * objeto, y este módulo ya era el neutro que las dos orillas importan.
+ *
+ * Lo que **no** hace: inventar una fecha para una habitación que no está en el
+ * mapa. Una habitación sin reserva no aparece en el resultado, y una fila con
+ * forma rara la descarta `leerReservas` antes de llegar hasta aquí.
+ */
+export function reservasDeLaPension(
+  reservas: ReservasPorHabitacion,
+  idsDeHabitaciones: readonly string[]
+): ReservasPorHabitacion {
+  const propias: Record<string, string> = {};
+  for (const id of idsDeHabitaciones) {
+    const fecha = reservas[id];
+    if (fecha) propias[id] = fecha;
+  }
+  return propias;
+}

@@ -44,6 +44,28 @@ interface Props {
   habitaciones: HabitacionForm[];
   onChange: (habitaciones: HabitacionForm[]) => void;
   maximo?: number;
+  /**
+   * Las habitaciones de este anuncio que hoy tienen una reserva vigente, con su
+   * fecha (tarea #119). Llega del servidor, leída por `public.listar_reservas()`.
+   *
+   * POR QUÉ HACE FALTA AQUÍ
+   * -----------------------
+   * La casilla «Disponible ahora» escribe `disponible` por un `update`, y en una
+   * habitación reservada la base lo rechaza: la restricción
+   * `habitaciones_reservada_no_se_ofrece` exige `reservada_en is null or
+   * disponible = false`. Antes, marcarla dejaba al anfitrión con un `23514`
+   * traducido a un aviso sobre longitudes del título, que no tenía nada que ver.
+   *
+   * Sin esta prop el editor no puede distinguir «esta habitación está reservada»
+   * de «esta habitación simplemente no se ofrece», y la segunda sí es una decisión
+   * legítima del anfitrión. Por eso la reserva se dice desde fuera y no se adivina
+   * por el valor de `disponible`.
+   *
+   * Es opcional y su defecto es «ninguna reserva»: un camino que no la pase —el
+   * formulario de alta, por ejemplo, donde ninguna habitación tiene `id` todavía—
+   * se comporta exactamente como antes.
+   */
+  reservadas?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -53,7 +75,12 @@ interface Props {
  * género y alimentación**, y esos datos viven en la habitación, no en la
  * pensión. Sin habitaciones, un anuncio desaparece en cuanto se usa un filtro.
  */
-export default function EditorHabitaciones({ habitaciones, onChange, maximo = 20 }: Props) {
+export default function EditorHabitaciones({
+  habitaciones,
+  onChange,
+  maximo = 20,
+  reservadas = {},
+}: Props) {
   const actualizar = (indice: number, cambios: Partial<HabitacionForm>) => {
     onChange(habitaciones.map((h, i) => (i === indice ? { ...h, ...cambios } : h)));
   };
@@ -175,15 +202,31 @@ export default function EditorHabitaciones({ habitaciones, onChange, maximo = 20
               <span>Incluye alimentación</span>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm text-neutro-700">
-              <input
-                type="checkbox"
-                checked={habitacion.disponible}
-                onChange={(evento) => actualizar(indice, { disponible: evento.target.checked })}
-                className="h-5 w-5 rounded border-neutro-300 text-primary-600 focus:ring-primary-500"
-              />
-              Disponible ahora
-            </label>
+            <div className="min-w-0">
+              <label
+                className={`inline-flex items-center gap-2 text-sm ${
+                  habitacion.id && reservadas[habitacion.id] ? "text-neutro-400" : "text-neutro-700"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={habitacion.disponible}
+                  disabled={Boolean(habitacion.id && reservadas[habitacion.id])}
+                  onChange={(evento) => actualizar(indice, { disponible: evento.target.checked })}
+                  className="h-5 w-5 rounded border-neutro-300 text-primary-600 focus:ring-primary-500 disabled:cursor-not-allowed"
+                />
+                Disponible ahora
+              </label>
+              {/* La reserva la escribe la base con fecha y autor, y deshacerla no es
+                  marcar esta casilla: es una acción del panel, y hoy la hace la
+                  coordinación. Se dice aquí en vez de dejar que el guardado falle. */}
+              {habitacion.id && reservadas[habitacion.id] ? (
+                <p className="mt-1 text-xs leading-relaxed text-neutro-500">
+                  Está reservada: la reserva no se libera desde el editor. Las reservas las gestiona
+                  la coordinación de Nido.
+                </p>
+              ) : null}
+            </div>
 
             {Number(habitacion.precio_mensual_cop) > 0 && (
               <span className="text-sm font-semibold text-accent-700">

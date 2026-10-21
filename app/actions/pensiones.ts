@@ -340,11 +340,16 @@ export async function cambiarDisponibilidadHabitacion(
     .select("id, pension_id");
 
   if (error) {
-    console.error("Error cambiando la disponibilidad de la habitación:", error.message);
-    return {
-      ok: false,
-      mensaje: "No pudimos guardar el cambio. Vuelve a intentarlo en unos segundos.",
-    };
+    console.error("Error cambiando la disponibilidad de la habitación:", error.code, error.message);
+    /*
+     * Tarea #119 · este `update` de `disponible` sobre una habitación reservada
+     * choca con la restricción de la oleada 17 y llega como `23514`. Antes se
+     * respondía «vuelve a intentarlo en unos segundos», que invitaba a repetir una
+     * acción que nunca iba a funcionar. Ahora se traduce por el mismo módulo que el
+     * editor, que distingue la reserva de una longitud de más: es la segunda capa,
+     * para el envío hecho a mano, porque la interfaz ya no ofrece el botón.
+     */
+    return { ok: false, mensaje: mensajeDeErrorDeBase(error) };
   }
 
   const fila = (data ?? [])[0] as { id: string; pension_id: string } | undefined;

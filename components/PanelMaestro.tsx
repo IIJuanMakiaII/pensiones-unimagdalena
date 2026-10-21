@@ -11,7 +11,11 @@ import {
   marcarHabitacionReservadaMaestro,
   sellarVerificacionMaestro,
 } from "@/app/actions/maestro";
-import { ESTADO_RESERVA_INICIAL, type EstadoReserva } from "@/lib/reserva";
+import {
+  ESTADO_RESERVA_INICIAL,
+  type EstadoReserva,
+  type ReservasPorHabitacion,
+} from "@/lib/reserva";
 import { PALABRA_DE_BORRADO } from "@/lib/borrado";
 import { formatearFechaVerificacion } from "@/lib/sello";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
@@ -49,9 +53,16 @@ const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
 export default function PanelMaestro({
   pension,
   contacto,
+  reservas,
 }: {
   pension: PensionConHabitaciones;
   contacto: ContactoDePanel;
+  /**
+   * Las reservas vigentes de **este** anuncio, leídas en el servidor por la
+   * función de la base (tarea #119). Llega ya recortado por anuncio: la tarjeta no
+   * recibe las fechas de reserva de los demás.
+   */
+  reservas: ReservasPorHabitacion;
 }) {
   const habitaciones = pension.habitaciones ?? [];
   const libres = habitaciones.filter((habitacion) => habitacion.disponible);
@@ -130,7 +141,11 @@ export default function PanelMaestro({
       ) : (
         <ul className="mt-3 space-y-2">
           {habitaciones.map((habitacion) => (
-            <FilaHabitacionMaestro key={habitacion.id} habitacion={habitacion} />
+            <FilaHabitacionMaestro
+              key={habitacion.id}
+              habitacion={habitacion}
+              reservadaEn={reservas[habitacion.id] ?? null}
+            />
           ))}
         </ul>
       )}
@@ -158,16 +173,40 @@ export default function PanelMaestro({
  * Las dos se declaran siempre —una por rama— porque los hooks no se pueden llamar
  * dentro de un `if`. Se renderiza la que corresponde al estado de la habitación.
  *
- * LA FECHA
- * --------
+ * LA FECHA, Y DE DÓNDE SALE
+ * ------------------------
  * `reservada_en` no tiene `SELECT` para ningún rol de cliente: `anon` y
- * `authenticated` reciben `42501` (medido al aplicar la oleada 17). La única fecha
- * de reserva que este panel puede enseñar es la que devolvió la función en el
- * momento de marcar, y por eso se queda en el estado del formulario y no se vuelve
- * a pedir. Al recargar la página no hay fecha: no es un descuido y no se rellena
- * con nada. Recuperarla pide una función de lectura `security definer` (oleada 18).
+ * `authenticated` reciben `42501` (medido al aplicar la oleada 17). Hasta la tarea
+ * #119 este panel solo podía enseñar la fecha que devolvía la función en el mismo
+ * instante de marcar, así que al recargar la línea desaparecía.
+ *
+ * Ahora hay dos fuentes, y el orden importa:
+ *
+ *   1. **La reserva recién marcada** — el valor que devolvió
+ *      `marcar_habitacion_reservada` y que vive en el estado del formulario. Es el
+ *      único sitio donde existe antes de que la página se vuelva a leer: un Server
+ *      Action no puede invalidar la ruta y a la vez enseñar el estado nuevo.
+ *   2. **La reserva persistida** — `reservadaEn`, que llega del servidor leída por
+ *      `public.listar_reservas()` (oleada 18). Es lo que hace que al recargar la
+ *      fecha siga ahí.
+ *
+ * Se prefiere la primera mientras existe porque es la que el maestro acaba de
+ * provocar, y así el texto no puede ir un paso por detrás de la acción. En cuanto
+ * la página se relee, el estado del formulario vuelve a su valor inicial y manda
+ * la persistida.
+ *
+ * Lo que **no** se hace: convertir «ausencia de fecha» en una fecha aproximada. Si
+ * la base no la devuelve —lectura fallida, o reserva anterior a la oleada 17— la
+ * línea no se dibuja, igual que antes.
  */
-function FilaHabitacionMaestro({ habitacion }: { habitacion: Habitacion }) {
+function FilaHabitacionMaestro({
+  habitacion,
+  reservadaEn,
+}: {
+  habitacion: Habitacion;
+  /** Fecha persistida de la reserva, o `null` si la base no la devuelve. */
+  reservadaEn: string | null;
+}) {
   const [estadoReservar, accionReservar] = useFormState(
     marcarHabitacionReservadaMaestro,
     ESTADO_RESERVA_INICIAL
@@ -183,9 +222,10 @@ function FilaHabitacionMaestro({ habitacion }: { habitacion: Habitacion }) {
   const estado: EstadoReserva = reservada ? estadoLiberar : estadoReservar;
   const accion = reservada ? accionLiberar : accionReservar;
 
-  // Solo la fecha de la reserva que se acaba de marcar. La de una reserva anterior
-  // no existe para el cliente, así que no se inventa ni se deduce de otro campo.
-  const fechaDeEstaReserva = formatearFechaReserva(estadoReservar.reservadaEn);
+  // La recién marcada manda; la persistida sostiene el texto al recargar. Nunca se
+  // deduce de otro campo ni se rellena con la fecha de hoy.
+  const fechaDeEstaReserva =
+    formatearFechaReserva(estadoReservar.reservadaEn) ?? formatearFechaReserva(reservadaEn);
 
   return (
     <li className="rounded-xl border border-neutro-200 p-3">

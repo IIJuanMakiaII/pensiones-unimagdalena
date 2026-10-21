@@ -5,6 +5,7 @@ import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerPensionPorIdConSesion } from "@/lib/datos";
 import { leerContactoDelAnfitrion } from "@/lib/contacto-anfitrion";
+import { leerReservas, reservasDeLaPension } from "@/lib/reservas";
 import FormularioEditarPension from "@/components/FormularioEditarPension";
 import Footer from "@/components/Footer";
 
@@ -95,6 +96,18 @@ export default async function EditarPensionPage({ params }: Props) {
    */
   const contacto = await leerContactoDelAnfitrion(user.id);
 
+  /*
+   * Las reservas vigentes de este anuncio (tarea #119), para que el editor no
+   * ofrezca «Disponible ahora» en una habitación reservada: la base lo rechaza con
+   * `23514` y hasta hoy el aviso hablaba de otra cosa.
+   *
+   * Se leen por la función, nunca por `SELECT` de `reservada_en` — esa columna no
+   * es legible por `authenticated` y pedirla dejaría la lectura entera en `42501`.
+   * Si la lectura falla, el mapa llega vacío y el editor se comporta como antes de
+   * la oleada 17: no se inventa ninguna reserva ni se bloquea nada de más.
+   */
+  const { reservas } = await leerReservas();
+
   return (
     <>
       <main id="resultados" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 md:px-6">
@@ -108,6 +121,10 @@ export default async function EditarPensionPage({ params }: Props) {
           pension={pension}
           mostrarWhatsapp
           whatsappActual={contacto.estado === "ok" ? contacto.whatsapp : null}
+          reservas={reservasDeLaPension(
+            reservas,
+            pension.habitaciones.map((habitacion) => habitacion.id)
+          )}
         />
       </main>
       <Footer />
