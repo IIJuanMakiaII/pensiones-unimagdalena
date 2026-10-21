@@ -50,8 +50,15 @@ export default function FormularioRegistro({ configurado }: Props) {
             nombre,
             rol: "anfitrion",
             // Constancia de la aceptación de los textos legales, con su fecha, en
-            // los metadatos de la cuenta. La autorización del número de contacto
-            // se registra aparte, al publicar (ver supabase/oleada-6.sql).
+            // los metadatos de la cuenta.
+            //
+            // Aquí se decía que la autorización del número de contacto se
+            // registraba aparte, al publicar, en `oleada-6.sql`. No es cierto y no
+            // hay que creérselo: esa migración creó la columna
+            // `pensiones.autorizacion_contacto_en`, pero desde la oleada 15 el
+            // número vive en `contacto_anfitrion`, que no tiene fecha de
+            // autorización, y ninguna ruta escribe ya esa columna. Hoy no queda
+            // constancia de esa autorización en ningún sitio.
             acepta_terminos: true,
             terminos_aceptados_en: new Date().toISOString(),
           },
