@@ -45,6 +45,26 @@ export interface Pension {
    * En la semilla de demostración coincide con el `id`, que ya era legible.
    */
   slug: string;
+  /**
+   * Código visible y dictable del anuncio (`NID-0001`), el identificador con el
+   * que se nombra una pensión por teléfono y se busca en el panel maestro
+   * (Oleada 16, tarea #87).
+   *
+   * Lo asigna **la base**, no el formulario: el disparador `antes_de_asignar_codigo`
+   * al publicar, y el relleno de la migración por orden de creación para los
+   * anuncios que ya existían. Un código no se reasigna nunca; el más antiguo es
+   * el `NID-0001`.
+   *
+   * Es `null` mientras la base no tenga la migración aplicada: la columna es
+   * nueva, y la capa de datos trata su ausencia como valor que falta, no como un
+   * código inventado. **Nunca se deduce del `id`, del `slug` ni de `creada_en`**:
+   * un identificador fabricado en la interfaz puede repetirse o cambiar, que es
+   * justo lo contrario de lo que este campo existe para hacer.
+   *
+   * Se escribe igual que la columna (`codigo_visible`, snake_case), como el resto
+   * de los campos que vienen de la base: `creada_en`, `verificado_en`.
+   */
+  codigo_visible?: string | null;
   anfitrion_id: string; // FK -> usuarios.id (auth.users.id)
   titulo: string;
   descripcion: string;
