@@ -22,6 +22,13 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# credenciales que no son un .env: un token suelto en un archivo de trabajo
+# `sbp_…` de Supabase, una clave de servicio, un volcado de `service_role`.
+# `.env*.local` cubre el archivo de entorno, no el token pegado en cualquier
+# otro sitio, que es justo como se filtran. (tarea #106)
+.acceso/
+*.token
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

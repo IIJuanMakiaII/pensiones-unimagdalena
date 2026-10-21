@@ -130,6 +130,50 @@ export function formatearCOP(valor: number): string {
   return "$" + valor.toLocaleString("es-CO");
 }
 
+/**
+ * Formatea la fecha de una reserva tal como la devuelve la base
+ * (`marcar_habitacion_reservada` → `timestamptz`): «21 de octubre de 2026, 4:12 p. m.».
+ *
+ * POR QUÉ LLEVA LA HORA
+ * ---------------------
+ * Una reserva se decide el mismo día en que se confirma el pago por fuera de la
+ * plataforma. Con solo el día, dos reservas del mismo día son indistinguibles y no
+ * se puede reconstruir el orden en que llegaron. La hora es el dato que hace la
+ * fecha utilizable cuando hay que resolver un cruce.
+ *
+ * ZONA HORARIA
+ * ------------
+ * `America/Bogota`, por lo mismo que el sello de verificación (`lib/sello.ts`): la
+ * columna es `timestamptz` y se guarda en UTC, así que una reserva de las 20:00 en
+ * Santa Marta ya es el día siguiente en UTC. Formatear con la zona del servidor
+ * —que en Vercel es UTC— mostraría un día que no es el de nadie.
+ *
+ * FALLA CERRADO
+ * -------------
+ * Solo acepta un `Date` o una cadena ISO no vacía. Cualquier otra cosa devuelve
+ * `null`, que significa «no hay fecha que enseñar». Una fecha inventada al lado de
+ * una habitación reservada es peor que ninguna: el maestro la leería como un hecho.
+ */
+export function formatearFechaReserva(valor: unknown): string | null {
+  const fecha =
+    valor instanceof Date
+      ? valor
+      : typeof valor === "string" && valor.trim() !== ""
+        ? new Date(valor)
+        : null;
+
+  if (fecha === null || Number.isNaN(fecha.getTime())) return null;
+
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Bogota",
+  }).format(fecha);
+}
+
 export const ETIQUETA_TIPO: Record<TipoHabitacion, string> = {
   individual: "Individual",
   compartida: "Compartida",

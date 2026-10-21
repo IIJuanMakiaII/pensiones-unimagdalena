@@ -342,12 +342,25 @@ describe("la superficie del maestro", () => {
     const guardias = acciones.match(/exigirMaestro\(\)/g) ?? [];
     assert.ok(guardias.length >= 4, `se esperaban 4 acciones con guardia y hay ${guardias.length}`);
 
-    // Nunca «ok» sin un cambio real: la fila devuelta se comprueba en las tres
-    // escrituras directas.
+    // Nunca «ok» sin un cambio real. Hoy son dos escrituras directas —publicar y
+    // sellar—: la de disponibilidad dejó de serlo en la tarea #106, cuando el estado
+    // «reservada» pasó a escribirse solo por las dos funciones de la base.
     const comprobaciones = acciones.match(/\(data \?\? \[\]\)\.length !== 1|\(actualizadas \?\? \[\]\)\.length !== 1/g) ?? [];
     assert.ok(
-      comprobaciones.length >= 3,
-      `se esperaban 3 comprobaciones de fila afectada y hay ${comprobaciones.length}`
+      comprobaciones.length >= 2,
+      `se esperaban 2 comprobaciones de fila afectada y hay ${comprobaciones.length}`
+    );
+
+    // La misma regla, para las dos que ya no devuelven filas: se comprueba el valor
+    // que devuelve la base. Sin fecha no hubo reserva; sin `true` no hubo nada que
+    // liberar, y ninguna de las dos puede convertirse en un «hecho» de cortesía.
+    assert.ok(
+      /if \(!reservadaEn\)/.test(acciones),
+      "marcar no puede responder «hecho» sin la fecha que devuelve la base"
+    );
+    assert.ok(
+      /data !== true/.test(acciones),
+      "liberar no puede responder «liberada» cuando la base dice que no había reserva"
     );
   });
 

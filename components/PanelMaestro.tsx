@@ -6,17 +6,24 @@ import Link from "next/link";
 import type { Habitacion, PensionConHabitaciones } from "@/types";
 import {
   borrarPensionMaestro,
-  cambiarDisponibilidadMaestro,
   cambiarEstadoPublicacionMaestro,
+  liberarHabitacionReservadaMaestro,
+  marcarHabitacionReservadaMaestro,
   sellarVerificacionMaestro,
 } from "@/app/actions/maestro";
+import { ESTADO_RESERVA_INICIAL, type EstadoReserva } from "@/lib/reserva";
 import { PALABRA_DE_BORRADO } from "@/lib/borrado";
 import { formatearFechaVerificacion } from "@/lib/sello";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
 import type { ContactoDePanel } from "@/lib/contacto-panel";
 import ContactoAnfitrionPrivado from "@/components/ContactoAnfitrionPrivado";
 import CorregirWhatsappAnfitrion from "@/components/CorregirWhatsappAnfitrion";
-import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
+import {
+  etiquetaGenero,
+  etiquetaTipo,
+  formatearCOP,
+  formatearFechaReserva,
+} from "@/lib/formato";
 
 /**
  * La tarjeta de administración de una publicación en el panel del maestro.
@@ -123,11 +130,7 @@ export default function PanelMaestro({
       ) : (
         <ul className="mt-3 space-y-2">
           {habitaciones.map((habitacion) => (
-            <FilaHabitacionMaestro
-              key={habitacion.id}
-              habitacion={habitacion}
-              pensionId={pension.id}
-            />
+            <FilaHabitacionMaestro key={habitacion.id} habitacion={habitacion} />
           ))}
         </ul>
       )}
@@ -139,17 +142,50 @@ export default function PanelMaestro({
   );
 }
 
-/** Una habitación con su acción de disponibilidad, válida para cualquier anuncio. */
-function FilaHabitacionMaestro({
-  habitacion,
-  pensionId,
-}: {
-  habitacion: Habitacion;
-  pensionId: string;
-}) {
-  const [estado, accion] = useFormState(cambiarDisponibilidadMaestro, ESTADO_INICIAL);
+/**
+ * Una habitación con su acción de reserva, válida para cualquier anuncio.
+ *
+ * DOS ACCIONES, NO UN INTERRUPTOR
+ * ------------------------------
+ * Antes había un solo botón que enviaba `disponible = true/false` a un `update`
+ * del cliente. Ahora el estado «reservada» no es un booleano suelto: es una marca
+ * con fecha y autor, y solo la base la escribe (`marcar_habitacion_reservada` y
+ * `liberar_habitacion_reservada`, oleada 17). Por eso hay dos acciones explícitas
+ * y el botón que se ve decide cuál se envía: no hay un despachador que reciba de
+ * vuelta el nombre de la función desde el formulario, que sería dejar al navegador
+ * elegir qué se ejecuta.
+ *
+ * Las dos se declaran siempre —una por rama— porque los hooks no se pueden llamar
+ * dentro de un `if`. Se renderiza la que corresponde al estado de la habitación.
+ *
+ * LA FECHA
+ * --------
+ * `reservada_en` no tiene `SELECT` para ningún rol de cliente: `anon` y
+ * `authenticated` reciben `42501` (medido al aplicar la oleada 17). La única fecha
+ * de reserva que este panel puede enseñar es la que devolvió la función en el
+ * momento de marcar, y por eso se queda en el estado del formulario y no se vuelve
+ * a pedir. Al recargar la página no hay fecha: no es un descuido y no se rellena
+ * con nada. Recuperarla pide una función de lectura `security definer` (oleada 18).
+ */
+function FilaHabitacionMaestro({ habitacion }: { habitacion: Habitacion }) {
+  const [estadoReservar, accionReservar] = useFormState(
+    marcarHabitacionReservadaMaestro,
+    ESTADO_RESERVA_INICIAL
+  );
+  const [estadoLiberar, accionLiberar] = useFormState(
+    liberarHabitacionReservadaMaestro,
+    ESTADO_RESERVA_INICIAL
+  );
+
   const descripcion = `${etiquetaTipo(habitacion.tipo)} · ${etiquetaGenero(habitacion.genero)}`;
-  const siguienteDisponible = !habitacion.disponible;
+  const reservada = !habitacion.disponible;
+
+  const estado: EstadoReserva = reservada ? estadoLiberar : estadoReservar;
+  const accion = reservada ? accionLiberar : accionReservar;
+
+  // Solo la fecha de la reserva que se acaba de marcar. La de una reserva anterior
+  // no existe para el cliente, así que no se inventa ni se deduce de otro campo.
+  const fechaDeEstaReserva = formatearFechaReserva(estadoReservar.reservadaEn);
 
   return (
     <li className="rounded-xl border border-neutro-200 p-3">
@@ -171,20 +207,23 @@ function FilaHabitacionMaestro({
             {formatearCOP(habitacion.precio_mensual_cop)} /mes
             {habitacion.alimentacion_incluida ? " · con alimentación" : ""}
           </p>
+          {reservada && fechaDeEstaReserva ? (
+            <p className="mt-1 text-xs font-semibold text-neutro-600">
+              Reservada el {fechaDeEstaReserva}.
+            </p>
+          ) : null}
         </div>
 
         <form action={accion}>
           <input type="hidden" name="habitacionId" value={habitacion.id} />
-          <input type="hidden" name="pensionId" value={pensionId} />
-          <input type="hidden" name="disponible" value={siguienteDisponible ? "1" : "0"} />
           <BotonAccion
-            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar reservada"}
+            etiqueta={reservada ? "Liberar" : "Marcar reservada"}
             ariaLabel={
-              siguienteDisponible
-                ? `Marcar como libre la habitación ${descripcion}`
+              reservada
+                ? `Liberar la reserva de la habitación ${descripcion}`
                 : `Marcar como reservada la habitación ${descripcion}`
             }
-            tono={siguienteDisponible ? "confirmar" : "neutral"}
+            tono={reservada ? "neutral" : "confirmar"}
           />
         </form>
       </div>
