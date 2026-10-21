@@ -114,7 +114,7 @@ Antes, las reglas críticas del negocio solo se comprobaban con pruebas extremo 
 
 | Archivo | Qué protege |
 |---|---|
-| `pruebas/precio.prueba.ts` | `precioReservable` (un anuncio con todo ocupado no anuncia precio) y el precio «desde» |
+| `pruebas/precio.prueba.ts` | `precioReservable` (devuelve `null` cuando no queda ninguna habitación libre: el precio que conserva la base no es una oferta) y el precio «desde» |
 | `pruebas/filtros.prueba.ts` | El motor de filtrado: precio, género, alimentación, distancia, favoritos, y el paso a la URL |
 | `pruebas/whatsapp.prueba.ts` | Normalización del número (`+57 300 123 4567` → `3001234567`), los 10 dígitos y el respaldo a la plataforma |
 | `pruebas/identificador.prueba.ts` | Por qué columna se busca un anuncio (uuid o dirección legible) — el error de tipos que hacía caer la app a la semilla |
