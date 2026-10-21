@@ -27,6 +27,18 @@ Verificado leyendo el archivo: en sus 249 líneas de código activo, toda escrit
 
 ---
 
+## La raíz del disco
+
+Todo el documento usa **una sola** variable para la ubicación. Se rellena una vez y lo demás se deriva de ella: es lo único que cambia de una máquina a otra.
+
+```powershell
+# La carpeta donde viven el clon del repositorio, la carpeta .acceso con el token
+# y la sonda `sondas-oleada-17.mjs`. Rellénala con la tuya.
+$raiz = "<tu carpeta de trabajo>"
+```
+
+`$raiz` no es un secreto, pero una ruta concreta tampoco sirve a nadie más: este archivo se publica, así que en el documento va el marcador y no la carpeta de quien lo escribió.
+
 ## 1. Acceso mínimo y manejo del secreto
 
 La migración necesita **escribir en la base**. Eso exige un permiso, y el permiso debe ser el más pequeño que sirva.
@@ -34,7 +46,7 @@ La migración necesita **escribir en la base**. Eso exige un permiso, y el permi
 | Sí | No |
 |---|---|
 | Token **con alcance** (`sbp_fc…`): proyecto `ayznnqkacpdvvufclhon` **solo**, permiso **Database → Read-write**, caducidad corta | Contraseña de Postgres |
-| Guardado en `C:\Users\DELL\AccioWork\2026-08-29-04-59-08-655-0b455861\.acceso\supabase-token.txt` | Clave `service_role` |
+| Guardado en `$raiz\.acceso\supabase-token.txt` (véase «La raíz del disco») | Clave `service_role` |
 | Revocado el mismo día, al terminar | Token clásico (sin alcance) |
 
 **Por qué no la contraseña ni `service_role`, y esto no es preferencia de estilo.** Los comandos que se autentican con la contraseña de la base **no quedan limitados** por los alcances del token: el alcance acota a la API de administración, no a `psql`. Y `service_role` se salta RLS por completo. Las dos cosas dan más poder del que esta migración necesita: tres columnas, cuatro `check`, dos funciones y cuatro `GRANT`/`REVOKE` sobre una sola tabla.
@@ -48,8 +60,8 @@ Reglas del secreto, sin excepciones:
 La primera llamada es de lectura y sirve para confirmar que el token sirve para esto:
 
 ```powershell
-$ws  = "C:\Users\DELL\AccioWork\2026-08-29-04-59-08-655-0b455861"
-$tok = (Get-Content "$ws\.acceso\supabase-token.txt" -Raw).Trim()
+# $raiz viene de «La raíz del disco», al principio del documento.
+$tok = (Get-Content "$raiz\.acceso\supabase-token.txt" -Raw).Trim()
 $sonda = curl.exe -s -o "$env:TEMP\tok.json" -w "%{http_code}" `
   -H "Authorization: Bearer $tok" `
   "https://api.supabase.com/v1/projects/ayznnqkacpdvvufclhon"
@@ -306,7 +318,7 @@ rollback;
 ### 5.1 El comando
 
 ```powershell
-Set-Location "C:\Users\DELL\AccioWork\2026-08-29-04-59-08-655-0b455861"
+Set-Location $raiz                   # definida en «La raíz del disco», arriba
 node sondas-oleada-17.mjs antes      # antes de aplicar
 node sondas-oleada-17.mjs despues    # despues de aplicar
 ```
