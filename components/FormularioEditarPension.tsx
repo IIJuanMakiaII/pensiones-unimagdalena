@@ -183,6 +183,17 @@ export default function FormularioEditarPension({
       <h1 className="font-display text-xl font-extrabold text-neutro-900">
         Editar «{pension.titulo}»
       </h1>
+      {/* El código visible del anuncio (tarea #88), aquí para poder dictarlo o
+          buscarlo en el panel cuando el anfitrión llama por teléfono. Es **texto y
+          no un campo**: un `<input>` parecería editable y el guardado podría
+          intentar escribirlo, y este código lo reparte la base una sola vez
+          (es la lección de la tarjeta del WhatsApp). Se imprime tal como llegó. */}
+      {pension.codigo_visible ? (
+        <p className="mt-1 text-sm text-neutro-600">
+          ID de esta pensión:{" "}
+          <span className="font-bold tabular-nums text-neutro-800">{pension.codigo_visible}</span>
+        </p>
+      ) : null}
       <p className="mt-1 text-sm text-neutro-600">
         Los cambios se ven en el catálogo y en la ficha en cuanto guardas.
       </p>

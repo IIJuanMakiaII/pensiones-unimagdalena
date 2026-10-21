@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerTodasLasPensiones } from "@/lib/datos";
+import { MAXIMO_DE_CONSULTA, filtrarPensiones, prepararConsulta } from "@/lib/busqueda-panel";
 import { esMaestroConCliente } from "@/lib/maestro";
 import { leerContactosDeAnfitriones } from "@/lib/contacto-anfitrion";
 import { resolverContactoDePanel } from "@/lib/contacto-panel";
@@ -29,7 +30,7 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   /** En Next 15 `searchParams` pasa a ser Promise (misma nota que en `/publicar`). */
-  searchParams: Promise<{ editada?: string; borrada?: string }>;
+  searchParams: Promise<{ editada?: string; borrada?: string; buscar?: string }>;
 }
 
 /**
@@ -57,7 +58,7 @@ interface Props {
  * hace a la base, que es quien sabe.
  */
 export default async function MaestroPage({ searchParams }: Props) {
-  const { editada, borrada } = await searchParams;
+  const { editada, borrada, buscar } = await searchParams;
 
   if (!esSupabaseConfigurado()) notFound();
 
@@ -85,6 +86,27 @@ export default async function MaestroPage({ searchParams }: Props) {
   const pensiones = await obtenerTodasLasPensiones();
   const activas = pensiones.filter((pension) => pension.activa).length;
   const retiradas = pensiones.length - activas;
+
+  /*
+   * El buscador (tarea #88). La consulta llega en la dirección (`?buscar=`) y el
+   * filtro se aplica **en memoria**, sobre la lista que se acaba de leer: no hay
+   * una segunda consulta, ni SQL nuevo, ni cambio de permisos. Buscar es una
+   * navegación normal, así que funciona sin JavaScript y sobrevive a recargar y al
+   * enlace compartido.
+   *
+   * El recuento del filtro es lo que informa de si se encontró algo; no se toca el
+   * total de arriba, que sigue contando el catálogo entero.
+   *
+   * `typeof` no es paranoia: `?buscar=a&buscar=b` llega como arreglo, y a esta
+   * pantalla se entra escribiendo la dirección a mano. Sin esta línea, una consulta
+   * repetida rompería el panel con un error en lugar de ignorarse.
+   */
+  const consulta = prepararConsulta(typeof buscar === "string" ? buscar : "");
+  const hayConsulta = consulta !== "";
+  const coincidencias = filtrarPensiones(pensiones, consulta);
+  const resumenDeLaBusqueda = `${coincidencias.length} ${
+    coincidencias.length === 1 ? "anuncio coincide" : "anuncios coinciden"
+  } con «${consulta}»`;
 
   /*
    * El WhatsApp privado de cada anunciante (tarea #77), en **una** consulta para
@@ -147,26 +169,90 @@ export default async function MaestroPage({ searchParams }: Props) {
           </div>
         )}
 
-        <section className="mt-8" aria-label="Todas las publicaciones">
-          <h2 className="font-display text-lg font-bold text-neutro-800">Todas las pensiones</h2>
+        {/* La sección se rotula con su propio encabezado, y ese encabezado lleva el
+            recuento cuando hay consulta. Es la forma de que quien entra leyendo sepa
+            cuántos coinciden sin depender de un anuncio en vivo: la búsqueda es una
+            navegación completa, así que un `role="status"` que se reemplaza al
+            recargar no llegaría a oírse. */}
+        <section className="mt-8" aria-labelledby="titulo-publicaciones">
+          <h2 id="titulo-publicaciones" className="font-display text-lg font-bold text-neutro-800">
+            {hayConsulta ? resumenDeLaBusqueda : "Todas las pensiones"}
+          </h2>
 
           {pensiones.length === 0 ? (
             <p className="mt-2 text-sm text-neutro-600">
               No hay ninguna pensión publicada todavía.
             </p>
           ) : (
-            <div className="mt-4 space-y-3">
-              {pensiones.map((pension) => (
-                <PanelMaestro
-                  key={pension.id}
-                  pension={pension}
-                  contacto={resolverContactoDePanel(
-                    contactos.get(pension.anfitrion_id) ?? null,
-                    motivo
-                  )}
-                />
-              ))}
-            </div>
+            <>
+              {/* Formulario GET: sin estado de cliente y sin `fetch`. El campo se
+                  dibuja siempre que haya algo que buscar, para que no aparezca y
+                  desaparezca según el recuento. */}
+              <form method="get" action="/maestro" className="mt-4">
+                <label htmlFor="buscar" className="block text-sm font-semibold text-neutro-700">
+                  Buscar pensión
+                </label>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    id="buscar"
+                    name="buscar"
+                    type="search"
+                    defaultValue={consulta}
+                    maxLength={MAXIMO_DE_CONSULTA}
+                    placeholder="NID-0001, nombre o barrio"
+                    enterKeyHint="search"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    className="h-12 w-full rounded-xl border border-neutro-300 bg-white px-3 text-base text-neutro-900 outline-none transition focus:border-primary-600 focus:ring-2 focus:ring-primary-600/30"
+                  />
+                  <button
+                    type="submit"
+                    className="h-12 shrink-0 rounded-xl bg-primary-600 px-5 text-sm font-bold text-white transition hover:bg-primary-700"
+                  >
+                    Buscar
+                  </button>
+                </div>
+                {hayConsulta && (
+                  <Link
+                    href="/maestro"
+                    className="mt-2 inline-block text-sm font-semibold text-primary-700 hover:underline"
+                  >
+                    Quitar la búsqueda
+                  </Link>
+                )}
+              </form>
+
+              {coincidencias.length === 0 ? (
+                /* El mensaje del catálogo vacío no sirve aquí: afirmaría que no hay
+                   ninguna pensión publicada cuando lo que pasa es que la consulta no
+                   encontró nada. Son dos estados distintos (tarea #67). */
+                <div
+                  role="status"
+                  className="mt-4 rounded-xl bg-white px-4 py-3 text-sm text-neutro-700 ring-1 ring-neutro-200"
+                >
+                  <p className="font-semibold">Ninguna pensión coincide con «{consulta}».</p>
+                  <p className="mt-1">
+                    <Link href="/maestro" className="font-bold text-primary-700 hover:underline">
+                      Ver los {pensiones.length} anuncios
+                    </Link>
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {coincidencias.map((pension) => (
+                    <PanelMaestro
+                      key={pension.id}
+                      pension={pension}
+                      contacto={resolverContactoDePanel(
+                        contactos.get(pension.anfitrion_id) ?? null,
+                        motivo
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
 
