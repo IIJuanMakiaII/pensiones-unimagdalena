@@ -97,6 +97,23 @@ export const ESTADO_WHATSAPP = estadoDelCanalWhatsApp(NUMERO_CRUDO);
  */
 export const WHATSAPP_DISPONIBLE = ESTADO_WHATSAPP.disponible;
 
+/**
+ * El número tal como se lee en pantalla: «+57 302 642 9730» (tarea #125).
+ *
+ * Existe para que la tarjeta «Quién está detrás» pueda enseñar el WhatsApp de la
+ * plataforma como texto del enlace y no solo como una palabra. Sigue saliendo de
+ * la variable de entorno: aquí no hay ningún número escrito a mano.
+ *
+ * Devuelve `null` cuando el canal no sirve —variable ausente, inválida o el número
+ * de ejemplo—, para que quien llame dibuje el formulario de respaldo en lugar de
+ * publicar un número al que no contesta nadie. No cae al número de ejemplo a
+ * propósito, por lo mismo que `WHATSAPP_DISPONIBLE`.
+ */
+export function numeroWhatsAppVisible(): string | null {
+  if (!WHATSAPP_DISPONIBLE) return null;
+  return `+${WHATSAPP_NUMERO.replace(/^(\d{1,3})(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3 $4")}`;
+}
+
 /** Formulario de respaldo. Una sola constante: la comparten la app y las pruebas. */
 export const RUTA_CONTACTO = "/contacto";
 

@@ -5,7 +5,12 @@ import { SITIO_URL } from "@/lib/sitio";
 import { FUNDADOR } from "@/lib/persona";
 import { serializarJsonLd } from "@/lib/json-ld";
 import { MIGA_INICIO, jsonLdMigas, type Miga } from "@/lib/migas";
-import { RUTA_CONTACTO, WHATSAPP_DISPONIBLE, enlaceWhatsAppPlataforma } from "@/lib/formato";
+import {
+  RUTA_CONTACTO,
+  WHATSAPP_DISPONIBLE,
+  enlaceWhatsAppPlataforma,
+  numeroWhatsAppVisible,
+} from "@/lib/formato";
 import Migas from "@/components/Migas";
 import Footer from "@/components/Footer";
 
@@ -54,6 +59,9 @@ const RUTA_CONDICIONES = "/legal/condiciones";
 /** El mismo mensaje que llevan los CTA de esta página: quien escribe no tiene que explicarse. */
 const MENSAJE_WHATSAPP =
   "Hola, quiero información sobre una pensión cerca de la Universidad del Magdalena.";
+
+/** El número legible para la tarjeta «Quién está detrás», o `null` si el canal no sirve. */
+const WHATSAPP_VISIBLE = numeroWhatsAppVisible();
 
 export const metadata: Metadata = {
   title: "Quiénes somos: la persona detrás de Nido",
@@ -268,6 +276,10 @@ export default function PaginaQuienesSomos() {
             plataforma, y yo visito cada inmueble que lleva el sello. Si tienes dudas, hablas
             directamente conmigo.
           </p>
+          {/* El contacto directo, aquí y no solo al final de la página: quien llega a
+              esta tarjeta es porque quiere hablar con la persona, no con el sitio.
+              El número no se escribe en el código —sale de la variable de entorno— y
+              si el canal no sirve, el enlace lleva al formulario de respaldo. */}
           <p className="mt-3 text-sm">
             <a
               href={FUNDADOR.linkedin}
@@ -277,6 +289,25 @@ export default function PaginaQuienesSomos() {
             >
               Mi perfil en LinkedIn
             </a>
+          </p>
+          <p className="mt-2 text-sm">
+            {WHATSAPP_DISPONIBLE ? (
+              <a
+                href={enlaceWhatsAppPlataforma(MENSAJE_WHATSAPP)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-primary-800 underline-offset-2 hover:underline"
+              >
+                {WHATSAPP_VISIBLE ? `WhatsApp ${WHATSAPP_VISIBLE}` : "Escríbeme por WhatsApp"}
+              </a>
+            ) : (
+              <Link
+                href={RUTA_CONTACTO}
+                className="font-bold text-primary-800 underline-offset-2 hover:underline"
+              >
+                Escríbeme por el formulario de contacto
+              </Link>
+            )}
           </p>
         </section>
 
