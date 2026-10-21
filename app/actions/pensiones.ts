@@ -165,9 +165,13 @@ export async function crearPension(
    * valida igual cuando nace y cuando se corrige, y esa única copia es la que
    * impide que el alta y la edición se separen con el tiempo.
    *
-   * Aquí se leía además el WhatsApp del anfitrión y su casilla de autorización.
-   * Desde el cambio de modelo del 2026-10-02 no se piden: el contacto y la
-   * reserva del primer mes los maneja la plataforma (ver `lib/formato.ts`).
+   * El número del anfitrión no se valida aquí: `leerCamposDePension` no lo lee.
+   * Se valida unas líneas más abajo con `leerWhatsappPrivado` y se escribe en
+   * `contacto_anfitrion`, nunca en `pensiones`.
+   *
+   * Lo que ya no se pide es la casilla de autorización para publicar ese número.
+   * Desde el cambio de modelo del 2026-10-02 el número no se publica en ningún
+   * sitio: la reserva del primer mes la maneja la plataforma (`lib/formato.ts`).
    */
   const { campos, errores } = leerCamposDePension(formData);
 
@@ -503,8 +507,7 @@ export async function actualizarPension(
   // Propiedad antes de escribir: un id ajeno o inventado no puede editar nada.
   const { data: propias, error: errorPropiedad } = await supabase
     .from("pensiones")
-    // Se trae también la autorización registrada: sirve para no volver a pedirla
-    // y para saber si este anuncio viene de antes de que existiera la casilla.
+    // Solo el id: esto comprueba propiedad, no contenido.
     .select("id")
     .eq("id", pensionId)
     .eq("anfitrion_id", user.id);
@@ -525,9 +528,12 @@ export async function actualizarPension(
   }
 
   /*
-   * Aquí se leían la autorización previa y la casilla del formulario para publicar
-   * el número del anfitrión. Ya no se piden: el contacto lo maneja la plataforma
-   * (ver `lib/formato.ts`).
+   * Aquí se leía una casilla de autorización para publicar el número del
+   * anfitrión. Esa casilla ya no existe, porque el número no se publica en ningún
+   * sitio: el contacto lo muestra la plataforma (ver `lib/formato.ts`).
+   *
+   * El número en sí se sigue leyendo unas líneas más abajo, para guardarlo en
+   * `contacto_anfitrion` y que el maestro pueda escribirle.
    */
 
   // Las reglas viven en `lib/pension-escritura.ts`: son las mismas que aplica el
