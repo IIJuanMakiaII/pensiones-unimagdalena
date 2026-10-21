@@ -27,7 +27,7 @@ Cada vez que se sube un cambio (a cualquier rama, y en cada propuesta de cambio)
 | `npm run probar` | 115 pruebas unitarias de la lógica pura, el motor de filtrado, las regresiones de seguridad y el Service Worker | No |
 | `npm run build` | compilación de producción | Solo las variables públicas |
 | `npm run verificar:secretos` | que no haya credenciales versionadas | No |
-| `npm run verificar:contraste` | 16 combinaciones WCAG AA del sistema de diseño | No |
+| `npm run verificar:contraste` | 18 pares WCAG AA del sistema de diseño (medido el 2026-10-21: el script imprime «18 pares cumplen WCAG AA») | No |
 | `npm run verificar:seo` | datos estructurados, metadatos, `robots`, `sitemap` sobre el build | No |
 | `npm run verificar:sw` | que ninguna ruta con sesión sea cacheable y que **ninguna ruta quede sin clasificar** (recorre las rutas reales del build) | Solo el build |
 | `npm run verificar:humo` | respuesta de las rutas (necesita el servidor levantado) | Opcional |

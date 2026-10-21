@@ -36,7 +36,9 @@ app/
   layout.tsx / globals.css  # Raíz, fuentes, metadata, estilos
 components/                 # Card, carrusel, filtros, sello, hero, footer…
 lib/
-  datos.ts                  # Mock data: 6 pensiones + 16 habitaciones
+  datos.ts                  # Lectura real desde Supabase (y respaldo, ver abajo)
+  catalogo-respaldo.ts      # Catálogo de ejemplo: qué se sirve y con qué bandera
+  datos.semilla.ts          # Semilla local de desarrollo (pensiones y habitaciones de ejemplo)
   filtros.ts                # Motor de filtrado (precio, género, distancia, alimentación)
   formato.ts                # COP, mensaje/enlace WhatsApp
 types/index.ts              # Contrato de datos Pension / Habitacion (Agente 1)
@@ -44,7 +46,7 @@ types/index.ts              # Contrato de datos Pension / Habitacion (Agente 1)
 
 ## Funcionalidades
 
-- Filtros en tiempo real: precio COP (slider), género, distancia a pie (<5 / 5–10 / 10–15 min) y alimentación incluida; extra "solo verificadas".
+- Filtros en tiempo real: precio COP (slider), género, distancia a pie en cuatro tramos (≤5 / 6–10 / 11–15 / más de 15 min), alimentación incluida, «solo verificadas», favoritas y orden (cercanía, precio o puntaje).
 - Catálogo responsive (1/2/3 columnas) con carrusel de imágenes, badges de servicios, sello de verificación y precios formateados en COP.
 - Reserva por WhatsApp con mensaje prellenado (pensión, tipo, género, precio, alimentación).
 - Detalle de pensión con galería, servicios, normas, selección de habitación y sticky bottom CTA en móvil.
@@ -52,22 +54,31 @@ types/index.ts              # Contrato de datos Pension / Habitacion (Agente 1)
 
 ## Paleta de marca
 
-Definida en `tailwind.config.ts` con la identidad del cliente (verde bosque + naranja quemado):
+Definida en `tailwind.config.ts` (paleta «Rausch»). **Ese archivo manda:** si esta tabla y el
+config difieren, el config es lo que se pinta.
 
 | Rol | Token | Hex |
 |---|---|---|
-| Primario | `primary-600` | `#325334` |
-| Superficie oscura (footer/hero) | `secondary-700` | `#2B3529` |
-| Acento de marca | `accent-500` | `#E16118` |
-| Acento accesible (texto blanco y textos pequeños) | `accent-700` | `#A4440D` |
-| WhatsApp (relleno de botones) | `whatsapp-deep` | `#075E54` |
+| Primario (botones, marca) | `primary-600` | `#E00B41` |
+| Enlaces, hover y texto pequeño sobre rosa | `primary-700` | `#C30036` |
+| Coral de marca — **solo elementos gráficos** | `accent-500` / `airbnb-rausch` | `#FF385C` |
+| Rosa claro (avisos y chips) | `primary-50` / `airbnb-pink-badge` | `#FFF0F3` |
+| Texto principal | `secondary-800` | `#222222` |
+| Texto secundario | `secondary-500` | `#717171` |
+| Bordes | `secondary-200` | `#DDDDDD` |
+| Fondo de sección | `secondary-100` / `airbnb-light-gray` | `#F7F7F7` |
 
 ```bash
-node scripts/verificar-contraste.mjs   # 16 combinaciones WCAG AA verificadas
+node scripts/verificar-contraste.mjs   # 18 pares WCAG AA verificados (medido el 2026-10-21)
 ```
 
-> Regla: `accent-500` (#E16118) se reserva para uso decorativo, precios grandes (≥ 20 px negrita),
-> slider y bordes; para textos pequeños o botones con texto blanco se usa `accent-700` (4.5:1 garantizado).
+> Regla: el coral `#FF385C` no se usa en texto pequeño — da 3,52:1 y solo cumple el mínimo de
+> 3:1 para gráficos. Sobre el rosa claro `#FFF0F3` el texto va en `primary-700` (`#C30036`),
+> que da 5,63:1; con `#E00B41` no llega. Los botones con texto blanco usan `primary-600`
+> (4,89:1) y su hover `primary-700` (6,22:1).
+>
+> Ojo con `accent-700`: en el config vale `#E00B41`, no `#C30036`. Para texto sobre el rosa
+> hay que usar `primary-700`.
 
 ## PWA (aplicación instalable)
 
@@ -108,11 +119,14 @@ Guía paso a paso, con las variables de entorno y la comprobación posterior:
 
 ## Modo dinámico (Supabase): autenticación y publicación
 
-El proyecto funciona en dos modos y **nunca se rompe**:
+El proyecto funciona en dos modos. **La demostración no se sirve en silencio**: o está
+encendida de forma explícita y el sitio lo avisa, o el catálogo enseña solo anuncios
+reales —y si la lectura falla, lo dice en vez de inventar inventario (`lib/catalogo-respaldo.ts`,
+tarea #42).
 
 | Modo | Requisito | Comportamiento |
 |---|---|---|
-| **Demo** | nada | Catálogo semilla de 6 pensiones (`lib/datos.semilla.ts`) |
+| **Demo** | desarrollo, o `NEXT_PUBLIC_MOSTRAR_DEMO=1` en producción | Catálogo de ejemplo (`lib/datos.semilla.ts`) con aviso visible |
 | **Dinámico** | credenciales en `.env.local` | Datos reales en Supabase + registro de anfitriones y publicación |
 
 ```env

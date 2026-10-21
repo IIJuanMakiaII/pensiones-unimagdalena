@@ -1,13 +1,20 @@
 # Migraciones de la base: estado, comprobación y lo que queda
 
-> Actualizado el **2026-10-12**. El usuario aplicó en el editor SQL `oleada-11`,
-> `oleada-12`, `oleada-13` y `oleada-15`, y las cuatro están **verificadas** contra
-> el proyecto Supabase `ayznnqkacpdvvufclhon` con la clave anónima del sitio.
+> Actualizado el **2026-10-21**. El usuario aplicó en el editor SQL `oleada-11`,
+> `oleada-12`, `oleada-13`, `oleada-15` y `oleada-16`, y las cinco están **verificadas**
+> contra el proyecto Supabase `ayznnqkacpdvvufclhon` con la clave anónima del sitio.
 > **`oleada-14` queda descartada**: no hay retirada permanente que aplicar.
-> **Queda UNA migración pendiente de aplicar: `oleada-16`**, el código visible de
-> pensión (`NID-0001`, tarea #87). Es aditiva y aún no está aplicada; su nota de
-> despliegue está en [`oleada-16-codigo-visible-pension.md`](oleada-16-codigo-visible-pension.md).
+> **No queda ninguna migración pendiente de aplicar.** `oleada-16` (el código visible de
+> pensión, `NID-0001`, tarea #87) **entró el 2026-10-20**: la sonda
+> `pensiones?select=codigo_visible` responde `200` con `NID-0001`, no queda ninguna fila
+> sin código y la proyección de 20 columnas lee sin `42501`. Su nota de despliegue sigue en
+> [`oleada-16-codigo-visible-pension.md`](oleada-16-codigo-visible-pension.md).
 > Lo que explican las secciones siguientes vale para las que ya entraron.
+>
+> **Lo que esa sonda no demuestra**, y conviene no confundir: que la columna exista y se
+> lea no prueba el disparador, la unicidad ni la restricción de formato. PostgREST no
+> expone funciones de disparador y con una sola fila la unicidad no se distingue. Esas
+> tres garantías siguen **argumentadas por el SQL, no observadas** (ver §3.6).
 > Esta hoja sigue existiendo porque las migraciones **no se pueden aplicar desde
 > esta cuenta** (ver §5). Las aplica el propietario, como se ha hecho siempre.
 
@@ -23,7 +30,7 @@
 | 4 | `supabase/oleada-14-retirar-anuncio-de-prueba.sql` | #58 | `update … set activa = false where slug = 'residencia-makia'`. | **descartada** — la tarea #58 fue **cancelada** por el usuario; la demostración es intencional |
 | 5 | `supabase/oleada-15-contacto-anfitrion-privado.sql` | #76, #77, #78 | Crea `public.contacto_anfitrion` (una fila por anfitrión) con RLS de **dos lectores**: el propio anfitrión y el rol maestro. `anon` queda sin ningún `grant`. **No toca `pensiones`**: las únicas menciones a esa tabla están dentro de comentarios. | **aplicada — medida** |
 
-| 6 | `supabase/oleada-16-codigo-visible-pension.sql` | #87 | Añade `pensiones.codigo_visible` (`NID-0001`), lo rellena por orden de creación, lo sella en el alta con un disparador, reafirma los privilegios y deja el `grant select` en 20 columnas. No toca ninguna función existente. | **pendiente de aplicar** |
+| 6 | `supabase/oleada-16-codigo-visible-pension.sql` | #87 | Añade `pensiones.codigo_visible` (`NID-0001`), lo rellena por orden de creación, lo sella en el alta con un disparador, reafirma los privilegios y deja el `grant select` en 20 columnas. No toca ninguna función existente. | **aplicada — medida** (relleno y lectura; disparador y unicidad, no observados) |
 
 Tamaños y sellos de los archivos, medidos:
 
@@ -33,7 +40,7 @@ oleada-12-contactos-respaldo.sql                  10081 bytes  sha 5EE8593F8835
 oleada-13-fecha-verificacion.sql                  18789 bytes  sha 68C180C156B7
 oleada-14-retirar-anuncio-de-prueba.sql           10475 bytes  sha CE02E953E244  (descartada)
 oleada-15-contacto-anfitrion-privado.sql          29332 bytes  sha 7C0C44B0ECAC  (aplicada · 521 líneas)
-oleada-16-codigo-visible-pension.sql              25407 bytes  sha 692B8A645DBA  (pendiente · 471 líneas)
+oleada-16-codigo-visible-pension.sql              25407 bytes  sha 692B8A645DBA  (aplicada · 471 líneas)
 ```
 
 Antes de esta pasada, las sondas daban: `contactos_respaldo` → `404 PGRST205`
@@ -98,9 +105,12 @@ permisos están completos.
 ### 3.4 · La consulta que el usuario pidió vigilar
 Si alguna vez aparece `42501` o `42703` sobre `pensiones`, es esta:
 ```bash
-curl -s "${CAB[@]}" "$U/pensiones?select=id,slug,anfitrion_id,titulo,descripcion,precio_mensual,direccion,barrio,distancia_a_pie_minutos,servicios,normas,calificacion,verificado,verificado_en,imagenes,activa,creada_en,latitud,longitud&activa=eq.true"
+curl -s "${CAB[@]}" "$U/pensiones?select=id,slug,anfitrion_id,titulo,descripcion,precio_mensual,direccion,barrio,distancia_a_pie_minutos,servicios,normas,calificacion,verificado,verificado_en,imagenes,activa,creada_en,latitud,longitud,codigo_visible&activa=eq.true"
 ```
-Hoy: `200`, con el anuncio de demostración dentro.
+Hoy: `200`, con el único anuncio activo dentro (`codigo_visible: "NID-0001"`). Son **20
+columnas**: la lista tiene que ir completa, porque un `select` con una columna de menos no
+falla —devuelve menos datos— y uno con una de más, o con una que perdió el `grant`,
+devuelve `42501`.
 
 ### 3.5 · oleada-15 — cómo saber si entró, sin abrir el panel
 
@@ -151,14 +161,20 @@ Es la misma familia de sonda que §3.3 y la misma trampa: `oleada-16` vuelve a h
 `codigo_visible`, no aparecería ningún error al leer una columna suelta: aparecería un
 `42501` **solo al pedir el catálogo**, que es la consulta que pide las 20 columnas.
 
-| Sonda | Antes de aplicar (medido el 2026-10-12) | Después de aplicar (esperado) |
+| Sonda | Antes de aplicar (medido el 2026-10-12) | Después de aplicar (medido el 2026-10-20) |
 |---|---|---|
-| `pensiones?select=id,codigo_visible&limit=1` | `400` `42703` «column pensiones.codigo_visible does not exist» | `200` |
-| La proyección completa de la aplicación, ya con **20** columnas y `&activa=eq.true` | `400` `42703` (la columna todavía no existe) | `200`, con `"codigo_visible":"NID-0001"` dentro |
+| `pensiones?select=id,codigo_visible&limit=1` | `400` `42703` «column pensiones.codigo_visible does not exist» | **`200`** |
+| La proyección completa de la aplicación, ya con **20** columnas y `&activa=eq.true` | `400` `42703` (la columna todavía no existe) | **`200`**, con `"codigo_visible":"NID-0001"` dentro |
+
+Y dos comprobaciones más, hechas el 21 de octubre: `codigo_visible=is.null` devuelve `[]`
+(ninguna fila se quedó sin código) y las veinte columnas juntas responden `200`, mientras
+que `select=*` sigue dando `42501` —el privilegio se concede columna por columna, y esa
+diferencia es la prueba de que la lista quedó completa.
 
 La consulta que decide —la que hay que mirar **antes** de desplegar el código que lee el
 campo— es la sección 7 de la migración, y en particular **E.6** (`t | t`): la lectura
-concedida a `anon` y a `authenticated`. El detalle está en
+concedida a `anon` y a `authenticated`. El lado `anon` está **medido** (`200`); el lado
+`authenticated` no se ha podido medir porque hace falta una sesión. El detalle está en
 [`oleada-16-codigo-visible-pension.md`](oleada-16-codigo-visible-pension.md).
 
 ## 4. La demostración
@@ -166,16 +182,22 @@ concedida a `anon` y a `authenticated`. El detalle está en
 `residencia-makia` | uuid `f555e5b3-6629-402a-ae37-32c366c3f022` | título
 «Residencia 101 (Pension de Prueba)» | `activa = true` | `verificado = false` |
 `verificado_en = null` | `precio_mensual = 600000` | dos habitaciones, las dos
-`disponible`, a 600000.
+`disponible` y las dos `individual`/`mixto`, a **$1.000.000** y **$700.000** (medido el
+2026-10-21 leyendo `habitaciones` con la clave anónima).
+
+El `precio_mensual` de $600.000 es el valor guardado en el anuncio, **no una oferta**: el
+precio que se muestra y se reserva sale de las habitaciones libres, y por eso la ficha
+enseña el millón, no los seiscientos mil. Quien lea «$600.000» como precio del catálogo se
+equivoca.
 
 **Es el único anuncio público.** Ocultarla deja el catálogo en cero, y por eso el
 estado sin inventario no es un caso de borde. No se retira: el usuario la oculta y
 la reactiva con su rol de maestro cuando quiere. No hay nada que revertir aquí.
 
-Con `oleada-16` aplicada, a este anuncio le corresponde el **`NID-0001`**: es el más
-antiguo de los que se ven sin sesión (`creada_en = 2026-09-18T01:47:46.707833+00:00`) y el
-relleno numera por orden de creación. La consulta E.3 de la migración lo confirma sobre la
-base real, retiradas incluidas —que la clave anónima no ve.
+Este anuncio **tiene ya el `NID-0001`**: es el más antiguo de los que se ven sin sesión
+(`creada_en = 2026-09-18T01:47:46.707833+00:00`) y el relleno numera por orden de creación.
+La consulta E.3 de la migración lo confirma sobre la base real, retiradas incluidas —que la
+clave anónima no ve— y la sonda de §3.6 lo devuelve al leer la columna.
 
 ## 5. Por qué no las aplico desde aquí
 
@@ -192,10 +214,14 @@ reintentando. Y en el repositorio no hay credencial de escritura: `.env.local` s
 trae variables `NEXT_PUBLIC_*`, y la clave anónima no puede aplicar DDL. La vía que
 funciona es el editor SQL del panel.
 
-## 6. Aviso: el formulario de respaldo no puede guardar
+## 6. El formulario de respaldo: defecto encontrado y ya cerrado
 
-Hallazgo de la verificación posterior, **ajeno a estas migraciones** y ya asignado
-como tarea #63: `app/actions/contacto.ts:66` escribe **directo en la tabla** con el
-cliente anónimo (`utils/supabase/server.ts:21`), pero `oleada-12` cerró esa puerta
-(`revoke all`, `:85`) y dejó la escritura solo por la función. El síntoma es el
-mismo `42501` de §3.2 — pero en una **escritura**, donde sí es un defecto.
+Hallazgo de la verificación posterior, **ajeno a estas migraciones**: el formulario
+escribía **directo en la tabla** con el cliente anónimo, pero `oleada-12` cerró esa puerta
+(`revoke all`, `:85`) y dejó la escritura solo por la función. El síntoma era el mismo
+`42501` de §3.2 — pero en una **escritura**, donde sí era un defecto.
+
+**Ya está corregido (tarea #63).** `app/actions/contacto.ts` escribe por
+`supabase.rpc("registrar_contacto_respaldo", …)`: el cliente público no toca la tabla y no
+hace falta ninguna clave de servicio. Se deja escrito aquí porque el aviso circularía
+como si siguiera abierto, y no lo está.

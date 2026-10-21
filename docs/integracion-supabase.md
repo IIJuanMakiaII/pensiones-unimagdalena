@@ -14,14 +14,20 @@
 | Sin publicación | Formulario + Server Action `crearPension` con validación estricta |
 | Rutas estáticas prerenderizadas | Catálogo y detalle revalidados cada 60 s (ISR) |
 
-**Dos modos de funcionamiento, sin romper nada:**
+**Dos modos de funcionamiento:**
 
 | Modo | Cuándo | Qué muestra |
 |---|---|---|
-| **Demo** | Sin credenciales en `.env.local` | Catálogo semilla de 6 pensiones (`lib/datos.semilla.ts`) |
+| **Demo** | En desarrollo, o en producción solo con `NEXT_PUBLIC_MOSTRAR_DEMO=1` | Catálogo de ejemplo (`lib/datos.semilla.ts`) **con un aviso visible** de que son datos de muestra |
 | **Dinámico** | Credenciales válidas | Datos reales de Supabase + publicación de anfitriones |
 
-> Si Supabase falla o no está configurado, la app **cae automáticamente al catálogo semilla**. El sitio nunca queda vacío ni con error.
+> **El respaldo ya no es automático.** Hasta la tarea #42, si Supabase fallaba o faltaba
+> la configuración, la app publicaba el catálogo de ejemplo sin avisar: un corte de red se
+> veía como seis anuncios inventados, con botón de contacto y todo. Hoy la decisión vive en
+> `lib/catalogo-respaldo.ts` y en la bandera `NEXT_PUBLIC_MOSTRAR_DEMO` (`lib/sitio.ts:23`):
+> **en producción, sin la bandera, un fallo de lectura se muestra como fallo de lectura**,
+> no como inventario. El caso «sin catalogar» y el caso «no se pudo leer» tienen mensajes
+> distintos (tarea #67), y esa distinción es la que permite enterarse de una caída.
 
 ---
 
@@ -55,7 +61,15 @@ Esto crea:
 ### Paso 4 — (Opcional) Cargar el catálogo de ejemplo
 Regístrate primero en `/registro` y luego ejecuta
 [`supabase/datos-ejemplo.sql`](../supabase/datos-ejemplo.sql): inserta las 6 pensiones y
-sus 16 habitaciones reales del catálogo demo, asignadas a tu primer anfitrión.
+sus 16 habitaciones de ejemplo, asignadas a tu primer anfitrión.
+
+> ⚠️ **Solo para un proyecto de pruebas.** Estas seis pensiones **no son inventario real**:
+> son el mismo catálogo de `lib/datos.semilla.ts`. Cargarlas en la base que sirve a los
+> estudiantes las convierte en anuncios **públicos y contactables** —aparecen en la
+> portada, en las fichas y en el `sitemap`—, porque el catálogo real no distingue entre
+> un anuncio sembrado y uno publicado por un anfitrión. En el proyecto de producción
+> (`ayznnqkacpdvvufclhon`) **no se cargan**: medido el 2026-10-21, ese proyecto tiene
+> **un solo anuncio** con **dos habitaciones**, y ese anuncio es el de prueba del equipo.
 
 ### Paso 5 — Reiniciar y probar
 ```bash
@@ -222,13 +236,17 @@ Enlaces directos del proyecto `ayznnqkacpdvvufclhon`:
 ## Después de registrar la primera cuenta de anfitrión
 
 ```sql
--- Carga las 6 pensiones de ejemplo en la base REAL (toma el primer anfitrión)
+-- Carga las 6 pensiones de ejemplo en una base de PRUEBAS (toma el primer anfitrión)
 -- Ejecutar en: Supabase → SQL Editor → New query
 -- Contenido: supabase/datos-ejemplo.sql
 ```
 
 El archivo `supabase/datos-ejemplo.sql` es idempotente: si ya existen anuncios con
 esos títulos, no los duplica.
+
+> Estas seis pensiones quedan **publicadas y contactables** igual que cualquier otra: la
+> plataforma no marca los anuncios sembrados. Por eso el script va contra una base de
+> pruebas y no contra la que atiende a estudiantes (ver el aviso del paso 4).
 
 ---
 

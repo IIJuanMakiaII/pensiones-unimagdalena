@@ -4,9 +4,17 @@
 >
 > **Este documento SUSTITUYE por completo al anterior.** La versión previa era una
 > autorización para **publicar el número de WhatsApp del anfitrión**. Esa autorización
-> **queda retirada y sin objeto**: con el modelo nuevo el número **no se pide, no se
-> publica y no viaja a la página**. **Nada de aquel documento debe copiarse al sitio**
-> ni pedirse de nuevo a los propietarios.
+> **queda retirada y sin objeto**: el número **no se publica y no viaja a la página**.
+> **Nada de aquel documento debe copiarse al sitio** ni pedirse de nuevo a los
+> propietarios.
+>
+> **Corrección del 21 de octubre de 2026.** Este borrador decía que el número «no se
+> pide». Ya no es cierto: desde la tarea #77 el formulario de publicación **sí lo
+> solicita**, para que el equipo pueda escribir al propietario, y lo guarda en la tabla
+> privada `contacto_anfitrion`, con reglas por fila de dos lectores (el propietario y el
+> equipo). Lo que sigue retirado es la **publicación** del número, no su captura. Si el
+> abogado considera que esa captura necesita autorización propia, el sitio tendrá que
+> añadir una casilla en el formulario de publicación: hoy no la tiene.
 
 ---
 
@@ -109,11 +117,16 @@ Puedo leer el [aviso de privacidad](../legales/aviso-de-privacidad.md) y las
 Hoy no hay ninguna pantalla que explique el reparto del dinero. Cuando se construya el
 pago, **antes del botón** y con el desglose a la vista:
 
+Ejemplo sobre un canon pactado de $1.000.000 mensuales. Los dos rubros salen del cálculo
+que ya usa la app —`desgloseReserva()` en `lib/pension.ts`: depósito 20 % del canon,
+mitad tarifa y mitad anticipo; saldo 80 %—, así que la tabla del sitio y el contrato no
+pueden discrepar:
+
 | Concepto | Monto | Destino |
 |---|---|---|
 | Tarifa de Servicio de la Plataforma | $100.000 | Remuneración de la plataforma |
 | Anticipo del Arriendo | $100.000 | Va al propietario, asegura tu cupo |
-| **Total hoy en la web** | **$200.000** | Procesado por la pasarela de pagos |
+| **Total del Depósito de Reserva** | **$200.000** | Se cobrará por la pasarela de pagos, todavía sin contratar |
 | **Saldo al llegar a la pensión** | **$800.000** | Directo al propietario, contra entrega de llaves |
 
 **Qué NO puede decir esa pantalla:** que el propietario recibe el canon completo, ni

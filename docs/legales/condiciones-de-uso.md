@@ -39,9 +39,11 @@ propietario**— y **traslada ese anticipo al propietario**, imputándolo al pri
 
 ## 2. El contacto y el cierre los lleva la plataforma
 
-**El número de WhatsApp del propietario no se publica.** No se pide en el formulario,
-no aparece en el anuncio y no viaja a la página. Cualquier versión anterior de estas
-condiciones que dijera lo contrario está **retirada**.
+**El número de WhatsApp del propietario no se publica.** Se pide en el formulario al
+publicar el anuncio —es la vía por la que la plataforma le escribe— y se guarda en una
+tabla privada que solo leen **el propio propietario y el equipo de Nido**. No aparece en
+el anuncio, no viaja a la página y no es accesible sin sesión. Cualquier versión anterior
+de estas condiciones que dijera que el número se publica está **retirada**.
 
 El contacto con quien busca alojamiento lo atiende **la plataforma**, que responde,
 acompaña la visita y **cierra con el estudiante la reserva del primer mes**.
@@ -108,7 +110,8 @@ digital entre particulares**.
 ### 4.1 Traslado del anticipo al propietario
 
 En virtud del contrato de mandato representativo otorgado por el propietario a la
-plataforma, una vez el estudiante efectúa el pago de la reserva en línea y el equipo
+plataforma, una vez el estudiante efectúa el pago del Depósito de Reserva por el medio
+que la plataforma le indique y el equipo
 de Nido coordina la confirmación del cupo con el anfitrión, **Nido transfiere de
 manera inmediata el Anticipo del Arriendo (10 % del canon)** a la cuenta bancaria
 informada por este. A partir de esa transferencia, el cupo queda formalmente
@@ -132,7 +135,7 @@ COP) se retendrá por concepto de gastos operativos, gestión tecnológica y cor
 causado.
 
 **b) Con quince (15) o menos días calendario de anticipación** a la fecha pactada de
-ingreso: el estudiante **perderá el 100 % del Depósito de Reserva** pagado en línea
+ingreso: el estudiante **perderá el 100 % del Depósito de Reserva** ya pagado
 ($100.000 COP en el ejemplo base). El anticipo del arriendo se mantiene **a favor del
 propietario** a título de arras o indemnización por lucro cesante y costo de
 oportunidad ante la dificultad de reubicar la habitación a vísperas del inicio de

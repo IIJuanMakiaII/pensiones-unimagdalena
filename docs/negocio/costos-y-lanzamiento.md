@@ -27,11 +27,14 @@ inventario, que hoy son 1 anuncio y 0 estudiantes.
    esto sea un negocio, hay que pasar al plan de pago: **~$20 / mes**. Conviene
    confirmarlo en las condiciones del proveedor antes de facturar, para no construir
    sobre un plan que no lo permite.
-2. **Aún no hay despliegue configurado.** El repositorio no tiene configuración de
-   despliegue ni dominio declarado (`NEXT_PUBLIC_SITE_URL` está vacío y el código cae
-   a un dominio por defecto). **Antes de publicar hay que fijar el dominio real**,
-   porque de él dependen las direcciones canónicas, los datos estructurados y los
-   enlaces de compartir.
+2. **Ya está desplegado, pero sin dominio propio.** El sitio lleva publicado en
+   `pensiones-unimagdalena.vercel.app` desde antes del 20 de octubre y ese dominio sirve
+   `main` (`41aca1e`). Lo que falta es un dominio propio: `lib/sitio.ts:10` trae el de
+   Vercel como valor por defecto, así que mientras `NEXT_PUBLIC_SITE_URL` no apunte a un
+   dominio real, las canónicas, los datos estructurados y los enlaces de compartir llevan
+   la dirección de Vercel. **Antes de una campaña hay que fijar el dominio**, y conviene
+   comprobar en Vercel si la variable está definida — eso no se puede ver desde el
+   repositorio.
 
 ---
 

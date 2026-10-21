@@ -3,6 +3,12 @@
 
 ## Anexo — Migración a la paleta de marca del cliente (2026-09)
 
+> **Superado el 2026-10-21.** Esta paleta **ya no es la del producto**. El config actual
+> (`tailwind.config.ts`) usa rojo `#E00B41` como primario, `#C30036` para enlaces y texto
+> pequeño sobre rosa, y coral `#FF385C` solo en elementos gráficos. Los hex de este anexo
+> quedan como registro de lo que se aplicó en septiembre; para los valores vigentes, ver
+> la tabla de paleta del `README.md` y el propio config.
+
 **Identidad entregada:** verde bosque `#325334` + naranja quemado `#E16118`.
 
 ### Cómo se aplicó
