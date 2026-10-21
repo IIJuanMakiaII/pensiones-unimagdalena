@@ -77,3 +77,47 @@ export function reservasDeLaPension(
   }
   return propias;
 }
+
+/**
+ * Los tres estados en que puede estar una habitación para quien la administra
+ * (tarea #122).
+ *
+ * - `libre` — `disponible = true`. Se ofrece en el catálogo y se puede reservar.
+ * - `reservada` — tiene una reserva registrada. **La fuente de verdad es la lista
+ *   de `listar_reservas()`, no la columna**: en este estado `disponible` es
+ *   `false`, porque la restricción `habitaciones_reservada_no_se_ofrece` lo exige.
+ * - `apagada` — `disponible = false` y **sin** reserva. Es la habitación que el
+ *   anfitrión dejó de ofrecer a mano: mantenimiento, reforma, o simplemente que ya
+ *   no la alquila.
+ *
+ * POR QUÉ HACEN FALTA TRES Y NO DOS
+ * --------------------------------
+ * Porque `disponible = false` no distingue «la reservé» de «la apagué», y la
+ * interfaz necesita distinguirlas: la primera se deshace liberando la reserva por
+ * la función de la base, y la segunda, volviendo a encenderla por la columna. La
+ * tarea #122 nació justamente de haberlas confundido: durante un tiempo el panel
+ * decía «está reservada» de una habitación apagada por mantenimiento y no ofrecía
+ * la acción de volver a ofrecerla.
+ *
+ * Es una función pura a propósito: así la tabla de casos se prueba entera sin
+ * base, sin sesión y sin navegador.
+ */
+export type EstadoDeLaHabitacion = "libre" | "reservada" | "apagada";
+
+/**
+ * Decide en qué de los tres estados está una habitación.
+ *
+ * `disponible = true` manda sobre todo lo demás: la restricción de la base
+ * garantiza que una habitación con reserva no puede estar ofreciéndose, así que
+ * ese caso no debería llegar. Si llegara —una fila incoherente, o una lectura de
+ * reservas que falló— se trata como libre, que es lo que la columna dice y lo que
+ * el catálogo está enseñando en ese instante; inventar una reserva a partir de una
+ * ausencia de dato sería peor.
+ */
+export function estadoDeLaHabitacion(
+  disponible: boolean,
+  reservadaEn: string | null | undefined
+): EstadoDeLaHabitacion {
+  if (disponible) return "libre";
+  return reservadaEn ? "reservada" : "apagada";
+}

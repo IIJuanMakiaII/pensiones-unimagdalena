@@ -392,6 +392,32 @@ export function mensajeDeErrorDeBase(error: { code?: string; message: string }):
 }
 
 /**
+ * ¿La habitación pertenece a una de las publicaciones de esta cuenta? (tarea #122)
+ *
+ * POR QUÉ ES UNA FUNCIÓN CON NOMBRE Y NO UNA CONDICIÓN SUELTA
+ * --------------------------------------------------------
+ * Porque es la puerta que decide si un anfitrión puede tocar una habitación, y una
+ * condición suelta se cambia sin que nadie se dé cuenta. Con nombre se puede probar
+ * sola, y su tabla de casos —que es donde vive el riesgo: listas vacías, cadena
+ * vacía, `undefined`— queda escrita una vez.
+ *
+ * `habitaciones` no tiene `anfitrion_id`: la pertenencia se resuelve por su
+ * pensión. Quien llama ya leyó `pension_id` de la habitación y la lista de
+ * pensiones propias; esto solo compara.
+ *
+ * Ante la duda, **falso**. Una pensión que no está en la lista no es propia, y una
+ * lista vacía no hace propia a ninguna habitación: decir «no es tuya» de más se
+ * corrige recargando; decir «es tuya» de más, no.
+ */
+export function esHabitacionDeMisPensiones(
+  misPensionesIds: readonly string[],
+  pensionDeLaHabitacion: string | null | undefined
+): boolean {
+  if (!pensionDeLaHabitacion) return false;
+  return misPensionesIds.includes(pensionDeLaHabitacion);
+}
+
+/**
  * Deja las habitaciones del anuncio exactamente como las envió el formulario.
  *
  * Se actualizan las que llegan con `id`, se insertan las nuevas y se quitan solo

@@ -6,9 +6,16 @@ import type { Habitacion, PensionConHabitaciones } from "@/types";
 import {
   cambiarDisponibilidadHabitacion,
   cambiarEstadoPublicacion,
+  liberarReservaDeMiHabitacion,
 } from "@/app/actions/pensiones";
 import type { EstadoFormulario } from "@/lib/pension-escritura";
-import { etiquetaGenero, etiquetaTipo, formatearCOP } from "@/lib/formato";
+import { estadoDeLaHabitacion, type ReservasPorHabitacion } from "@/lib/reserva";
+import {
+  etiquetaGenero,
+  etiquetaTipo,
+  formatearCOP,
+  formatearFechaReserva,
+} from "@/lib/formato";
 
 /**
  * Estado inicial de los formularios del panel. Vive aquí (no en el módulo de
@@ -20,18 +27,28 @@ const ESTADO_INICIAL: EstadoFormulario = { ok: false, mensaje: null };
 
 interface Props {
   pension: PensionConHabitaciones;
+  /**
+   * Las reservas vigentes de **este** anuncio, con su fecha (tarea #122).
+   *
+   * Sin esto el panel no puede distinguir «reservada» de «apagada por el
+   * anfitrión»: las dos tienen `disponible = false`, y la columna no dice cuál es
+   * cuál. Lo resuelve `public.listar_reservas()`, que es la única lectura posible
+   * —`reservada_en` no tiene `SELECT` para `authenticated`—. Llega ya recortado por
+   * anuncio, así que esta tarjeta no ve las fechas de las demás.
+   */
+  reservas: ReservasPorHabitacion;
 }
 
 /**
- * Gestión de una publicación ya creada: marcar cada habitación como libre o
- * reservada y retirar o reactivar el anuncio.
+ * Gestión de una publicación ya creada: ofrecer o retirar cada habitación, liberar
+ * una reserva propia y retirar o reactivar el anuncio.
  *
  * Toda la escritura pasa por Server Actions (nunca por `fetch` desde el
  * cliente) y la autorización se resuelve en el servidor: si la habitación o la
  * publicación no son del anfitrión autenticado, la acción devuelve un error
  * visible en lugar de un éxito falso.
  */
-export default function PanelPublicacion({ pension }: Props) {
+export default function PanelPublicacion({ pension, reservas }: Props) {
   const habitaciones = pension.habitaciones ?? [];
   const libres = habitaciones.filter((h) => h.disponible);
   const preciosLibres = libres.map((h) => h.precio_mensual_cop);
@@ -86,7 +103,11 @@ export default function PanelPublicacion({ pension }: Props) {
       ) : (
         <ul className="mt-3 space-y-2">
           {habitaciones.map((habitacion) => (
-            <FilaHabitacion key={habitacion.id} habitacion={habitacion} />
+            <FilaHabitacion
+              key={habitacion.id}
+              habitacion={habitacion}
+              reservadaEn={reservas[habitacion.id] ?? null}
+            />
           ))}
         </ul>
       )}
@@ -103,16 +124,74 @@ export default function PanelPublicacion({ pension }: Props) {
 }
 
 /**
- * Una habitación con su acción de disponibilidad y su propio estado de envío.
+ * Una habitación con su acción y su propio estado de envío.
  *
- * La acción que ofrece esta fila es una sola: marcar como reservada la que está
- * libre. La contraria —«Marcar libre» sobre una reservada— desapareció con la
- * tarea #119 porque la base la rechaza por diseño; el porqué está escrito en el
- * bloque de abajo.
+ * TRES ESTADOS, DOS PUERTAS DE ESCRITURA (tarea #122)
+ * -------------------------------------------------
+ * `apagada` (`disponible = false` sin reserva) y `reservada` (`disponible = false`
+ * **con** reserva) se veían iguales en esta pantalla, y durante un tiempo la
+ * segunda se comió a la primera: se retiró el botón que volvía a ofrecer una
+ * habitación apagada, y encima se la llamaba «reservada». La base nunca lo pidió
+ * —la restricción solo prohíbe encender una habitación **con reserva**—, así que
+ * el defecto era de aquí. Ahora:
+ *
+ *   libre     → «Retirar de la oferta»   · `disponible = false` por la columna
+ *   apagada   → «Volver a ofrecer»       · `disponible = true` por la columna
+ *   reservada → «Liberar reserva»        · `liberar_habitacion_reservada`, la función
+ *
+ * La tercera va por la función y no por la columna porque una reserva son tres
+ * columnas coherentes y la función las devuelve a su valor previo en la misma
+ * transacción; escribir `disponible = true` a mano choca con
+ * `habitaciones_reservada_no_se_ofrece` y devuelve un `23514`.
+ *
+ * Quién puede: el servidor lo vuelve a decidir en las dos acciones, comparando la
+ * pensión de la habitación con las publicaciones de la sesión. Aquí no hay ninguna
+ * comprobación de permisos, y es a propósito: un componente de cliente no decide
+ * quién escribe.
+ *
+ * «Reservada» solo se dice cuando hay reserva. Es la lista de
+ * `listar_reservas()` la que lo decide, no la columna `disponible`.
  */
-function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
-  const [estado, accion] = useFormState(cambiarDisponibilidadHabitacion, ESTADO_INICIAL);
+function FilaHabitacion({
+  habitacion,
+  reservadaEn,
+}: {
+  habitacion: Habitacion;
+  /** Fecha de la reserva vigente, o `null` si la habitación no está reservada. */
+  reservadaEn: string | null;
+}) {
+  const [estadoApagar, accionApagar] = useFormState(
+    cambiarDisponibilidadHabitacion,
+    ESTADO_INICIAL
+  );
+  const [estadoLiberar, accionLiberar] = useFormState(
+    liberarReservaDeMiHabitacion,
+    ESTADO_INICIAL
+  );
+
   const descripcion = `${etiquetaTipo(habitacion.tipo)} · ${etiquetaGenero(habitacion.genero)}`;
+  const situacion = estadoDeLaHabitacion(habitacion.disponible, reservadaEn);
+
+  // El mensaje que se enseña es el del formulario que se acaba de enviar: si se
+  // pintaran los dos, el de una acción vieja aparecería bajo un botón que no es.
+  const estado = situacion === "reservada" ? estadoLiberar : estadoApagar;
+  const accion = situacion === "reservada" ? accionLiberar : accionApagar;
+
+  const etiqueta =
+    situacion === "reservada"
+      ? "Liberar reserva"
+      : situacion === "apagada"
+        ? "Volver a ofrecer"
+        : "Retirar de la oferta";
+
+  const insignia =
+    situacion === "reservada"
+      ? { texto: "Reservada", clase: "bg-confianza-danger/10 text-confianza-danger" }
+      : situacion === "apagada"
+        ? { texto: "No se ofrece", clase: "bg-neutro-100 text-neutro-600 ring-1 ring-neutro-200" }
+        : { texto: "Libre", clase: "bg-primary-50 text-primary-800 ring-1 ring-primary-100" };
+
+  const fecha = formatearFechaReserva(reservadaEn);
 
   return (
     <li className="rounded-xl border border-neutro-200 p-3">
@@ -121,55 +200,58 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-neutro-800">
             {descripcion}
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${
-                habitacion.disponible
-                  ? "bg-primary-50 text-primary-800 ring-1 ring-primary-100"
-                  : "bg-confianza-danger/10 text-confianza-danger"
-              }`}
+              className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${insignia.clase}`}
             >
-              {habitacion.disponible ? "Libre" : "Reservada"}
+              {insignia.texto}
             </span>
           </p>
           <p className="precio mt-0.5 text-xs font-semibold text-neutro-500">
             {formatearCOP(habitacion.precio_mensual_cop)} /mes
             {habitacion.alimentacion_incluida ? " · con alimentación" : ""}
           </p>
+          {situacion === "reservada" && fecha ? (
+            <p className="mt-1 text-xs font-semibold text-neutro-600">Reservada el {fecha}.</p>
+          ) : null}
+          {situacion === "apagada" ? (
+            <p className="mt-1 text-xs text-neutro-500">
+              No se muestra en el catálogo: no hay ninguna reserva, la retiraste tú.
+            </p>
+          ) : null}
         </div>
 
-        {/*
-          LA HABITACIÓN RESERVADA NO LLEVA FORMULARIO (tarea #119)
-
-          Esta acción escribe `disponible` por un `update` directo, y desde la
-          oleada 17 eso ya no describe el estado de una habitación: el estado
-          «reservada» es una marca con fecha y autor que solo escriben las
-          funciones de la base. Si el anfitrión pulsaba «Marcar libre» sobre una
-          reservada, la restricción `habitaciones_reservada_no_se_ofrece`
-          (`reservada_en is null or disponible = false`) lo rechazaba —correcto—
-          pero el aviso hablaba de longitudes del título y la descripción.
-
-          Ofrecer un botón que la base va a rechazar siempre es peor que no
-          ofrecerlo. Aquí no se le da ningún poder nuevo al anfitrión: se le dice
-          quién gestiona la reserva. Que pueda liberarla o no es una decisión de
-          producto de Juan, no de esta pantalla.
-
-          El caso **no reservado** queda exactamente como estaba: mismo formulario,
-          mismos campos ocultos, mismo botón.
-        */}
-        {habitacion.disponible ? (
-          <form action={accion}>
+        {situacion === "reservada" ? (
+          /*
+           * Liberar va por la función. Se envía solo el identificador: el permiso lo
+           * resuelve el servidor —y la función, dentro de la misma transacción—, no
+           * un campo del formulario.
+           */
+          <form action={accionLiberar}>
             <input type="hidden" name="habitacionId" value={habitacion.id} />
-            <input type="hidden" name="disponible" value="0" />
             <BotonAccion
-              etiqueta="Marcar reservada"
-              ariaLabel={`Marcar como reservada la habitación ${descripcion}`}
-              tono="neutral"
+              etiqueta={etiqueta}
+              ariaLabel={`Liberar la reserva de la habitación ${descripcion}`}
+              tono="confirmar"
             />
           </form>
         ) : (
-          <p className="max-w-[16rem] rounded-xl bg-neutro-100 px-3 py-2 text-xs leading-relaxed text-neutro-600">
-            Esta habitación está reservada. Las reservas las gestiona la coordinación de Nido:
-            escríbenos para liberarla.
-          </p>
+          /*
+           * Encender y apagar sí son la columna: es exactamente lo que el anfitrión
+           * decide, y ninguna de las dos choca con la restricción de la reserva
+           * porque estas habitaciones no la tienen.
+           */
+          <form action={accionApagar}>
+            <input type="hidden" name="habitacionId" value={habitacion.id} />
+            <input type="hidden" name="disponible" value={situacion === "apagada" ? "1" : "0"} />
+            <BotonAccion
+              etiqueta={etiqueta}
+              ariaLabel={
+                situacion === "apagada"
+                  ? `Volver a ofrecer la habitación ${descripcion}`
+                  : `Retirar de la oferta la habitación ${descripcion}`
+              }
+              tono={situacion === "apagada" ? "confirmar" : "neutral"}
+            />
+          </form>
         )}
       </div>
 

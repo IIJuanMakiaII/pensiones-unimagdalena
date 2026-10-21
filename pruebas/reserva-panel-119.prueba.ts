@@ -264,24 +264,23 @@ describe("un `23514` por reserva no se cuenta como un `23514` por longitud", () 
 });
 
 /* ------------------------------------------------------------------------- *
- * 3. La interfaz no ofrece la acción que la base rechazará
+ * 3. El editor no ofrece la acción que la base rechazará
+ *
+ * El panel del anfitrión cambió después, en la tarea #122: pasó de dos estados a
+ * tres y recuperó las acciones que le faltaban. Su contrato se prueba en
+ * `reserva-anfitrion-122.prueba.ts`; lo que queda aquí es lo que la #119 fijó y
+ * sigue valiendo, que es el editor y su mensaje.
  * ------------------------------------------------------------------------- */
 
-describe("el panel del anfitrión deja de ofrecer el botón condenado", () => {
-  it("la rama reservada no monta el formulario y lo dice", () => {
-    assert.match(PANEL_ANFITRION, /habitacion\.disponible \? \(/);
+describe("el editor no ofrece la acción que la base rechazará", () => {
+  it("el panel del anfitrión ya no deduce el estado de la columna sola", () => {
+    // Este era el defecto de la #119: la etiqueta se calculaba con
+    // `!habitacion.disponible`, que mete en el mismo saco «reservada» y «apagada».
     assert.ok(
       !PANEL_ANFITRION.includes("siguienteDisponible"),
-      "ya no hay «siguiente estado»: la habitación reservada no tiene acción"
+      "ya no hay «siguiente estado» calculado solo con la columna"
     );
-    assert.match(PANEL_ANFITRION, /Las reservas las gestiona la coordinación de Nido/);
-  });
-
-  it("el caso no reservado sigue siendo el de antes: mismo campo y mismo botón", () => {
-    // Valor fijo en 0 —marcar reservada— y la misma etiqueta de siempre.
-    assert.match(PANEL_ANFITRION, /name="disponible" value="0"/);
-    assert.match(PANEL_ANFITRION, /etiqueta="Marcar reservada"/);
-    assert.match(PANEL_ANFITRION, /ariaLabel=\{`Marcar como reservada la habitación \$\{descripcion\}`\}/);
+    assert.match(PANEL_ANFITRION, /estadoDeLaHabitacion\(/);
   });
 
   it("el editor no deja marcar «Disponible ahora» en una habitación reservada", () => {
