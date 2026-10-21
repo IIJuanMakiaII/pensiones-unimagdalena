@@ -1,4 +1,4 @@
-import type { GeneroHabitacion, Habitacion, Pension, TipoHabitacion } from "@/types";
+import type { GeneroHabitacion, Habitacion, PensionSinContacto, TipoHabitacion } from "@/types";
 
 /**
  * Número central de WhatsApp del marketplace (variable de entorno).
@@ -154,7 +154,7 @@ export function etiquetaGenero(genero: GeneroHabitacion): string {
  * Mensaje prellenado de WhatsApp parametrizado según la plantilla canónica
  * del Agente 1 (§5.3): pensión, barrio, tipo, género, precio y alimentación.
  */
-export function mensajeWhatsApp(pension: Pension, habitacion?: Habitacion): string {
+export function mensajeWhatsApp(pension: PensionSinContacto, habitacion?: Habitacion): string {
   const ubicacion = pension.barrio ? ` (${pension.barrio})` : "";
 
   // Pensión publicada sin habitaciones: mensaje general con su precio de referencia.
@@ -221,7 +221,7 @@ function enlaceDeContacto(mensaje: string, contexto: Record<string, string>): st
 }
 
 /** Enlace de contacto de un anuncio: WhatsApp si sirve, formulario de respaldo si no. */
-export function enlaceWhatsApp(pension: Pension, habitacion?: Habitacion): string {
+export function enlaceWhatsApp(pension: PensionSinContacto, habitacion?: Habitacion): string {
   return enlaceDeContacto(mensajeWhatsApp(pension, habitacion), {
     pension: pension.slug,
     ...(habitacion ? { habitacion: habitacion.id } : {}),

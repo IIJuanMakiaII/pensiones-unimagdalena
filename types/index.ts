@@ -150,6 +150,29 @@ export interface PensionConHabitaciones extends Pension {
   habitaciones: Habitacion[];
 }
 
+/**
+ * Un anuncio **sin los dos campos internos** (tarea #93).
+ *
+ * Existe porque los props de un componente de cliente no se quedan en el servidor:
+ * se serializan dentro del HTML, en el payload RSC, y viajan al navegador de
+ * cualquiera que abra la página. Los dos campos que se omiten aquí son los que la
+ * interfaz pública no usa y no tiene por qué recibir:
+ *
+ *   - `anfitrion_id`: la cuenta que publicó. Nunca se decidió publicarlo.
+ *   - `codigo_visible` (`NID-0001`): el identificador de administración. Se puede
+ *     leer con la clave anónima por decisión de la oleada 16, así que omitirlo no lo
+ *     vuelve secreto; lo que se corrige es que no llegue a una pantalla que no lo
+ *     muestra.
+ *
+ * No es un tipo decorativo: es el que impide que el objeto crudo vuelva a cruzar la
+ * frontera. Si un componente de cliente intenta leer uno de los dos campos, el
+ * compilador lo rechaza en vez de dejarlo pasar en silencio.
+ */
+export type PensionSinContacto = Omit<Pension, "anfitrion_id" | "codigo_visible">;
+
+/** El anuncio con sus habitaciones, ya sin los campos internos. */
+export type PensionPublica = PensionSinContacto & { habitaciones: Habitacion[] };
+
 export interface Filtros {
   precioMaximoCop: number; // 0 = sin tope
   genero: GeneroHabitacion | "todos";

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { PensionConHabitaciones } from "@/types";
+import type { PensionPublica } from "@/types";
 import type { FiltrosUI } from "@/lib/filtros";
 import { contarDisponibles, habitacionDestacada } from "@/lib/filtros";
 import { galeriaDe, precioDesde } from "@/lib/pension";
@@ -15,7 +15,7 @@ import Estrellas from "@/components/Estrellas";
 import BadgesServicios from "@/components/BadgesServicios";
 
 interface Props {
-  pension: PensionConHabitaciones;
+  pension: PensionPublica;
   filtros: FiltrosUI;
   /** Solo en la primera card (LCP). */
   prioridadImagen?: boolean;

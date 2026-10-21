@@ -12,6 +12,7 @@ import MapaUbicacion from "@/components/MapaUbicacion";
 import Footer from "@/components/Footer";
 import { SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
+import { paraVistaPublica } from "@/lib/vista-publica";
 import { resumenesDeBarrio, slugDeBarrio } from "@/lib/barrios";
 import { MIGA_INICIO, jsonLdMigas, type Miga } from "@/lib/migas";
 import Migas from "@/components/Migas";
@@ -353,7 +354,11 @@ export default async function DetallePensionPage({ params }: Props) {
           </section>
 
           <div className="mt-10">
-            <DetallePension pension={pension} />
+            {/* `DetallePension` es de cliente: lo que recibe se serializa en el HTML
+                (tarea #93). Se le pasa el anuncio recortado, sin `codigo_visible` ni
+                `anfitrion_id`, que no usa. El objeto completo sigue aquí arriba para
+                los datos estructurados y las migas, que se arman campo a campo. */}
+            <DetallePension pension={paraVistaPublica(pension)} />
           </div>
         </div>
       </main>

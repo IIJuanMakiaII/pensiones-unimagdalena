@@ -1,4 +1,4 @@
-import type { GeneroHabitacion, Habitacion, Pension, PensionConHabitaciones } from "@/types";
+import type { GeneroHabitacion, Habitacion, PensionPublica, PensionSinContacto } from "@/types";
 
 /**
  * Reglas de negocio compartidas sobre una pensión.
@@ -8,22 +8,22 @@ import type { GeneroHabitacion, Habitacion, Pension, PensionConHabitaciones } fr
 export const IMAGEN_RESPALDO =
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80";
 
-export function imagenesDe(pension: Pension): string[] {
+export function imagenesDe(pension: PensionSinContacto): string[] {
   return (pension.imagenes ?? []).filter((url) => Boolean(url));
 }
 
 /** Imagen principal: la primera del arreglo `imagenes`. */
-export function imagenPrincipal(pension: Pension): string {
+export function imagenPrincipal(pension: PensionSinContacto): string {
   return imagenesDe(pension)[0] ?? IMAGEN_RESPALDO;
 }
 
 /** Galería para el carrusel (nunca vacía). */
-export function galeriaDe(pension: Pension): string[] {
+export function galeriaDe(pension: PensionSinContacto): string[] {
   const imagenes = imagenesDe(pension);
   return imagenes.length > 0 ? imagenes : [IMAGEN_RESPALDO];
 }
 
-export function habitacionesDisponibles(pension: PensionConHabitaciones): Habitacion[] {
+export function habitacionesDisponibles(pension: PensionPublica): Habitacion[] {
   return (pension.habitaciones ?? []).filter((h) => h.disponible);
 }
 
@@ -31,7 +31,7 @@ export function habitacionesDisponibles(pension: PensionConHabitaciones): Habita
  * Precio "desde": el más económico entre las habitaciones disponibles.
  * Si el anfitrión publicó la pensión sin habitaciones, se usa `precioMensual`.
  */
-export function precioDesde(pension: PensionConHabitaciones): number {
+export function precioDesde(pension: PensionPublica): number {
   const disponibles = habitacionesDisponibles(pension);
   if (disponibles.length === 0) return pension.precioMensual;
   return Math.min(...disponibles.map((h) => h.precio_mensual_cop));
@@ -50,7 +50,7 @@ export function precioDesde(pension: PensionConHabitaciones): number {
  *
  * Devuelve `null` también si el precio fuese 0: no es un precio anunciable.
  */
-export function precioReservable(pension: PensionConHabitaciones): number | null {
+export function precioReservable(pension: PensionPublica): number | null {
   const disponibles = habitacionesDisponibles(pension);
   if (disponibles.length === 0) return null;
 
@@ -59,12 +59,12 @@ export function precioReservable(pension: PensionConHabitaciones): number | null
 }
 
 /** ¿Alguna habitación disponible incluye alimentación? */
-export function tieneAlimentacion(pension: PensionConHabitaciones): boolean {
+export function tieneAlimentacion(pension: PensionPublica): boolean {
   return habitacionesDisponibles(pension).some((h) => h.alimentacion_incluida);
 }
 
 /** Géneros que ofrece la pensión (para el filtro por género). */
-export function generosDisponibles(pension: PensionConHabitaciones): GeneroHabitacion[] {
+export function generosDisponibles(pension: PensionPublica): GeneroHabitacion[] {
   return [...new Set(habitacionesDisponibles(pension).map((h) => h.genero))];
 }
 
@@ -74,7 +74,7 @@ export function generosDisponibles(pension: PensionConHabitaciones): GeneroHabit
  * Distingue "no publicó habitaciones" de "las tiene, pero todas ocupadas": son
  * situaciones distintas para el estudiante y antes se contaban igual.
  */
-export function resumenHabitaciones(pension: PensionConHabitaciones): string {
+export function resumenHabitaciones(pension: PensionPublica): string {
   const todas = pension.habitaciones ?? [];
   const disponibles = habitacionesDisponibles(pension);
 
