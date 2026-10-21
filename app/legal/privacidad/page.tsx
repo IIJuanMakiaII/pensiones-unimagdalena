@@ -10,9 +10,15 @@ export const metadata: Metadata = {
     "Qué datos guarda Nido, de quién son, dónde quedan y qué es visible sin haber iniciado sesión.",
   alternates: { canonical: `${SITIO_URL}/legal/privacidad` },
   /**
-   * Sin indexar mientras el documento esté en revisión jurídica: contiene los
-   * datos del responsable marcados como PENDIENTE. Cuando el abogado lo valide y
-   * estén rellenos, se quita esta línea y pasa a indexarse como cualquier página.
+   * Sin indexar mientras el documento no haya pasado por revisión jurídica.
+   *
+   * El motivo ya no es el que decía antes: los datos del responsable **están
+   * rellenos** y el cartel que avisaba de que el texto seguía en revisión se
+   * retiró de la página (tarea #125). Lo que queda es la decisión, que no es del
+   * código:
+   * meter un contrato en el índice de Google antes de que lo lea un abogado
+   * expone el texto a cualquiera que lo busque. Se deja fuera hasta que se decida
+   * lo contrario, y entonces basta con quitar esta línea.
    */
   robots: { index: false, follow: true },
 };
@@ -29,14 +35,6 @@ export default function PrivacidadPage() {
           <Link href="/" className="text-sm font-bold text-primary-700 hover:underline">
             ← Volver al catálogo
           </Link>
-        </p>
-
-        <p
-          role="note"
-          className="mb-5 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-4 py-3 text-sm font-semibold text-neutro-700"
-        >
-          Este texto está pendiente de revisión jurídica y sus datos del responsable figuran como
-          PENDIENTE. No lo tomes todavía como el aviso definitivo.
         </p>
 
         <DocumentoLegal archivo="aviso-de-privacidad.md" />

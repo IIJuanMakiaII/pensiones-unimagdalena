@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   description:
     "Cómo funciona Nido: llevamos el contacto con los anfitriones y cerramos contigo la reserva del primer mes.",
   alternates: { canonical: `${SITIO_URL}/legal/condiciones` },
-  /** Sin indexar mientras esté en revisión jurídica (ver /legal/privacidad). */
+  /**
+   * Sin indexar hasta que se decida lo contrario (ver el comentario largo en
+   * /legal/privacidad). No es por datos sin rellenar: el cartel que avisaba de ello
+   * se retiró en la tarea #125 y el documento está completo.
+   */
   robots: { index: false, follow: true },
 };
 
@@ -25,14 +29,6 @@ export default function CondicionesPage() {
           <Link href="/" className="text-sm font-bold text-primary-700 hover:underline">
             ← Volver al catálogo
           </Link>
-        </p>
-
-        <p
-          role="note"
-          className="mb-5 rounded-xl border border-confianza-gold/40 bg-confianza-gold/10 px-4 py-3 text-sm font-semibold text-neutro-700"
-        >
-          Este texto está pendiente de revisión jurídica y sus datos del responsable figuran como
-          PENDIENTE. No lo tomes todavía como las condiciones definitivas.
         </p>
 
         <DocumentoLegal archivo="condiciones-de-uso.md" />
