@@ -1,4 +1,4 @@
-import type { Habitacion, PensionConHabitaciones, RangoDistancia } from "@/types";
+import type { Habitacion, PensionPublica, RangoDistancia } from "@/types";
 import { habitacionesDisponibles } from "@/lib/pension";
 
 /**
@@ -62,7 +62,7 @@ export const PRECIO_MAX_DEFECTO = 1500000;
  * control no anuncia un abanico que no existe (antes el tope subía un paso
  * —$600.000 → $650.000— y el sitio sugería oferta donde no la había).
  */
-export function limitesDePrecio(pensiones: PensionConHabitaciones[]): { min: number; max: number } {
+export function limitesDePrecio(pensiones: PensionPublica[]): { min: number; max: number } {
   const precios = pensiones.flatMap((p) => {
     const disponibles = habitacionesDisponibles(p);
     if (disponibles.length > 0) return disponibles.map((h) => h.precio_mensual_cop);
@@ -172,7 +172,7 @@ export function habitacionCumpleFiltros(h: Habitacion, f: FiltrosUI): boolean {
  * justamente ese máximo (con el máximo puesto no hay filtro de precio activo).
  */
 export function pensionCumpleFiltros(
-  p: PensionConHabitaciones,
+  p: PensionPublica,
   f: FiltrosUI,
   precioMaximoReal: number
 ): boolean {
@@ -198,7 +198,7 @@ export function pensionCumpleFiltros(
 
 /** Habitación recomendada para el CTA de la card: la más barata que cumple filtros. */
 export function habitacionDestacada(
-  p: PensionConHabitaciones,
+  p: PensionPublica,
   f: FiltrosUI
 ): Habitacion | null {
   const candidatas = habitacionesDisponibles(p)
@@ -208,7 +208,7 @@ export function habitacionDestacada(
 }
 
 /** Cantidad de habitaciones disponibles (microbadge de la card). */
-export function contarDisponibles(p: PensionConHabitaciones): number {
+export function contarDisponibles(p: PensionPublica): number {
   return habitacionesDisponibles(p).length;
 }
 
@@ -220,7 +220,7 @@ export function contarDisponibles(p: PensionConHabitaciones): number {
  * prometería habitaciones que sus filtros excluyen.
  */
 export function contarHabitacionesDisponibles(
-  pensiones: PensionConHabitaciones[],
+  pensiones: PensionPublica[],
   f: FiltrosUI
 ): number {
   return pensiones.reduce(
@@ -238,7 +238,7 @@ export function contarHabitacionesDisponibles(
  * conserva la base no es una oferta vigente, y encabezar una lista "menor precio"
  * con algo que no se puede alquilar sería el mismo engaño por otra puerta.
  */
-function precioParaOrdenar(p: PensionConHabitaciones, f: FiltrosUI): number {
+function precioParaOrdenar(p: PensionPublica, f: FiltrosUI): number {
   const destacada = habitacionDestacada(p, f);
   if (destacada) return destacada.precio_mensual_cop;
   if ((p.habitaciones ?? []).length > 0) return Number.POSITIVE_INFINITY;
@@ -256,16 +256,16 @@ function precioParaOrdenar(p: PensionConHabitaciones, f: FiltrosUI): number {
  * pueda explicarse, no en el orden arbitrario en que llegaron de la base.
  */
 export function aplicarFiltros(
-  pensiones: PensionConHabitaciones[],
+  pensiones: PensionPublica[],
   f: FiltrosUI,
   precioMaximoReal: number,
   favoritos: string[] = []
-): PensionConHabitaciones[] {
+): PensionPublica[] {
   const filtradas = pensiones
     .filter((p) => (f.soloFavoritas ? favoritos.includes(p.id) : true))
     .filter((p) => pensionCumpleFiltros(p, f, precioMaximoReal));
 
-  const porDistancia = (a: PensionConHabitaciones, b: PensionConHabitaciones) =>
+  const porDistancia = (a: PensionPublica, b: PensionPublica) =>
     a.distancia_a_pie_minutos - b.distancia_a_pie_minutos;
 
   const orden = f.orden ?? ORDEN_POR_DEFECTO;
@@ -384,7 +384,7 @@ export interface FiltroBloqueante {
  * en caso de empate gana el de mayor prioridad declarada arriba.
  */
 export function filtroQueMasBloquea(
-  pensiones: PensionConHabitaciones[],
+  pensiones: PensionPublica[],
   f: FiltrosUI,
   precioMaximoReal: number,
   favoritos: string[] = []

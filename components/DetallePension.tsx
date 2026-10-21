@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PensionConHabitaciones } from "@/types";
+import type { PensionPublica } from "@/types";
 import {
   atributosDeContacto,
   enlaceWhatsApp,
@@ -14,7 +14,7 @@ import { WhatsAppIcon } from "@/components/CardPension";
 import DesgloseReserva from "@/components/DesgloseReserva";
 
 interface Props {
-  pension: PensionConHabitaciones;
+  pension: PensionPublica;
 }
 
 /**

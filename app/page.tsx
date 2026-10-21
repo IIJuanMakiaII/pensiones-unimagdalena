@@ -3,6 +3,7 @@ import { catalogoDemo, obtenerCatalogo } from "@/lib/datos";
 import { esFalloDeLectura } from "@/lib/catalogo-respaldo";
 import { DEMO_HABILITADA, SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
+import { paraVistaPublicaLista } from "@/lib/vista-publica";
 import { mostrarListaDeEspera } from "@/lib/lista-espera";
 import Hero from "@/components/Hero";
 import ComoFunciona from "@/components/ComoFunciona";
@@ -87,9 +88,14 @@ export default async function Home() {
            resultado eran dos encabezados idénticos seguidos, que un lector de pantalla
            anuncia dos veces. El del catálogo es el que se queda, porque es el que cae
            dentro del landmark y del destino del salto al contenido. */
+        /* El catálogo es un componente de cliente: todo lo que recibe se serializa
+           dentro del HTML y viaja al navegador (tarea #93). Por eso las dos listas
+           se recortan aquí —con `paraVistaPublicaLista`— y no se pasan crudas: el
+           código visible y el `anfitrion_id` no se dibujan en ninguna tarjeta, así
+           que no tienen por qué salir del servidor. La consulta no cambia. */
         <CatalogoInteractivo
-          pensiones={pensiones}
-          pensionesDemo={DEMO_HABILITADA ? catalogoDemo() : []}
+          pensiones={paraVistaPublicaLista(pensiones)}
+          pensionesDemo={DEMO_HABILITADA ? paraVistaPublicaLista(catalogoDemo()) : []}
           demoHabilitada={DEMO_HABILITADA}
         />
       )}

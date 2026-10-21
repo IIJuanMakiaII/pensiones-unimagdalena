@@ -6,6 +6,7 @@ import { resumenesDeBarrio } from "@/lib/barrios";
 import { formatearCOP } from "@/lib/formato";
 import { SITIO_URL } from "@/lib/sitio";
 import { serializarJsonLd } from "@/lib/json-ld";
+import { paraVistaPublica } from "@/lib/vista-publica";
 import { MIGA_INICIO, jsonLdMigas, type Miga } from "@/lib/migas";
 import { FILTROS_INICIALES } from "@/lib/filtros";
 import CardPension from "@/components/CardPension";
@@ -184,8 +185,17 @@ export default async function PaginaBarrio({ params }: Props) {
             Publicadas en {nombre}
           </h2>
           <div className="mt-3 grid gap-5 md:grid-cols-2">
+            {/*
+              `CardPension` es de cliente y sus props se serializan en el HTML
+              (tarea #93): la tarjeta se pasa recortada. El listado completo sigue
+              disponible arriba para los datos estructurados de la página.
+            */}
             {pensiones.map((pension) => (
-              <CardPension key={pension.id} pension={pension} filtros={FILTROS_INICIALES} />
+              <CardPension
+                key={pension.id}
+                pension={paraVistaPublica(pension)}
+                filtros={FILTROS_INICIALES}
+              />
             ))}
           </div>
         </section>

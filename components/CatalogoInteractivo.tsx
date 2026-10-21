@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import ChipsFiltros from "@/components/ChipsFiltros";
-import type { PensionConHabitaciones } from "@/types";
+import type { PensionPublica } from "@/types";
 import {
   ETIQUETA_ORDEN,
   FILTROS_INICIALES,
@@ -26,9 +26,9 @@ import CardPension from "@/components/CardPension";
 import EstadoVacio from "@/components/EstadoVacio";
 
 interface Props {
-  pensiones: PensionConHabitaciones[];
+  pensiones: PensionPublica[];
   /** Catálogo de ejemplo para presentaciones (vacío si la demo está deshabilitada). */
-  pensionesDemo: PensionConHabitaciones[];
+  pensionesDemo: PensionPublica[];
   demoHabilitada: boolean;
 }
 
