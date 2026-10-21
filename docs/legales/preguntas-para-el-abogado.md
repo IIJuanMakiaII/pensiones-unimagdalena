@@ -206,7 +206,11 @@ no requieren respuesta:
   en el formulario al publicar, pero se guarda en una tabla aparte (`contacto_anfitrion`)
   con reglas por fila de dos lectores —el propietario y el equipo—; la proyección pública
   no incluye la columna y el acceso anónimo a esa tabla responde «permiso denegado». La
-  captura **sí** ocurre: ver la pregunta sobre si necesita autorización propia.
+  captura **sí** ocurre, y **no hay constancia de que el propietario la aceptara**: no hay
+  casilla que marcar ni columna donde guardar la aceptación. El detalle medido está en
+  [autorizacion-anfitrion.md](autorizacion-anfitrion.md) §8, «Estado técnico del
+  consentimiento sobre el número». **Falta la pregunta:** este cuestionario no le pregunta
+  al abogado cómo debe recogerse y conservarse ese permiso, y debería.
 - Hay **medición sin cookies** que no identifica personas; por eso el sitio no necesita
   aviso de cookies.
 - Un propietario **no puede modificar por su cuenta** el sello de verificación, la
