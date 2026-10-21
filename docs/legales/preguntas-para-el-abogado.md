@@ -172,7 +172,8 @@ falsa.)*
 ## H. El consumidor y el arriendo
 
 33. ¿Aplica la **Ley 1480 (Estatuto del Consumidor)** a esta relación — sobre todo
-    ahora que hay un cobro en línea — y qué debería decir el aviso para cumplirla,
+    cuando la plataforma pase a cobrar el Depósito de Reserva, hoy manual y mañana por
+    pasarela — y qué debería decir el aviso para cumplirla,
     particularmente si el estudiante es menor de 18 años?
 34. ¿La plataforma debe ofrecer un **modelo de contrato de arriendo** a las partes, o
     eso agrava nuestra posición como intermediarios?
@@ -201,9 +202,11 @@ no requieren respuesta:
 - Las **contraseñas están cifradas** y nadie del equipo puede leerlas.
 - Los **correos y nombres de las cuentas no son públicos**: cada persona solo ve su
   propio perfil. Verificado en las políticas de acceso de la base de datos.
-- **El número de WhatsApp del propietario ya no se pide, no se publica y no viaja a la
-  página.** La aplicación pide las columnas por su nombre y esa no está entre ellas;
-  hay una prueba que lo sostiene.
+- **El número de WhatsApp del propietario no se publica y no viaja a la página.** Se pide
+  en el formulario al publicar, pero se guarda en una tabla aparte (`contacto_anfitrion`)
+  con reglas por fila de dos lectores —el propietario y el equipo—; la proyección pública
+  no incluye la columna y el acceso anónimo a esa tabla responde «permiso denegado». La
+  captura **sí** ocurre: ver la pregunta sobre si necesita autorización propia.
 - Hay **medición sin cookies** que no identifica personas; por eso el sitio no necesita
   aviso de cookies.
 - Un propietario **no puede modificar por su cuenta** el sello de verificación, la

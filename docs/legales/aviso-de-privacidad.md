@@ -33,17 +33,27 @@ Esta no es una lista genérica: es exactamente lo que el sitio guarda hoy.
 | Descripción, servicios y normas | Propietario | Al publicar | Base de datos, tabla `pensiones` |
 | Fotos del inmueble | Propietario | Al publicar | Almacenamiento de archivos |
 | Habitaciones: tipo, género, precio, si dan comida, si están libres | Propietario | Al publicar | Base de datos, tabla `habitaciones` |
+| **Número de WhatsApp del propietario** | Propietario | Al publicar un anuncio | Base de datos, tabla `contacto_anfitrion`. **Privada**: solo la leen el propio propietario y el equipo de Nido; no es pública en ninguna página |
+| Nombre, dato de contacto y mensaje del formulario de respaldo | Quien consulta | Al enviar el formulario de respaldo, cuando WhatsApp no está disponible | Base de datos, tabla `contactos_respaldo`. **Privada**: sin acceso público |
+| Constancia de aceptación de los textos legales, con su fecha | Quien crea cuenta | Al registrarse | Metadatos de la cuenta. No se publica |
 | Fecha de creación de la cuenta | Quien crea cuenta | Al registrarse | Base de datos |
 
-**El número de WhatsApp del anfitrión ya no se pide ni se publica.** El campo existe
-todavía en la tabla por razones históricas, pero **no se solicita, no se muestra y no
-viaja a la página**. Si hubiera quedado algún valor guardado de versiones anteriores, se
-elimina a petición por el canal de la sección 7.
+**El número de WhatsApp del anfitrión no se publica, pero sí se pide.** Se solicita en
+el formulario al publicar el anuncio, porque es la vía por la que el equipo de Nido
+escribe al propietario para coordinar visitas y reservas. Se guarda en una tabla aparte
+(`contacto_anfitrion`) con reglas por fila de **dos lectores**: el propio propietario y el
+equipo de Nido. **No se muestra en el anuncio, no viaja a la página y no es legible sin
+sesión.**
+
+La columna heredada de versiones anteriores sigue existiendo en la tabla de anuncios, pero
+está sin uso y cerrada a la lectura pública. Si hubiera quedado algún valor guardado de
+entonces, se elimina a petición por el canal de la sección 7.
 
 ### 2.2 Lo que se añade con la reserva y el pago
 
 Estas categorías **todavía no se recogen**, porque el cobro en línea no está
-construido. Se declaran aquí para que el aviso esté completo el día que se active:
+construido y la reserva se coordina hoy por WhatsApp, fuera de la plataforma. Se declaran
+aquí para que el aviso esté completo el día que se active:
 
 | Dato | De quién | Para qué | Dónde queda |
 |---|---|---|---|
@@ -58,6 +68,12 @@ con ella el proveedor de pagos. **Hoy no hay ninguno contratado y ninguna de est
 categorías se recoge todavía**; cuando se activen, esta sección se actualizará antes de
 empezar a usarlas.
 
+**El estado de una habitación no es un dato personal.** Que una habitación figure libre,
+ocupada o reservada —y la fecha en que se marca— describe el anuncio, no a una persona: no
+dice quién reservó, ni cuánto pagó, ni cómo contactarle. Marcar una habitación como
+reservada **no crea un registro de la reserva**: esa constancia sigue viviendo fuera de la
+plataforma mientras el cobro en línea no exista.
+
 ### 2.3 Lo que NO guardamos
 
 - **No guardamos datos de tarjeta ni credenciales de pago.** Los procesará la **pasarela
@@ -67,7 +83,9 @@ empezar a usarlas.
   la tarjeta.
 - No pedimos **documento de identidad**, ni fecha de nacimiento, ni datos bancarios del
   estudiante, ni su dirección particular.
-- **Ya no se guarda ningún teléfono del propietario para publicarlo.**
+- **No se guarda ningún teléfono del propietario para publicarlo.** El que se registra al
+  publicar queda en la tabla privada de la sección 2.1 y solo lo ven el propio propietario
+  y el equipo de Nido.
 
 ## 3. Qué es visible sin haber iniciado sesión
 
@@ -151,11 +169,12 @@ plataforma deja de cobrar en tu nombre, sin afectar a las reservas ya cerradas. 
 quede constancia por escrito, basta con pedirlo a **oterojuan15@gmail.com** desde el
 correo registrado de tu cuenta.
 
-### Si retiraste tu número de WhatsApp
+### Sobre el número de WhatsApp que registraste
 
-**Se te retiró solo.** Con el modelo nuevo el número no se publica, así que no tienes
-que pedir nada. Si quieres además que se **borre** cualquier valor que hubiera quedado
-guardado de antes, pídelo por el canal de la sección 7 y se elimina.
+**No se publica.** Ya no aparece en tu anuncio ni en ninguna página pública, así que no
+tienes que pedir nada para eso. El número que registres al publicar vive en la tabla
+privada de la sección 2.1, lo leen solo tú y el equipo de Nido, y puedes pedir que se
+**borre** —o que se corrija— por el canal de la sección 7.
 
 ## 8. Menores de edad
 
@@ -182,6 +201,10 @@ actualización y se avisará a los propietarios por el correo registrado.
 
 ---
 
-**Última actualización:** 10 de octubre de 2026.
-**Versión:** 1.0 — incluye los datos del responsable del tratamiento y el modelo de
-reserva del primer mes.
+**Última actualización:** 21 de octubre de 2026.
+**Versión:** 1.1 — la 1.0 incluía los datos del responsable del tratamiento y el modelo de
+reserva del primer mes. La 1.1 corrige la sección 2.1: el número de WhatsApp del
+propietario **sí se pide** al publicar y se guarda en la tabla privada `contacto_anfitrion`;
+añade el formulario de respaldo y la constancia de aceptación de los textos legales a la
+lista de lo que se guarda; y precisa que el estado de una habitación no es un dato personal
+ni un registro de la reserva.

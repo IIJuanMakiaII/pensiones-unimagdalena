@@ -52,10 +52,12 @@ que hace falta para saber si se puede cobrar por un contacto y cuánto vale.
 
 ### 3.1 El dominio real (5 minutos, y es requisito de #25)
 
-Hoy `NEXT_PUBLIC_SITE_URL` está vacío y el código usa
-`https://pensiones-unimagdalena.vercel.app` como respaldo. Mientras siga así, las
+Si `NEXT_PUBLIC_SITE_URL` no está definida, el código usa
+`https://pensiones-unimagdalena.vercel.app` como respaldo. **Desde el repositorio no se
+puede saber si está definida**: esa variable vive en el panel de Vercel y solo se
+comprueba allí (Project → Settings → Environment Variables). Mientras no lo esté, las
 canónicas, los datos estructurados, el `sitemap.xml` y **los enlaces de los
-correos** apuntan a un dominio que quizá no sea el tuyo.
+correos** apuntan al dominio de respaldo, que no es el tuyo.
 
 Cuando tengas el dominio, abre `.env.local` (o las variables de entorno del
 despliegue) y pega **exactamente** esto, sustituyendo el dominio:

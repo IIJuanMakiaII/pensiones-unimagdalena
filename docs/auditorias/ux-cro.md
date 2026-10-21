@@ -137,7 +137,10 @@ Microcopy obligatorio bajo el `legend`: *"Añade al menos una habitación: así 
 
 **Evidencia:** `components/Carrusel.tsx:131-133` — `className="h-2 w-2 rounded-full"` → área táctil de **8 × 8 px**, sin padding.
 
-**Impacto:** incumple WCAG 2.5.8 (mínimo 24 × 24 px) y el estándar propio del contrato Mobile-First (≥ 44 px, `docs/agent1-diseno-arquitectura.md` §5.2). En un celular, acertar es azar; fallar navega a la ficha (por H3).
+**Impacto:** incumple WCAG 2.5.8 (mínimo 24 × 24 px) y el estándar propio de accesibilidad del proyecto (≥ 44 px, `README.md:53`). En un celular, acertar es azar; fallar navega a la ficha (por H3).
+
+> *Referencia corregida el 2026-10-21:* esta línea citaba `docs/agent1-diseno-arquitectura.md` §5.2,
+> un documento que **nunca se escribió**. El estándar de 44 px sí existe y está en el `README.md`.
 
 **Propuesta concreta:** mantener el punto visual de 8 px dentro de un botón de 44 px:
 ```tsx

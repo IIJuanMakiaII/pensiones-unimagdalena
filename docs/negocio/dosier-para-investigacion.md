@@ -1,6 +1,8 @@
 # Dosier de negocio para investigación de mercado y análisis financiero
 
 > **Preparado:** 2026-09-18 · **Para:** investigador de mercado y experto financiero
+> **Actualizado:** 2026-10-21 · se volvieron a medir el inventario y los precios (§4, §6) y
+> se corrigieron los hallazgos 1 a 4 de §9, que ya no describían el sistema.
 > **Fuente:** el propio sistema en producción (código, base de datos y auditorías del
 > repositorio privado `IIJuanMakiaII/pensiones-unimagdalena`).
 
@@ -80,8 +82,8 @@ análisis, no los matices:
 |---|---|
 | **Cobro de ningún tipo** — ni comisión, ni suscripción, ni destacados | El ingreso actual es **$0**. La monetización está por construir, no por optimizar. |
 | **Pasarela de pagos** integrada | Cualquier cobro sería hoy **manual y fuera de la plataforma**. |
-| **Registro de que una transacción ocurrió** | La reserva termina en WhatsApp: **la plataforma no sabe si el estudiante alquiló**, ni por cuánto, ni cuándo. Ver §5. |
-| **Analítica de uso** | **No hay ningún dato de tráfico, filtros usados, contactos generados ni conversión.** Cualquier métrica histórica es cero o inexistente. |
+| **Registro de que una transacción ocurrió** | La reserva termina en WhatsApp: **la plataforma no sabe si el estudiante alquiló**, ni por cuánto, ni cuándo. Ver §5. Marcar una habitación como «reservada» **no cambia esto**: es un estado del anuncio, no un registro de la reserva — no guarda quién reservó, ni cuánto pagó, ni con qué medio |
+| **Analítica de uso** | Existe el **instrumento** (medición sin cookies, con eventos de filtros aplicados, ficha abierta, contacto iniciado y publicación creada), pero **no hay serie histórica acumulada**: no hay datos de tráfico, contactos ni conversión anteriores. Cualquier métrica histórica es cero o inexistente |
 | **Reseñas o calificaciones de estudiantes** | El «puntaje» es interno. No hay prueba social generada por usuarios. |
 | **Contrato, depósito o garantía** | El estudiante y el dueño acuerdan por fuera; la plataforma no media ni respalda. |
 | **Sistema de reportes o moderación a escala** | No hay forma de verificar que un anuncio es real más allá del sello manual. |
@@ -91,13 +93,15 @@ análisis, no los matices:
 
 ## 4. Cifras base verificadas
 
-Los números desde los que se puede empezar a calcular, medidos hoy:
+Los números desde los que se puede empezar a calcular. Los de la primera tanda se midieron
+el 2026-09-18, cuando se preparó este dosier; los tres marcados con la fecha se volvieron a
+medir el **2026-10-21** y sustituyen al valor anterior.
 
 | Dato | Valor | Nota |
 |---|---|---|
-| Anuncios publicados | **1** | «Residencia Makia» |
-| Habitaciones en el sistema | **1** | Individual, mixta, sin alimentación, disponible |
-| Precio del anuncio existente | **$600.000 COP / mes** | Precio real publicado |
+| Anuncios publicados | **1** | Hoy titulado «Residencia 101 (Pension de Prueba)»; su dirección es `residencia-makia`. Es el único anuncio público |
+| Habitaciones en el sistema | **2** | *Actualizado el 2026-10-21.* Las dos individuales, mixtas, sin alimentación y disponibles |
+| Precio del anuncio existente | **$1.000.000 y $700.000 COP / mes** | *Actualizado el 2026-10-21.* Son los precios de las dos habitaciones libres, y el que se muestra es el más barato de ellos. El campo `precio_mensual` del anuncio guarda $600.000, pero **no es una oferta reservable** |
 | Anfitriones registrados | **1** | El propio fundador |
 | Estudiantes registrados | **0** | No se registran para buscar |
 | Transacciones cerradas | **0** | No hay forma de medirlas hoy |
@@ -122,7 +126,7 @@ compara con el primer mes de arriendo que acaba de cobrar.
 
 **Comparación con referencias del sector [VERIFICADO, fuentes en §8]:**
 
-| Referencia | Cómo cobra | Equivalente en un arriendo de $600.000 |
+| Referencia | Cómo cobra | Equivalente sobre un arriendo hipotético de $600.000 |
 |---|---|---|
 | Airbnb (2026) | ~**15,5%** del subtotal por reserva | ~$93.000 por reserva |
 | Booking | **14–16%** por reserva | ~$84.000–$96.000 |
@@ -130,9 +134,14 @@ compara con el primer mes de arriendo que acaba de cobrar.
 | Grupos de Facebook (canal real hoy) | Gratis | $0 |
 | **Este negocio (planteado)** | **$50.000–$100.000 una sola vez** | **8%–17% de un mes de arriendo** |
 
+Los $600.000 de la última columna son un **arriendo de referencia para comparar
+porcentajes**, no el precio de las habitaciones de esta plataforma: las dos que hay hoy
+cuestan $700.000 y $1.000.000 (§4). Con un canon de $600.000, la tarifa del 10 % del
+modelo vigente son $60.000.
+
 La comisión planteada **cae dentro del rango del mercado internacional** (un 15,5% de
-Airbnb equivale a unos $93.000 en este caso) y se cobra **una sola vez, no por mes**,
-lo que la hace más barata para el anfitrión que una plataforma global.
+Airbnb equivale a unos $93.000 sobre ese arriendo de referencia) y se cobra **una sola
+vez, no por mes**, lo que la hace más barata para el anfitrión que una plataforma global.
 
 ### 5.2 Segunda fase planteada: destacados y visibilidad **[PLANTEADO]**
 
@@ -172,8 +181,11 @@ Estudiante entra → filtra → ve fichas → pulsa WhatsApp → (fuera de la pl
                                               la plataforma deja de saber qué pasó
 ```
 
-No hay instrumentación en ningún punto de ese recorrido. **Medir el embudo es
-requisito previo a cobrar por él.**
+Los primeros tres pasos **sí están instrumentados** desde que la plataforma mide sin
+cookies: hay eventos de filtros aplicados, de ficha abierta y de contacto iniciado. Lo
+que no existe es la **serie acumulada** —no hay histórico con el que calcular tasas— ni
+ningún punto que observe lo que ocurre después del WhatsApp. **Medir el embudo completo
+es requisito previo a cobrar por él.**
 
 ---
 
@@ -182,9 +194,9 @@ requisito previo a cobrar por él.**
 ### 6.1 Lo que se puede afirmar hoy **[VERIFICADO]**
 
 - **Infraestructura:** base de datos y autenticación en Supabase, más un despliegue
-  serverless. El volumen de datos actual —**1 anuncio, 1 habitación**— cabe en
-  cualquier plan gratuito con márgenes enormes. El costo de infraestructura **no es
-  el problema del negocio hoy**.
+  serverless. El volumen de datos actual —**1 anuncio, 2 habitaciones** (medido el
+  2026-10-21)— cabe en cualquier plan gratuito con márgenes enormes. El costo de
+  infraestructura **no es el problema del negocio hoy**.
 - **Sin costos variables:** no hay pasarela de pagos (no hay comisión por
   transacción), ni envío de correos masivos, ni servicios de terceros de pago
   integrados.
@@ -209,7 +221,7 @@ requisito previo a cobrar por él.**
 | Estudiantes de la Universidad del Magdalena | **28.227** (2026) | [unimagdalena.edu.co](https://www.unimagdalena.edu.co/) · [Wikipedia](https://es.wikipedia.org/wiki/Universidad_del_Magdalena) |
 | Nuevos estudiantes de pregrado presencial, 2026-I | **más de 2.100** | [El Informador (19 ene 2026)](https://www.elinformador.com.co/index.php/el-magdalena/83-departamento/346413-unimagdalena-abre-el-2026-con-nuevas-carreras-y-mas-de-2-100-estudiantes) |
 | Habitación amoblada en Santa Marta (avisos publicados) | desde **~$400.000 COP/mes** | [CompartoApto · Santa Marta](https://www.compartoapto.com/magdalena/en-arriendo-santa-marta) |
-| Precio del anuncio real de esta plataforma | **$600.000 COP/mes** | Sistema propio |
+| Precio de las habitaciones reales de esta plataforma | **$700.000 y $1.000.000 COP/mes** (medido el 2026-10-21) | Sistema propio |
 
 **Lectura de los datos:** el mercado de estudiantes es grande y se renueva cada
 semestre, pero el número que decide el negocio **no es el total de estudiantes** (la
@@ -218,11 +230,13 @@ tiene contrato o comparte). El dato que falta es la **rotación real**: cuántos
 estudiantes buscan habitación cada semestre. Eso es lo primero que debe estimar el
 investigador de mercado, y no lo puede deducir nadie más que él.
 
-**Un dato cualitativo del propio producto:** el único anuncio real está a $600.000,
-**por encima** del aviso más barato visto en la competencia (~$400.000). Con una sola
-observación no se concluye nada, pero sí orienta la pregunta: ¿el producto debe
-posicionarse en el segmento alto (más servicios, más cerca del campus) o en el
-volumen?
+**Un dato cualitativo del propio producto:** el único anuncio real ofrece dos
+habitaciones a **$700.000 y $1.000.000**, las dos **por encima** del aviso más barato
+visto en la competencia (~$400.000). Con una sola publicación no se concluye nada, pero
+sí orienta la pregunta: ¿el producto debe posicionarse en el segmento alto (más
+servicios, más cerca del campus) o en el volumen? Con el modelo vigente —10 % de tarifa de
+servicio y 20 % de depósito—, esas dos habitaciones producen $70.000 y $100.000 de tarifa
+respectivamente, no una cifra fija.
 
 ---
 
@@ -246,22 +260,31 @@ los canales informales no estructuran. Ese es el activo a defender.
 Hallazgos de las auditorías internas del repositorio, ya corregidos o pendientes.
 Se incluyen porque afectan al negocio, no solo a la técnica.
 
-1. **Sin analítica ni `sitemap`:** la plataforma no puede medirse ni aparecer en
-   buscadores con URLs limpias. Es la deuda más urgente para cualquier decisión con
-   datos.
-2. **Catálogo de demostración en producción:** hoy se sirve contenido de ejemplo bajo
-   ciertas condiciones de configuración. **Para un lanzamiento comercial hay que
-   apagarlo**, o un estudiante podría ver una habitación que no existe. Es la lección
-   más caras del tipo de marketplace: un catálogo con inventario falso destruye la
-   confianza en una sola visita.
-3. **Identificadores de anuncio y URL:** el sistema mezcla dos formatos de
-   identificador, lo que produce direcciones poco compartibles. Afecta al
-   boca a boca, que es el canal principal de este mercado.
-4. **Datos personales de terceros:** la plataforma almacena el **número de WhatsApp
-   del anfitrión** y la dirección del inmueble. Ese número queda visible para
-   visitantes anónimos. **Hay que revisar qué obligaciones aplican** en Colombia al
-   tratar datos de contacto de personas naturales (la Ley 1581 de 2012 y la
-   autorización del titular son el punto de partida a consultar con un abogado).
+> **Actualización del 2026-10-21.** Los puntos 1, 2, 3 y 4 de esta lista **ya no
+> describen el estado actual** y se corrigen abajo, para que el dosier no siga
+> atribuyéndole a la plataforma fallos que ya están cerrados. Los puntos 5 y 6 siguen
+> vigentes tal como están.
+
+1. **Analítica y `sitemap`:** *corregido.* Ya hay `sitemap`, `robots` y URLs legibles, y
+   la plataforma mide sin cookies. Lo que falta no es el instrumento sino la **serie**:
+   no hay datos acumulados de tráfico ni de conversión con los que decidir.
+2. **Catálogo de demostración:** *corregido.* La demostración **no se sirve en
+   producción** con la configuración actual: solo aparece si se enciende de forma
+   explícita con `NEXT_PUBLIC_MOSTRAR_DEMO=1`, y entonces el sitio lo avisa. Antes, un
+   fallo de lectura publicaba seis anuncios inventados sin síntoma; hoy un fallo se
+   muestra como fallo. **Para un lanzamiento comercial la bandera debe seguir apagada**:
+   un catálogo con inventario falso destruye la confianza en una sola visita.
+3. **Identificadores de anuncio y URL:** *corregido.* Las fichas se sirven con dirección
+   legible y estable (`/pensiones/residencia-makia`), que es la que se comparte y la que
+   entra en el `sitemap`.
+4. **Datos personales de terceros:** *corregido en lo esencial, pendiente en lo formal.*
+   La plataforma sigue guardando el número de WhatsApp del anfitrión y la dirección del
+   inmueble, pero **el número ya no es visible para visitantes anónimos**: vive en una
+   tabla privada que solo leen el propietario y el equipo. Lo que queda pendiente no es
+   técnico sino legal: **revisar qué obligaciones aplican** a ese tratamiento (la Ley 1581
+   de 2012 y la autorización del titular son el punto de partida a consultar con un
+   abogado), incluida la pregunta de si la captura del número necesita una autorización
+   propia en el formulario.
 5. **Verificación manual:** el sello de confianza lo asigna el equipo a mano. No
    escala y su valor depende de que el criterio se sostenga.
 6. **Dependencia de un solo canal de contacto externo** (WhatsApp) para todo el

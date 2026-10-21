@@ -2,6 +2,11 @@
 
 Guía para poner el sitio en línea por primera vez. Se puede seguir de arriba abajo.
 
+> **Estado (medido el 2026-10-21):** esto **ya está hecho**. El sitio lleva publicado en
+> `https://pensiones-unimagdalena.vercel.app` sirviendo `main`. Lo que queda de esta guía
+> por hacer es el **dominio propio** (§2, `NEXT_PUBLIC_SITE_URL`), que desde el
+> repositorio no se puede comprobar: vive en el panel de Vercel.
+
 > **Resumen en una línea:** el sitio va en **Vercel**, no en GitHub Pages. GitHub
 > queda como casa del código y de las comprobaciones automáticas.
 
