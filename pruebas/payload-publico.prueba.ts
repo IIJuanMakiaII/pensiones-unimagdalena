@@ -1,5 +1,5 @@
 /**
- * La frontera servidor→cliente de las rutas públicas (tarea #93).
+ * La frontera servidor→cliente de las rutas públicas (tarea #93, reforzada en la #95).
  *
  * EL PROBLEMA QUE ESTO VIGILA, Y POR QUÉ NO SE VE MIRANDO EL HTML
  * ---------------------------------------------------------------
@@ -17,17 +17,35 @@
  * `42501` que este proyecto ya sufrió— sino la frontera: el objeto entero cruzaba
  * del servidor al cliente.
  *
- * POR QUÉ LA PRUEBA MIRA EL HTML COMPILADO
+ * LAS DOS PUERTAS QUE SE MIRAN (tarea #95)
  * ---------------------------------------
+ * 1. **El HTML servido**, con su payload dentro de `<script>`. Es la carga inicial.
+ * 2. **Los payloads `.rsc`**, que Next sirve aparte en las navegaciones de cliente.
+ *    Se quedaron fuera de la primera versión de esta prueba: el día que se
+ *    escribió estaban limpios, pero nada lo exigía, así que el defecto podía volver
+ *    por ahí sin que la suite se enterara. Un cero que nadie comprueba no es una
+ *    garantía, es una coincidencia.
+ *
+ * POR QUÉ LA PRUEBA MIRA LA COMPILACIÓN Y NO SOLO EL CÓDIGO
+ * -------------------------------------------------------
  * Una prueba que solo leyera el código fuente podría pasar mientras el payload
  * sigue llevando los datos: lo que hay que medir es **lo que se sirve**. Por eso
- * este archivo recorre las páginas prerenderizadas de `.next` y busca las dos
- * cadenas en el HTML completo, `<script>` incluidos, que es exactamente donde se
- * escondían.
+ * este archivo recorre los artefactos de `.next` y busca las dos cadenas en el
+ * contenido completo, `<script>` incluidos, que es exactamente donde se escondían.
  *
- * Si todavía no hay compilación, la comprobación del HTML **no se salta en
- * silencio**: se declara como no medida, porque un verde que no midió nada es peor
- * que un rojo honesto.
+ * La segunda suite comprueba además la **frontera en el código**: que las rutas
+ * públicas no pasen el objeto crudo al componente de cliente. No duplica la
+ * primera; la primera dice que hoy no se filtra, la segunda que no se filtrará en
+ * la próxima compilación. Si solo existiera la primera, un cambio descuidado en una
+ * página pasaría inadvertido hasta el siguiente build; esta lo caza al instante.
+ *
+ * Y cubre **las tres** rutas que entregan objetos a un componente de cliente, no
+ * solo dos: las páginas de barrio fueron la tercera puerta, y fueron justo la que
+ * ninguna ficha preveía.
+ *
+ * Si todavía no hay compilación, la comprobación **no se salta en silencio**: se
+ * declara como no medida, porque un verde que no midió nada es peor que un rojo
+ * honesto.
  */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -91,8 +109,8 @@ function fuente(relativa: string): string {
   return sinComentarios(readFileSync(join(RAIZ, ...relativa.split("/")), "utf8"));
 }
 
-/** Todas las páginas HTML prerenderizadas de la compilación. */
-function htmlCompilado(): string[] {
+/** Los artefactos de la compilación que se sirven al navegador con esa extensión. */
+function compilado(extension: string): string[] {
   const base = join(RAIZ, ".next", "server", "app");
   if (!existsSync(base)) return [];
 
@@ -101,44 +119,69 @@ function htmlCompilado(): string[] {
     for (const entrada of readdirSync(carpeta)) {
       const camino = join(carpeta, entrada);
       if (statSync(camino).isDirectory()) recorrer(camino);
-      else if (entrada.endsWith(".html")) encontrados.push(camino);
+      else if (entrada.endsWith(extension)) encontrados.push(camino);
     }
   };
   recorrer(base);
   return encontrados;
 }
 
-const PAGINAS = htmlCompilado();
+/** Las páginas prerenderizadas: la carga inicial. */
+const PAGINAS = compilado(".html");
+
+/**
+ * Los payloads de navegación de cliente. Es la puerta que la primera versión de
+ * esta prueba no barría (hallazgo O-1 de la revisión de la tarea #94).
+ */
+const PAYLOADS = compilado(".rsc");
+
+/** Todo lo que Next sirve al navegador desde la compilación, junto. */
+const SERVIDO = [...PAGINAS, ...PAYLOADS];
+
+/**
+ * Busca una cadena en todos los artefactos servidos y devuelve los culpables.
+ *
+ * Se lee como texto y no con un parser a propósito: el payload RSC viaja escapado
+ * dentro de una cadena de JavaScript (`\"anfitrion_id\"`), así que buscar el nombre
+ * del campo tal cual es más estricto que interpretarlo — si aparece de cualquier
+ * forma, aparece.
+ */
+function artefactosCon(cadena: string): string[] {
+  return SERVIDO.filter((artefacto) => readFileSync(artefacto, "utf8").includes(cadena))
+    .map((artefacto) => relative(RAIZ, artefacto))
+    .sort();
+}
 
 /* -------------------------------------------------------------------------- */
 /* Lo que se sirve                                                             */
 /* -------------------------------------------------------------------------- */
 
-describe("el HTML público no lleva al navegador datos que no usa", () => {
-  it("hay compilación que medir (si no, esto no puede dar verde)", () => {
+describe("lo que se sirve al navegador no lleva datos que la interfaz no usa", () => {
+  it("hay compilación que medir: páginas y payloads (si no, esto no puede dar verde)", () => {
     assert.ok(
       PAGINAS.length > 0,
       "no se encontró ninguna página prerenderizada en `.next/server/app`: compila antes de correr esta prueba. " +
         "Un verde sin compilación no mediría nada."
     );
+    assert.ok(
+      PAYLOADS.length > 0,
+      "no se encontró ningún payload `.rsc` en `.next/server/app`: sin ellos la prueba no estaría mirando la puerta " +
+        "de las navegaciones de cliente, y diría que vigila algo que no vigila."
+    );
   });
 
-  it("ninguna página servida contiene `NID-`, ni dentro de `<script>`", () => {
-    const culpables = PAGINAS.filter((pagina) =>
-      readFileSync(pagina, "utf8").includes("NID-")
-    ).map((pagina) => relative(RAIZ, pagina));
+  it("ningún artefacto servido contiene `NID-`, ni dentro de `<script>` ni en un payload RSC", () => {
+    const culpables = artefactosCon("NID-");
 
     assert.deepEqual(
       culpables,
       [],
-      `el código visible viaja al navegador en estas páginas: ${culpables.join(", ")}`
+      `el código visible viaja al navegador en estos artefactos servidos: ${culpables.join(", ")}`
     );
   });
 
-  it("ninguna página servida contiene `anfitrion_id`", () => {
-    const culpables = PAGINAS.filter((pagina) =>
-      readFileSync(pagina, "utf8").includes("anfitrion_id")
-    ).map((pagina) => relative(RAIZ, pagina));
+  it("ningún artefacto servido contiene `anfitrion_id`", () => {
+    const culpables = artefactosCon("anfitrion_id");
 
     assert.deepEqual(
       culpables,
@@ -149,7 +192,7 @@ describe("el HTML público no lleva al navegador datos que no usa", () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* La frontera                                                                 */
+/* La frontera, en el código                                                   */
 /* -------------------------------------------------------------------------- */
 
 describe("las rutas públicas recortan el objeto antes de dárselo al cliente", () => {
@@ -170,6 +213,23 @@ describe("las rutas públicas recortan el objeto antes de dárselo al cliente", 
       ficha.includes("pension={pension}"),
       false,
       "el anuncio cruza al cliente sin recortar"
+    );
+  });
+
+  /**
+   * La tercera puerta (hallazgo O-2). Las páginas de barrio pintan la tarjeta
+   * directamente desde el servidor, sin pasar por el catálogo, y fue justo la ruta
+   * que ninguna ficha preveía: la encontró la medición, con el dominio delante.
+   * La aserción de HTML ya la cubría; esta la cubre también en el código, que es
+   * lo que impide que vuelva en la próxima compilación.
+   */
+  it("la página de barrio no entrega el anuncio crudo a la tarjeta", () => {
+    const barrio = fuente("app/barrios/[barrio]/page.tsx");
+
+    assert.equal(
+      barrio.includes("pension={pension}"),
+      false,
+      "el anuncio cruza al cliente sin recortar desde la página de barrio: es la tercera puerta, la que la medición destapó"
     );
   });
 });
