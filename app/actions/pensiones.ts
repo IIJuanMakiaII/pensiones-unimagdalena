@@ -1,10 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { revalidarCatalogo } from "@/lib/revalidar-catalogo";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import {
+  esHabitacionDeMisPensiones,
   leerCamposDePension,
   mensajeDeErrorDeBase,
   reconciliarHabitaciones,
@@ -39,6 +41,24 @@ import { AYUDA_WHATSAPP, CAMPO_WHATSAPP } from "@/lib/formulario-pension";
  * acción, con la sesión por delante.
  */
 const MAX_PUBLICACIONES_24H = 5;
+
+/**
+ * Descarta la caché del panel del anfitrión.
+ *
+ * Se añadió en la tarea #122: hasta entonces las acciones de disponibilidad solo
+ * invalidaban el catálogo, así que el panel se quedaba con la insignia de antes
+ * hasta que el anfitrión recargaba a mano. Es el mismo patrón —y por el mismo
+ * motivo— que `revalidarPanelMaestro()` en `app/actions/maestro.ts`: una función
+ * local y no exportada, porque un módulo `"use server"` solo puede exportar
+ * funciones asíncronas y `revalidatePath` es síncrona.
+ *
+ * El tipo `"page"` es obligatorio en las rutas dinámicas: sin él no se invalida
+ * ninguna de sus direcciones.
+ */
+function revalidarPanelAnfitrion(): void {
+  revalidatePath("/publicar", "page");
+  revalidatePath("/publicar/[id]/editar", "page");
+}
 
 /**
  * Lee el WhatsApp privado que envía el formulario del anfitrión (tarea #77).
@@ -243,7 +263,23 @@ export async function crearPension(
 }
 
 /**
- * Server Action: marca una habitación como libre o reservada.
+ * Server Action: enciende o apaga la oferta de una habitación (columna `disponible`).
+ *
+ * QUÉ NO ES ESTA ACCIÓN (tarea #122)
+ * ---------------------------------
+ * **No reserva.** Desde la oleada 17, «reservada» no es un `disponible = false`
+ * más: es una marca con fecha y autor que solo escriben las funciones de la base
+ * (`marcar_habitacion_reservada` / `liberar_habitacion_reservada`). Aquí se escribe
+ * la columna, que es exactamente lo que hace un anfitrión cuando deja de ofrecer su
+ * habitación: mantenimiento, reforma, o que ya no la alquila. Y por eso el
+ * `disponible = false` de este camino deja la habitación **apagada, no reservada**.
+ *
+ * El caso simétrico —volver a encenderla— sí pasa por aquí, y es legítimo: apagar y
+ * encender una habitación **sin reserva** nunca chocó con la restricción
+ * `habitaciones_reservada_no_se_ofrece`, que exige `reservada_en is null or
+ * disponible = false`. Lo que la restricción prohíbe es encender una habitación
+ * **con reserva**, y para eso está `liberarReservaDeMiHabitacion`, que va por la
+ * función.
  *
  * Autorización en dos capas, porque ocultar el botón no protege nada:
  *  1. La identidad sale de la sesión (`supabase.auth.getUser()`), nunca del
@@ -340,11 +376,16 @@ export async function cambiarDisponibilidadHabitacion(
     .select("id, pension_id");
 
   if (error) {
-    console.error("Error cambiando la disponibilidad de la habitación:", error.message);
-    return {
-      ok: false,
-      mensaje: "No pudimos guardar el cambio. Vuelve a intentarlo en unos segundos.",
-    };
+    console.error("Error cambiando la disponibilidad de la habitación:", error.code, error.message);
+    /*
+     * Tarea #119 · este `update` de `disponible` sobre una habitación reservada
+     * choca con la restricción de la oleada 17 y llega como `23514`. Antes se
+     * respondía «vuelve a intentarlo en unos segundos», que invitaba a repetir una
+     * acción que nunca iba a funcionar. Ahora se traduce por el mismo módulo que el
+     * editor, que distingue la reserva de una longitud de más: es la segunda capa,
+     * para el envío hecho a mano, porque la interfaz ya no ofrece el botón.
+     */
+    return { ok: false, mensaje: mensajeDeErrorDeBase(error) };
   }
 
   const fila = (data ?? [])[0] as { id: string; pension_id: string } | undefined;
@@ -361,13 +402,194 @@ export async function cambiarDisponibilidadHabitacion(
   }
 
   revalidarCatalogo();
+  revalidarPanelAnfitrion();
 
+  /*
+   * Los dos mensajes dicen lo que de verdad ocurrió, que no es lo mismo en los dos
+   * sentidos: encender la vuelve a ofrecer; apagarla la retira de la oferta **sin**
+   * que exista ninguna reserva. Antes el segundo decía «marcada como reservada», y
+   * esa frase fue la que hizo creer que la columna bastaba para reservar.
+   */
   return {
     ok: true,
     mensaje: disponible
-      ? "Habitación marcada como libre: vuelve a ofrecerse en el catálogo."
-      : "Habitación marcada como reservada: ya no se ofrece ni se puede reservar por WhatsApp.",
+      ? "Habitación libre otra vez: vuelve a ofrecerse en el catálogo."
+      : "Habitación retirada de la oferta: deja de mostrarse en el catálogo. Puedes volver a ofrecerla cuando quieras.",
   };
+}
+
+/**
+ * Server Action: libera la reserva de una habitación **propia** (tarea #122).
+ *
+ * QUÉ HACE, Y POR QUÉ NO POR `update`
+ * ----------------------------------
+ * Llama a `public.liberar_habitacion_reservada(uuid)`, la función de la oleada 17.
+ * Es la única puerta correcta: una reserva son tres columnas coherentes
+ * (`disponible`, `disponible_antes_de_reservar`, `reservada_en`) y la función las
+ * devuelve a su valor previo dentro de la misma transacción. Escribir
+ * `disponible = true` a mano no compila ni llega: la restricción
+ * `habitaciones_reservada_no_se_ofrece` lo rechaza con `23514`, que es justo el
+ * error confuso que se corrigió en la #119.
+ *
+ * LA PROPIEDAD SE COMPRUEBA AQUÍ, ANTES DE LLAMAR
+ * -----------------------------------------------
+ * La función ya autoriza por su cuenta —su predicado es `es_maestro() or
+ * v_anfitrion = v_usuario`—, así que esto no es «la» garantía: es la segunda capa,
+ * la que convierte un intento sobre una habitación ajena en un mensaje que no
+ * revela si esa habitación existe. Se lee el `pension_id` de la habitación, se
+ * compara con las publicaciones de la sesión y solo entonces se llama. Nunca al
+ * revés: llamar primero y «ver qué devuelve» convertiría a la función en la única
+ * puerta y dejaría el `42501` como mensaje de usuario.
+ *
+ * Se pide `email_confirmed_at` por el mismo criterio que las demás escrituras del
+ * panel (A-4): el catálogo es público y se indexa.
+ */
+export async function liberarReservaDeMiHabitacion(
+  _estadoPrevio: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  if (!esSupabaseConfigurado()) {
+    return {
+      ok: false,
+      mensaje:
+        "El modo dinámico no está activo: agrega las credenciales de Supabase en .env.local (ver docs/integracion-supabase.md).",
+    };
+  }
+
+  const habitacionId = String(formData.get("habitacionId") ?? "").trim();
+
+  if (!habitacionId) {
+    return {
+      ok: false,
+      mensaje: "No pudimos identificar la habitación. Recarga la página e inténtalo de nuevo.",
+    };
+  }
+
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, mensaje: "Tu sesión expiró. Inicia sesión de nuevo para gestionar tus habitaciones." };
+  }
+
+  if (!user.email_confirmed_at) {
+    return {
+      ok: false,
+      mensaje:
+        "Confirma tu correo electrónico para publicar y gestionar tus anuncios. Revisa el enlace que te enviamos al registrarte (si no lo ves, mira la carpeta de spam).",
+    };
+  }
+
+  /*
+   * Las publicaciones de esta sesión. Es el dato contra el que se compara después,
+   * y sale de la sesión: aquí no hay ningún campo que diga de quién es la
+   * habitación.
+   */
+  const { data: misPensiones, error: errorPensiones } = await supabase
+    .from("pensiones")
+    .select("id")
+    .eq("anfitrion_id", user.id);
+
+  if (errorPensiones) {
+    console.error("Error consultando las publicaciones del anfitrión:", errorPensiones.message);
+    return {
+      ok: false,
+      mensaje: "No pudimos verificar tus publicaciones. Vuelve a intentarlo en unos segundos.",
+    };
+  }
+
+  const misPensionesIds = (misPensiones ?? []).map((pension) => pension.id as string);
+
+  /*
+   * A qué anuncio pertenece la habitación. Se nombran las columnas —nunca
+   * `select("*")`: desde la oleada 17 devuelve `42501` porque incluye las tres de
+   * la reserva— y se leen solo estas dos, que sí son legibles.
+   */
+  const { data: habitacion, error: errorHabitacion } = await supabase
+    .from("habitaciones")
+    .select("id, pension_id")
+    .eq("id", habitacionId)
+    .maybeSingle();
+
+  if (errorHabitacion) {
+    console.error("Error consultando la habitación:", errorHabitacion.code, errorHabitacion.message);
+    return {
+      ok: false,
+      mensaje: "No pudimos comprobar la habitación. Vuelve a intentarlo en unos segundos.",
+    };
+  }
+
+  // Un `id` inventado y una habitación ajena reciben el mismo mensaje: no hay que
+  // decirle a nadie si existe algo que no es suyo. La RLS ya devuelve cero filas
+  // para lo ajeno; esto es el segundo cerrojo.
+  const pensionDeLaHabitacion = (habitacion as { pension_id?: string } | null)?.pension_id;
+
+  if (!esHabitacionDeMisPensiones(misPensionesIds, pensionDeLaHabitacion)) {
+    return {
+      ok: false,
+      mensaje:
+        "Esa habitación no pertenece a tus publicaciones, así que no se cambió nada. Si crees que es un error, revisa tu sesión.",
+    };
+  }
+
+  const { data, error } = await supabase.rpc("liberar_habitacion_reservada", {
+    p_habitacion_id: habitacionId,
+  });
+
+  if (error) {
+    console.error("Error liberando la reserva de la habitación:", error.code, error.message);
+    return { ok: false, mensaje: mensajeDeErrorAlLiberar(error) };
+  }
+
+  /*
+   * `false` significa «no había nada que liberar», y entonces la función **no toca
+   * `disponible`**. Se informa como tal en vez de responder «liberada»: decir que
+   * se hizo algo que la base no hizo es el fallo que esta tarea existe para evitar.
+   * Si la habitación está apagada sin reserva, el botón que corresponde es «Volver
+   * a ofrecer», no este.
+   */
+  if (data !== true) {
+    return {
+      ok: false,
+      mensaje:
+        "Esa habitación no tenía una reserva registrada, así que no se cambió nada. Si está apagada, usa «Volver a ofrecer».",
+    };
+  }
+
+  revalidarCatalogo();
+  revalidarPanelAnfitrion();
+
+  return {
+    ok: true,
+    mensaje:
+      "Reserva liberada: la habitación vuelve a ofrecerse en el catálogo y la marca de reserva quedó borrada.",
+  };
+}
+
+/**
+ * Traduce un error de `liberar_habitacion_reservada` para el anfitrión.
+ *
+ * No se reutiliza el traductor del panel maestro porque su rama de `42501` habla de
+ * «la base no reconoce esta sesión como maestra», y aquí quien llama no es el
+ * maestro: es el dueño del anuncio. Un mensaje que nombre un rol que no es el suyo
+ * confunde y, peor, sugiere que el permiso es cuestión de rol.
+ */
+function mensajeDeErrorAlLiberar(error: { code?: string; message: string }): string {
+  if (error.code === "42501") {
+    return "No pudimos liberar la reserva: la base no reconoce esta cuenta como dueña de esa habitación. Si tu sesión caducó, inicia sesión de nuevo y vuelve a intentarlo.";
+  }
+  if (error.code === "22023") {
+    return "No pudimos identificar la habitación. Recarga la página e inténtalo de nuevo.";
+  }
+  if (error.code === "P0002") {
+    return "Esa habitación ya no existe: puede que el anuncio se haya borrado mientras tenías el panel abierto. Recarga la página.";
+  }
+  if (error.code === "23514") {
+    return "La base rechazó el cambio por una restricción del anuncio. Recarga la página para ver cómo quedó la habitación.";
+  }
+  return "No pudimos liberar la reserva. Vuelve a intentarlo en unos segundos.";
 }
 
 /**

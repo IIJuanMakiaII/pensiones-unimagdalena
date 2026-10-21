@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/utils/supabase/server";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 import { obtenerPensionesDelAnfitrion } from "@/lib/datos";
+import { leerReservas, reservasDeLaPension } from "@/lib/reservas";
 import FormularioPension from "@/components/FormularioPension";
 import PanelPublicacion from "@/components/PanelPublicacion";
 import Footer from "@/components/Footer";
@@ -49,6 +50,23 @@ export default async function PublicarPage({ searchParams }: Props) {
   if (!user) redirect("/login?destino=/publicar");
 
   const publicaciones = await obtenerPensionesDelAnfitrion(user.id);
+
+  /*
+   * Las reservas vigentes de este anfitrión (tarea #122), por la función de la
+   * oleada 18. Sin ellas el panel no puede distinguir una habitación reservada de
+   * una que el anfitrión apagó a mano —las dos tienen `disponible = false`— y
+   * acabaría ofreciendo la acción equivocada.
+   *
+   * Una sola llamada para todo el panel, y el reparto por anuncio lo hace
+   * `reservasDeLaPension`: cada tarjeta recibe solo sus fechas. La función ya filtra
+   * por la sesión —el anfitrión ve las suyas, nadie más—, así que aquí no se repite
+   * el predicado.
+   *
+   * Si la lectura falla, el mapa llega vacío y el panel se comporta como antes de la
+   * oleada 17: las habitaciones apagadas muestran «Volver a ofrecer» y ninguna se
+   * anuncia como reservada. No se inventa ninguna fecha.
+   */
+  const { reservas } = await leerReservas();
 
   return (
     <>
@@ -112,7 +130,14 @@ export default async function PublicarPage({ searchParams }: Props) {
           ) : (
             <div className="mt-4 space-y-3">
               {publicaciones.map((pension) => (
-                <PanelPublicacion key={pension.id} pension={pension} />
+                <PanelPublicacion
+                  key={pension.id}
+                  pension={pension}
+                  reservas={reservasDeLaPension(
+                    reservas,
+                    pension.habitaciones.map((habitacion) => habitacion.id)
+                  )}
+                />
               ))}
             </div>
           )}

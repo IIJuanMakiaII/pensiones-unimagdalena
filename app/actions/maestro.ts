@@ -9,6 +9,8 @@ import { esMaestroConCliente } from "@/lib/maestro";
 import { confirmacionDeBorradoValida } from "@/lib/borrado";
 import { CAMPO_WHATSAPP } from "@/lib/formulario-pension";
 import { corregirWhatsappDelAnuncio } from "@/lib/contacto-del-anuncio";
+import { formatearFechaReserva } from "@/lib/formato";
+import { ESTADO_RESERVA_INICIAL, type EstadoReserva } from "@/lib/reserva";
 import {
   leerCamposDePension,
   mensajeDeErrorDeBase,
@@ -105,57 +107,170 @@ function revalidarPanelMaestro(): void {
 }
 
 /**
- * Server Action: marca una habitación como libre o reservada, sea de quien sea.
+ * Traduce un error de las dos funciones de reserva.
  *
- * El `pensionId` que llega en el formulario no autoriza nada: se usa como
- * predicado estructural de la escritura (`id` de la habitación **y** su pensión),
- * de modo que un `habitacionId` ajeno no puede colarse cambiando solo el
- * identificador. Quien autoriza es el perfil maestro.
+ * POR QUÉ NO SE REUTILIZA `mensajeDeErrorDeBase`
+ * ----------------------------------------------
+ * Su rama de `42501` habla del sello de verificación, la calificación y el precio
+ * «que no se editan a mano». Aquí `42501` significa otra cosa: la base no reconoce
+ * al llamante como maestro ni como dueño del anuncio, o la sesión ya no vale. El
+ * mensaje viejo mandaría al maestro a revisar unos campos que no ha tocado.
+ *
+ * Los códigos son los que levantan las funciones (`supabase/oleada-17-habitacion-reservada.sql`):
+ * `42501` permiso, `22023` identificador nulo, `P0002` habitación inexistente.
  */
-export async function cambiarDisponibilidadMaestro(
-  _estadoPrevio: EstadoFormulario,
+function mensajeDeErrorDeReserva(error: { code?: string; message: string }): string {
+  if (error.code === "42501") {
+    return "No pudimos cambiar la reserva: la base no reconoce esta sesión como maestra. Si tu sesión caducó, inicia sesión de nuevo y vuelve a intentarlo.";
+  }
+  if (error.code === "22023") {
+    return "No pudimos identificar la habitación. Recarga el panel e inténtalo de nuevo.";
+  }
+  if (error.code === "P0002") {
+    return "Esa habitación ya no existe: puede que el anuncio se haya borrado mientras tenías el panel abierto. Recarga la página.";
+  }
+  if (error.code === "23514") {
+    return "La base rechazó el cambio: una habitación reservada no puede volver a ofrecerse. Libérala primero.";
+  }
+  return "No pudimos cambiar la reserva. Vuelve a intentarlo en unos segundos.";
+}
+
+/**
+ * Server Action: marca una habitación como **reservada**, por la función de la base.
+ *
+ * POR QUÉ VA POR `marcar_habitacion_reservada` Y NO POR UN `update`
+ * ----------------------------------------------------------------
+ * La reserva no es un `disponible = false` más: son tres columnas que tienen que
+ * quedar coherentes —`disponible`, `disponible_antes_de_reservar` y `reservada_en`—
+ * y la fecha la sella la base, no el navegador. Escrito a mano desde aquí haría
+ * falta confiar en el cliente para algo que la base ya resuelve mejor: la función
+ * bloquea la fila (`for update of h`), comprueba el permiso dentro de la misma
+ * transacción, es idempotente —pulsar dos veces no mueve la fecha ni el autor— y
+ * es la única puerta que tiene `EXECUTE`. `authenticated` no puede escribir
+ * `reservada_en` ni con un `PATCH`: recibiría `42501`.
+ *
+ * El identificador del anuncio no se envía: la función autoriza por su cuenta
+ * (`es_maestro()` o el anfitrión dueño de la pensión) y comprobar aquí lo mismo
+ * sería duplicar la regla en dos sitios que podrían separarse.
+ */
+export async function marcarHabitacionReservadaMaestro(
+  _estadoPrevio: EstadoReserva,
   formData: FormData
-): Promise<EstadoFormulario> {
+): Promise<EstadoReserva> {
   if (!esSupabaseConfigurado()) {
     return {
-      ok: false,
+      ...ESTADO_RESERVA_INICIAL,
       mensaje:
         "El modo dinámico no está activo: agrega las credenciales de Supabase en .env.local (ver docs/integracion-supabase.md).",
     };
   }
 
   const habitacionId = String(formData.get("habitacionId") ?? "").trim();
-  const pensionId = String(formData.get("pensionId") ?? "").trim();
-  const disponible = String(formData.get("disponible") ?? "") === "1";
 
-  if (!habitacionId || !pensionId) {
+  if (!habitacionId) {
     return {
-      ok: false,
+      ...ESTADO_RESERVA_INICIAL,
       mensaje:
         "No pudimos identificar la habitación. Recarga el panel e inténtalo de nuevo.",
     };
   }
 
   const guardia = await exigirMaestro();
-  if (!guardia.ok) return guardia.estado;
+  if (!guardia.ok) return { ...ESTADO_RESERVA_INICIAL, ...guardia.estado };
 
-  const { data, error } = await guardia.supabase
-    .from("habitaciones")
-    .update({ disponible })
-    .eq("id", habitacionId)
-    .eq("pension_id", pensionId)
-    .select("id");
+  const { data, error } = await guardia.supabase.rpc("marcar_habitacion_reservada", {
+    p_habitacion_id: habitacionId,
+  });
 
   if (error) {
-    console.error("Error cambiando la disponibilidad desde el panel maestro:", error.message);
-    return { ok: false, mensaje: mensajeDeErrorDeBase(error) };
+    console.error(
+      "Error marcando la habitación como reservada desde el panel maestro:",
+      error.message
+    );
+    return { ...ESTADO_RESERVA_INICIAL, mensaje: mensajeDeErrorDeReserva(error) };
   }
 
-  if ((data ?? []).length !== 1) {
+  // La función devuelve la fecha. Sin ella no se puede afirmar que la reserva
+  // exista: se informa en vez de responder «hecho» con una confirmación vacía.
+  const reservadaEn = typeof data === "string" && data.trim() !== "" ? data : null;
+
+  if (!reservadaEn) {
     return {
-      ok: false,
+      ...ESTADO_RESERVA_INICIAL,
       mensaje:
-        "No se cambió nada: esa habitación no existe o no pertenece al anuncio indicado.",
+        "La base no devolvió la fecha de la reserva, así que no podemos confirmar que se guardara. Recarga el panel para ver cómo quedó la habitación.",
+    };
+  }
+
+  revalidarCatalogo();
+  revalidarPanelMaestro();
+
+  const legible = formatearFechaReserva(reservadaEn);
+
+  return {
+    ok: true,
+    reservadaEn,
+    mensaje: legible
+      ? `Habitación reservada el ${legible}. Deja de ofrecerse en el catálogo hasta que la liberes.`
+      : "Habitación marcada como reservada: deja de ofrecerse en el catálogo.",
+  };
+}
+
+/**
+ * Server Action: libera una reserva y devuelve la habitación a la oferta.
+ *
+ * La función devuelve `true` solo si había una reserva que liberar; `false`
+ * significa «no había nada», y en ese caso **no toca `disponible`**. Por eso el
+ * `false` se informa como tal en lugar de responder «liberada»: decir que se hizo
+ * algo que la base no hizo es el fallo que esta tarea existe para evitar.
+ *
+ * El caso que deja fuera —una habitación apagada sin reserva registrada, porque se
+ * publicó así o porque el panel anterior la marcó ocupada— no se resuelve aquí: su
+ * disponibilidad se cambia en «Editar anuncio». Intentarlo por `update` desde esta
+ * acción sería reintroducir la escritura directa que la oleada 17 cerró.
+ */
+export async function liberarHabitacionReservadaMaestro(
+  _estadoPrevio: EstadoReserva,
+  formData: FormData
+): Promise<EstadoReserva> {
+  if (!esSupabaseConfigurado()) {
+    return {
+      ...ESTADO_RESERVA_INICIAL,
+      mensaje:
+        "El modo dinámico no está activo: agrega las credenciales de Supabase en .env.local (ver docs/integracion-supabase.md).",
+    };
+  }
+
+  const habitacionId = String(formData.get("habitacionId") ?? "").trim();
+
+  if (!habitacionId) {
+    return {
+      ...ESTADO_RESERVA_INICIAL,
+      mensaje:
+        "No pudimos identificar la habitación. Recarga el panel e inténtalo de nuevo.",
+    };
+  }
+
+  const guardia = await exigirMaestro();
+  if (!guardia.ok) return { ...ESTADO_RESERVA_INICIAL, ...guardia.estado };
+
+  const { data, error } = await guardia.supabase.rpc("liberar_habitacion_reservada", {
+    p_habitacion_id: habitacionId,
+  });
+
+  if (error) {
+    console.error(
+      "Error liberando la reserva de una habitación desde el panel maestro:",
+      error.message
+    );
+    return { ...ESTADO_RESERVA_INICIAL, mensaje: mensajeDeErrorDeReserva(error) };
+  }
+
+  if (data !== true) {
+    return {
+      ...ESTADO_RESERVA_INICIAL,
+      mensaje:
+        "Esa habitación no tenía una reserva registrada, así que no se cambió nada. Si quieres volver a ofrecerla, cambia su disponibilidad en «Editar anuncio».",
     };
   }
 
@@ -164,9 +279,9 @@ export async function cambiarDisponibilidadMaestro(
 
   return {
     ok: true,
-    mensaje: disponible
-      ? "Habitación marcada como libre: el catálogo la vuelve a ofrecer."
-      : "Habitación marcada como reservada: deja de ofrecerse en el catálogo.",
+    reservadaEn: null,
+    mensaje:
+      "Reserva liberada: la habitación vuelve a ofrecerse en el catálogo y la marca de reserva quedó borrada.",
   };
 }
 

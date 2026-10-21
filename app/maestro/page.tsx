@@ -8,6 +8,7 @@ import { MAXIMO_DE_CONSULTA, filtrarPensiones, prepararConsulta } from "@/lib/bu
 import { esMaestroConCliente } from "@/lib/maestro";
 import { leerContactosDeAnfitriones } from "@/lib/contacto-anfitrion";
 import { resolverContactoDePanel } from "@/lib/contacto-panel";
+import { leerReservas, reservasDeLaPension } from "@/lib/reservas";
 import PanelMaestro from "@/components/PanelMaestro";
 import Footer from "@/components/Footer";
 
@@ -123,6 +124,19 @@ export default async function MaestroPage({ searchParams }: Props) {
   const { contactos, motivo } = await leerContactosDeAnfitriones(
     pensiones.map((pension) => pension.anfitrion_id)
   );
+
+  /*
+   * Las reservas vigentes con su fecha (tarea #119), por la función de la base
+   * `listar_reservas` —`security definer`, oleada 18—. La columna `reservada_en`
+   * no tiene `SELECT` para ningún rol de cliente: pedirla aquí daría `42501` y se
+   * llevaría por delante el panel entero.
+   *
+   * Es una sola llamada para todo el panel, igual que los contactos: con veinte
+   * anuncios, una por tarjeta serían veinte viajes para pintar una línea de texto.
+   * Y no puede tumbar la página: si la lectura falla, `leerReservas` devuelve el
+   * mapa vacío y las tarjetas se dibujan como antes de esta tarea, sin fecha.
+   */
+  const { reservas } = await leerReservas();
 
   return (
     <>
@@ -247,6 +261,10 @@ export default async function MaestroPage({ searchParams }: Props) {
                       contacto={resolverContactoDePanel(
                         contactos.get(pension.anfitrion_id) ?? null,
                         motivo
+                      )}
+                      reservas={reservasDeLaPension(
+                        reservas,
+                        pension.habitaciones.map((habitacion) => habitacion.id)
                       )}
                     />
                   ))}

@@ -341,21 +341,80 @@ export function leerCamposDePension(formData: FormData): LecturaDeFormulario {
 }
 
 /**
+ * El nombre de la restricción que la oleada 17 puso a la reserva.
+ *
+ * `habitaciones_reservada_no_se_ofrece` exige `reservada_en is null or disponible
+ * = false`: una habitación con reserva no se puede volver a ofrecer por un
+ * `update` de la columna. Es un `23514`, el mismo código que una longitud de más,
+ * y hasta la tarea #119 se traducía al mismo mensaje.
+ *
+ * PostgreSQL incluye el nombre de la restricción en el texto del error, así que
+ * es lo que permite distinguir «te pasaste del largo del título» de «esa
+ * habitación está reservada» sin adivinar. Se declara una vez y se compara contra
+ * el mensaje; si el texto cambiara de forma, el peor caso es el mensaje genérico,
+ * nunca una explicación falsa sobre el título.
+ */
+const RESTRICCION_DE_RESERVA = "habitaciones_reservada_no_se_ofrece";
+
+/**
  * Traduce un error de la base a algo que una persona pueda accionar.
  *
  * `42501` (permiso denegado) y `23514` (restricción incumplida) son los dos que
  * puede provocar un anfitrión legítimo; el resto no se le explica con jerga
  * técnica. El precio de la pensión no está en la lista de columnas editables a
  * propósito: lo impone la base desde las habitaciones.
+ *
+ * EL `23514` NO ES UNO SOLO
+ * -------------------------
+ * Bajo el mismo código conviven restricciones que no tienen nada que ver entre
+ * sí: longitudes del título y la descripción, precio, cantidad de fotos, formato
+ * del WhatsApp… y, desde la oleada 17, la reserva. Un mensaje único que hablara
+ * de longitudes acusaba al anfitrión de un error que no había cometido cuando el
+ * rechazo era por reserva. Por eso la reserva tiene su propio texto: no es algo
+ * que se arregle corrigiendo un campo, es un estado que gestiona la coordinación.
+ *
+ * La interfaz procura no ofrecer las acciones que la base rechaza (el panel del
+ * anfitrión y el editor ya no dejan marcar libre una habitación reservada). Este
+ * mensaje es la segunda capa, para el caso que siempre queda: un envío hecho a
+ * mano o una pantalla que se quedó con datos de hace un minuto.
  */
 export function mensajeDeErrorDeBase(error: { code?: string; message: string }): string {
   if (error.code === "42501") {
     return "No pudimos guardar algún campo: hay datos del anuncio que gestiona la plataforma (el sello de verificación, la calificación y el precio del anuncio no se editan a mano).";
   }
   if (error.code === "23514") {
+    if (error.message.includes(RESTRICCION_DE_RESERVA)) {
+      return "Esa habitación está reservada, y una reserva no se libera desde el editor. Las reservas las gestiona la coordinación de Nido: escríbenos para liberarla.";
+    }
     return "Algún dato no cumple las reglas del anuncio. Revisa las longitudes del título y la descripción, el precio de cada habitación y la cantidad de fotos.";
   }
   return "No pudimos guardar los cambios. Vuelve a intentarlo en unos segundos.";
+}
+
+/**
+ * ¿La habitación pertenece a una de las publicaciones de esta cuenta? (tarea #122)
+ *
+ * POR QUÉ ES UNA FUNCIÓN CON NOMBRE Y NO UNA CONDICIÓN SUELTA
+ * --------------------------------------------------------
+ * Porque es la puerta que decide si un anfitrión puede tocar una habitación, y una
+ * condición suelta se cambia sin que nadie se dé cuenta. Con nombre se puede probar
+ * sola, y su tabla de casos —que es donde vive el riesgo: listas vacías, cadena
+ * vacía, `undefined`— queda escrita una vez.
+ *
+ * `habitaciones` no tiene `anfitrion_id`: la pertenencia se resuelve por su
+ * pensión. Quien llama ya leyó `pension_id` de la habitación y la lista de
+ * pensiones propias; esto solo compara.
+ *
+ * Ante la duda, **falso**. Una pensión que no está en la lista no es propia, y una
+ * lista vacía no hace propia a ninguna habitación: decir «no es tuya» de más se
+ * corrige recargando; decir «es tuya» de más, no.
+ */
+export function esHabitacionDeMisPensiones(
+  misPensionesIds: readonly string[],
+  pensionDeLaHabitacion: string | null | undefined
+): boolean {
+  if (!pensionDeLaHabitacion) return false;
+  return misPensionesIds.includes(pensionDeLaHabitacion);
 }
 
 /**
