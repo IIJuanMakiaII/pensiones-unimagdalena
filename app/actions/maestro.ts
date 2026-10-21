@@ -105,7 +105,7 @@ function revalidarPanelMaestro(): void {
 }
 
 /**
- * Server Action: marca una habitación como libre u ocupada, sea de quien sea.
+ * Server Action: marca una habitación como libre o reservada, sea de quien sea.
  *
  * El `pensionId` que llega en el formulario no autoriza nada: se usa como
  * predicado estructural de la escritura (`id` de la habitación **y** su pensión),
@@ -166,7 +166,7 @@ export async function cambiarDisponibilidadMaestro(
     ok: true,
     mensaje: disponible
       ? "Habitación marcada como libre: el catálogo la vuelve a ofrecer."
-      : "Habitación marcada como ocupada: deja de ofrecerse en el catálogo.",
+      : "Habitación marcada como reservada: deja de ofrecerse en el catálogo.",
   };
 }
 

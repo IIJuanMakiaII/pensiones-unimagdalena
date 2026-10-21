@@ -23,8 +23,8 @@ interface Props {
 }
 
 /**
- * Gestión de una publicación ya creada: marcar cada habitación como libre u
- * ocupada y retirar o reactivar el anuncio.
+ * Gestión de una publicación ya creada: marcar cada habitación como libre o
+ * reservada y retirar o reactivar el anuncio.
  *
  * Toda la escritura pasa por Server Actions (nunca por `fetch` desde el
  * cliente) y la autorización se resuelve en el servidor: si la habitación o la
@@ -62,7 +62,7 @@ export default function PanelPublicacion({ pension }: Props) {
       </div>
 
       {/* Precio "desde" real: solo se anuncia si hay alguna habitación libre que
-          se pueda reservar. Con todas ocupadas no se muestra un precio que ya no
+          se pueda reservar. Con todas reservadas no se muestra un precio que ya no
           aplica (el trigger de la base conserva el último valor). */}
       {precioDesdeLibre > 0 ? (
         <p className="precio mt-2 text-sm font-bold text-accent-700">
@@ -121,7 +121,7 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
                   : "bg-confianza-danger/10 text-confianza-danger"
               }`}
             >
-              {habitacion.disponible ? "Libre" : "Ocupada"}
+              {habitacion.disponible ? "Libre" : "Reservada"}
             </span>
           </p>
           <p className="precio mt-0.5 text-xs font-semibold text-neutro-500">
@@ -134,11 +134,11 @@ function FilaHabitacion({ habitacion }: { habitacion: Habitacion }) {
           <input type="hidden" name="habitacionId" value={habitacion.id} />
           <input type="hidden" name="disponible" value={siguienteDisponible ? "1" : "0"} />
           <BotonAccion
-            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar ocupada"}
+            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar reservada"}
             ariaLabel={
               siguienteDisponible
                 ? `Marcar como libre la habitación ${descripcion}`
-                : `Marcar como ocupada la habitación ${descripcion}`
+                : `Marcar como reservada la habitación ${descripcion}`
             }
             tono={siguienteDisponible ? "confirmar" : "neutral"}
           />

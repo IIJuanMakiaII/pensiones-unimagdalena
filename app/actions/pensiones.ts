@@ -239,7 +239,7 @@ export async function crearPension(
 }
 
 /**
- * Server Action: marca una habitación como libre u ocupada.
+ * Server Action: marca una habitación como libre o reservada.
  *
  * Autorización en dos capas, porque ocultar el botón no protege nada:
  *  1. La identidad sale de la sesión (`supabase.auth.getUser()`), nunca del
@@ -362,7 +362,7 @@ export async function cambiarDisponibilidadHabitacion(
     ok: true,
     mensaje: disponible
       ? "Habitación marcada como libre: vuelve a ofrecerse en el catálogo."
-      : "Habitación marcada como ocupada: ya no se ofrece ni se puede reservar por WhatsApp.",
+      : "Habitación marcada como reservada: ya no se ofrece ni se puede reservar por WhatsApp.",
   };
 }
 

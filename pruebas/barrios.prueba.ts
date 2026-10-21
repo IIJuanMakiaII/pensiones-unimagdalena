@@ -105,7 +105,7 @@ describe("resumenesDeBarrio", () => {
     assert.equal(resumenes[0].precioMaximo, 900000);
   });
 
-  it("deja el rango en nulo si todas las habitaciones están ocupadas", () => {
+  it("deja el rango en nulo si ninguna habitación está disponible", () => {
     const resumenes = resumenesDeBarrio([
       pension({ habitaciones: [habitacion({ disponible: false })] }),
     ]);

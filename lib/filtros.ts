@@ -54,7 +54,7 @@ export const PRECIO_MAX_DEFECTO = 1500000;
  *
  * Solo aportan precio los anuncios con algo reservable o, si nunca se
  * publicaron habitaciones, su precio declarado. Un anuncio con habitaciones pero
- * todas ocupadas queda fuera: su `precioMensual` es el que conserva la base y no
+ * todas no disponibles queda fuera: su `precioMensual` es el que conserva la base y no
  * una oferta vigente, así que no debe ensanchar el rango de búsqueda.
  *
  * El rango es **exactamente** el del catálogo: no se redondea ni se rellena para
@@ -161,11 +161,11 @@ export function habitacionCumpleFiltros(h: Habitacion, f: FiltrosUI): boolean {
  *  1. **Sin habitaciones publicadas** (anuncio creado con el formulario
  *     anterior): conserva el precio declarado por el anfitrión y se evalúa con
  *     `precioMensual`, para no ocultarla del catálogo.
- *  2. **Con habitaciones, pero todas ocupadas**: no hay nada reservable. El
+ *  2. **Con habitaciones, pero ninguna disponible**: no hay nada reservable. El
  *     anuncio sigue visible —la tarjeta avisa de que no hay habitaciones
  *     libres—, pero **no puede satisfacer una búsqueda por precio**: el
- *     `precioMensual` que conserva la base es el de la última habitación que se
- *     ocupó, no una oferta vigente.
+ *     `precioMensual` que conserva la base es el de la última habitación que dejó
+ *     de ofrecerse, no una oferta vigente.
  *
  * `precioMaximoReal` es el máximo del catálogo: hace falta para saber si el
  * usuario movió el tope de precio, porque el valor inicial del filtro es
@@ -234,7 +234,7 @@ export function contarHabitacionesDisponibles(
  * hoy**, no el que declara la ficha.
  *
  * Es la misma regla que ya usan la tarjeta y los datos estructurados (M-10/#13).
- * Un anuncio con habitaciones pero todas ocupadas va al final: el precio que
+ * Un anuncio con habitaciones pero ninguna disponible va al final: el precio que
  * conserva la base no es una oferta vigente, y encabezar una lista "menor precio"
  * con algo que no se puede alquilar sería el mismo engaño por otra puerta.
  */

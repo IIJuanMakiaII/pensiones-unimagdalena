@@ -71,7 +71,7 @@ export function generosDisponibles(pension: PensionPublica): GeneroHabitacion[] 
 /**
  * Texto corto para tarjetas y resultados.
  *
- * Distingue "no publicó habitaciones" de "las tiene, pero todas ocupadas": son
+ * Distingue "no publicó habitaciones" de "las tiene, pero ninguna disponible": son
  * situaciones distintas para el estudiante y antes se contaban igual.
  */
 export function resumenHabitaciones(pension: PensionPublica): string {
