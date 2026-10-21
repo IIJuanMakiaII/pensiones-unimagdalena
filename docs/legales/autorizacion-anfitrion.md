@@ -3,18 +3,22 @@
 > **BORRADOR — NO PUBLICAR TODAVÍA.** Pendiente de revisión jurídica.
 >
 > **Este documento SUSTITUYE por completo al anterior.** La versión previa era una
-> autorización para **publicar el número de WhatsApp del anfitrión**. Esa autorización
-> **queda retirada y sin objeto**: el número **no se publica y no viaja a la página**.
-> **Nada de aquel documento debe copiarse al sitio** ni pedirse de nuevo a los
-> propietarios.
+> autorización para **publicar el número de WhatsApp del anfitrión**. Lo que queda
+> retirado es ese permiso —**publicar** el número en el anuncio—, no el tratamiento
+> interno del dato. **Nada de aquel documento debe copiarse al sitio** ni pedirse de
+> nuevo a los propietarios para publicar.
 >
-> **Corrección del 21 de octubre de 2026.** Este borrador decía que el número «no se
-> pide». Ya no es cierto: desde la tarea #77 el formulario de publicación **sí lo
-> solicita**, para que el equipo pueda escribir al propietario, y lo guarda en la tabla
-> privada `contacto_anfitrion`, con reglas por fila de dos lectores (el propietario y el
-> equipo). Lo que sigue retirado es la **publicación** del número, no su captura. Si el
-> abogado considera que esa captura necesita autorización propia, el sitio tendrá que
-> añadir una casilla en el formulario de publicación: hoy no la tiene.
+> **El número sí se pide, y no se publica.** Desde la tarea #77 el formulario de
+> publicación lo solicita, porque el equipo necesita poder escribir al propietario. Se
+> guarda en la tabla privada `contacto_anfitrion`; la proyección pública no incluye la
+> columna y el acceso anónimo responde «permiso denegado». **No se publica, no viaja a la
+> página y no llega a los estudiantes.** Capturarlo y publicarlo son dos cosas distintas,
+> y este documento existe para la segunda.
+>
+> **Corrección del 21 de octubre de 2026.** Este borrador afirmaba que el número «no se
+> pide». Era falso cuando se escribió. Lo que **no** existe todavía es la constancia de
+> que el propietario aceptó cederlo: el formulario lo avisa, pero no lo pide por escrito
+> ni guarda esa aceptación. Ver §8.
 
 ---
 
@@ -157,3 +161,47 @@ es un depósito de reserva compuesto por dos rubros distintos.
   para eso (ver [preguntas-para-el-abogado.md](preguntas-para-el-abogado.md)).
 - Cómo tratar los **anuncios que existen hoy** bajo el modelo anterior, y el plazo y la
   comunicación para presentarles el mandato nuevo.
+
+## 8. Estado técnico del consentimiento sobre el número
+
+**Medido el 21 de octubre de 2026.** Se deja por escrito porque hoy la plataforma **no
+puede demostrar** que el propietario aceptara ceder su número, y ese hueco no debe
+descubrirlo el abogado: tiene que leerlo.
+
+**Lo que sí existe.**
+
+- El formulario de publicación pide el número en un campo que **no se llama `whatsapp`**
+  (`whatsappPrivado`, `lib/formulario-pension.ts:128`), a propósito: `pensiones.whatsapp`
+  existió y está congelada, y el número del anfitrión es un dato de la persona, no del
+  anuncio.
+- El rótulo del campo **ya avisa** de quién lo ve: «Tu WhatsApp (solo lo ve el equipo de
+  Nido; nunca se muestra a estudiantes)» —`lib/formulario-pension.ts:130-131`—, y el texto
+  de ayuda repite que no aparece en el anuncio, ni en la ficha, ni en el mensaje que
+  recibe el estudiante.
+- El número se guarda en `contacto_anfitrion`, tabla privada creada en
+  `supabase/oleada-15-contacto-anfitrion-privado.sql:116`, con reglas por fila de dos
+  lectores y sin acceso anónimo.
+
+**Lo que no existe.**
+
+- **No hay casilla de autorización.** Cero coincidencias de `autoriz`, `consent` o
+  `acepto` en `components/FormularioPension.tsx`. El anfitrión lee un aviso; no marca
+  nada.
+- **No hay constancia de la aceptación en ninguna tabla.** `contacto_anfitrion` no tiene
+  columna de consentimiento: su `creado_en` registra **cuándo se guardó el número**, no
+  que su dueño aceptara cederlo.
+- **`pensiones.autorizacion_contacto_en` existe, pero está inerte.** Se creó en
+  `supabase/oleada-6.sql:55`, con la restricción de que no haya número sin fecha de
+  autorización (`:73`). Desde que el número se mudó a la tabla privada, **ninguna ruta de
+  `app/`, `components/` ni `lib/` escribe esa columna**: solo la mencionan comentarios y
+  las migraciones. Quedó la columna, pero no el flujo que la llenaba.
+
+**Qué significa, sin adornos.** Un aviso visible no es una aceptación registrada. Si un
+propietario dijera más adelante que nunca cedió su número, hoy la plataforma no tiene con
+qué demostrar lo contrario, y esa prueba no se puede reconstruir después.
+
+**Qué no hace este documento.** No propone la solución ni redacta la cláusula: eso es
+decisión de Juan con el abogado, y una cláusula escrita por un agente en un texto que va
+a revisión jurídica es peor que el hueco. Lo que sí queda fijado es el estado real, para
+que la conversación empiece en el sitio correcto: qué se pidió, qué se avisó y qué no se
+guardó.
