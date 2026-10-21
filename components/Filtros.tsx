@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import type { GeneroHabitacion, RangoDistancia } from "@/types";
 import type { FiltrosUI } from "@/lib/filtros";
 import {
@@ -53,6 +53,32 @@ const OPCIONES_DISTANCIA: { valor: RangoDistancia; etiqueta: string }[] = [
  * controles se abren a petición. Antes iban siempre desplegados y, como la barra
  * es `sticky`, se quedaban fijos comiéndose media pantalla mientras el catálogo
  * pasaba por debajo: el problema que reportó el fundador.
+ *
+ * POR QUÉ HAY DOS ESTADOS Y NO UNO (tarea #96)
+ * -------------------------------------------
+ * El mecanismo de plegado existía, pero solo en móvil: la barra con el botón
+ * llevaba `lg:hidden` y el panel `lg:block`, así que en escritorio el botón no se
+ * pintaba y el panel estaba forzado a visible. El estado era inútil ahí.
+ *
+ * Para habilitarlo en escritorio sin cambiar nada en móvil hacen falta **dos
+ * estados**, porque el punto de partida es distinto en cada familia de pantallas:
+ *
+ *   - `abierto` (móvil y tablet): arranca **plegado**, como hoy. Se abre al pulsar.
+ *   - `plegado` (escritorio): arranca **desplegado**, para que quien llega vea el
+ *     catálogo como siempre; plegar es una acción suya.
+ *
+ * Un único estado no puede arrancar en dos valores a la vez. La alternativa
+ * evidente —leer `matchMedia` al montar— obliga a dibujar primero una cosa y
+ * corregirla después en el cliente: un parpadeo del panel en cada carga de
+ * escritorio, y un desajuste entre el HTML del servidor y el del cliente. Con dos
+ * estados el CSS decide qué botón y qué regla aplican en cada ancho, y no hay ni
+ * parpadeo ni trabajo de hidratación.
+ *
+ * Plegar **oculta, no desmonta**: los valores no viven aquí sino en el estado del
+ * catálogo y en la URL, y desmontar destruiría además el estado interno de los
+ * controles (la posición del deslizador, el desplazamiento del panel). Con
+ * `display:none` —lo que hace `hidden`— el panel desaparece, sus controles dejan
+ * de recibir foco, y nada de lo elegido se toca.
  */
 export default function Filtros({
   filtros,
@@ -62,7 +88,10 @@ export default function Filtros({
   resultados,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
+  /** Solo afecta a partir de 1024 px; en móvil y tablet manda `abierto`. */
+  const [plegado, setPlegado] = useState(false);
   const botonRef = useRef<HTMLButtonElement>(null);
+  const botonEscritorioRef = useRef<HTMLButtonElement>(null);
 
   const actualizar = (parcial: Partial<FiltrosUI>) => onChange({ ...filtros, ...parcial });
 
@@ -86,36 +115,51 @@ export default function Filtros({
     botonRef.current?.focus();
   };
 
+  /**
+   * Plegar o desplegar en escritorio.
+   *
+   * El foco se devuelve al botón a mano por la misma razón que en `cerrar`: si se
+   * pliega mientras el foco está en un control del panel, ese control desaparece
+   * (`display:none`) y el foco se perdería en el `body`. Y no todos los navegadores
+   * enfocan un `<button>` al pulsarlo con el ratón, así que no se deja al azar.
+   */
+  const plegar = () => {
+    setPlegado((v) => !v);
+    botonEscritorioRef.current?.focus();
+  };
+
   return (
     <div className="sticky top-0 z-30 border-b border-neutro-200 bg-white/95 backdrop-blur">
-      {/* Fila compacta: es todo lo que la barra ocupa mientras se recorre el catálogo.
-          Solo existe en móvil y tablet; en escritorio la barra queda como estaba. */}
-      <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 md:px-6 lg:hidden">
-        <button
-          ref={botonRef}
-          type="button"
-          onClick={() => setAbierto((v) => !v)}
-          aria-expanded={abierto}
-          aria-controls="panel-filtros"
-          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-neutro-200 bg-white px-4 text-sm font-semibold text-neutro-800 transition hover:border-neutro-800"
-        >
-          <IconoFiltro />
-          {activos.length > 0 ? `Filtros (${activos.length})` : "Filtros"}
-          <IconoFlecha abierto={abierto} />
-        </button>
+      {/*
+        Dos barras, un solo panel. La de móvil/tablet ya existía; la de escritorio
+        es la nueva (tarea #96) y usa el mismo botón y el mismo estilo, porque
+        «coherente con Nido» significa reutilizar el control que el estudiante ya
+        conoce, no inventar otro. Cada una solo se pinta en su ancho, así que la
+        oculta no estorba al teclado ni al lector de pantalla.
+      */}
+      <BarraFiltros
+        className="lg:hidden"
+        abierto={abierto}
+        activos={activos.length}
+        botonRef={botonRef}
+        onToggle={() => setAbierto((v) => !v)}
+        onQuitar={quitarTodos}
+        classBoton="flex-1"
+      />
 
-        {activos.length > 0 && (
-          <button
-            type="button"
-            onClick={quitarTodos}
-            className="inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-bold text-accent-700 underline underline-offset-2 transition hover:text-accent-800"
-          >
-            Quitar
-          </button>
-        )}
-      </div>
+      <BarraFiltros
+        className="hidden lg:flex"
+        abierto={!plegado}
+        activos={activos.length}
+        botonRef={botonEscritorioRef}
+        onToggle={plegar}
+        onQuitar={quitarTodos}
+      />
 
-      <div id="panel-filtros" className={`${abierto ? "block" : "hidden"} lg:block`}>
+      <div
+        id="panel-filtros"
+        className={`${abierto ? "block" : "hidden"} ${plegado ? "lg:hidden" : "lg:block"}`}
+      >
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pb-3 md:px-6 lg:py-3">
         {/* Precio */}
         <div>
@@ -278,6 +322,96 @@ export default function Filtros({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * La fila que se queda pegada arriba mientras se recorre el catálogo: el botón de
+ * plegar y, si hay filtros puestos, el atajo para quitarlos.
+ *
+ * Existe una por familia de pantallas —móvil/tablet y escritorio— porque cada una
+ * controla un estado distinto (ver el comentario de `Filtros`). El aspecto es el
+ * mismo en las dos a propósito.
+ */
+function BarraFiltros({
+  abierto,
+  activos,
+  onToggle,
+  onQuitar,
+  botonRef,
+  className = "",
+  classBoton = "",
+}: {
+  abierto: boolean;
+  activos: number;
+  onToggle: () => void;
+  onQuitar: () => void;
+  botonRef: RefObject<HTMLButtonElement>;
+  className?: string;
+  classBoton?: string;
+}) {
+  return (
+    <div className={`mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 md:px-6 ${className}`}>
+      <BotonFiltros
+        abierto={abierto}
+        activos={activos}
+        onClick={onToggle}
+        botonRef={botonRef}
+        className={classBoton}
+      />
+
+      {activos > 0 && (
+        <button
+          type="button"
+          onClick={onQuitar}
+          className="inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-bold text-accent-700 underline underline-offset-2 transition hover:text-accent-800"
+        >
+          Quitar
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * El botón de plegar y desplegar.
+ *
+ * Tres cosas dicen el estado a la vez, para que no haya que adivinarlo: la flecha
+ * gira (dirección del cambio), `aria-expanded` lo anuncia al lector de pantalla, y
+ * el contador de filtros activos sigue visible **con el panel plegado** —que es lo
+ * que evita perder la cuenta de lo que se tiene aplicado mientras se navega.
+ *
+ * El nombre accesible lleva delante la acción («Mostrar» / «Ocultar») porque
+ * `aria-expanded` dice el estado, pero no qué hace el botón; y va en un `sr-only`
+ * para no repetirlo en pantalla, donde la flecha ya lo sugiere.
+ */
+function BotonFiltros({
+  abierto,
+  activos,
+  onClick,
+  botonRef,
+  className = "",
+}: {
+  abierto: boolean;
+  activos: number;
+  onClick: () => void;
+  botonRef: RefObject<HTMLButtonElement>;
+  className?: string;
+}) {
+  return (
+    <button
+      ref={botonRef}
+      type="button"
+      onClick={onClick}
+      aria-expanded={abierto}
+      aria-controls="panel-filtros"
+      className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border border-neutro-200 bg-white px-4 text-sm font-semibold text-neutro-800 transition hover:border-neutro-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 ${className}`}
+    >
+      <IconoFiltro />
+      <span className="sr-only">{abierto ? "Ocultar" : "Mostrar"}</span>
+      {activos > 0 ? `Filtros (${activos})` : "Filtros"}
+      <IconoFlecha abierto={abierto} />
+    </button>
   );
 }
 
