@@ -42,7 +42,7 @@ const PREGUNTAS: PreguntaFrecuente[] = [
   {
     pregunta: "¿Cómo se calcula el precio que aparece en una publicación?",
     respuesta:
-      "El precio es el que declara el anfitrión para cada tipo de habitación y se muestra en pesos colombianos al mes. Cuando una habitación está marcada como ocupada, deja de contarse como reservable.",
+      "El precio es el que declara el anfitrión para cada tipo de habitación y se muestra en pesos colombianos al mes. Cuando una habitación está marcada como reservada, deja de contarse como reservable.",
   },
   {
     pregunta: "¿La distancia a pie la mide la plataforma?",

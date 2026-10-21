@@ -47,7 +47,7 @@ function resumir(barrio: string, grupo: PensionConHabitaciones[]): ResumenDeBarr
 
   /**
    * El rango de precios se calcula con `precioReservable`, no con el precio de
-   * referencia: si el anfitrion marco todas sus habitaciones como ocupadas, no
+   * referencia: si no queda ninguna habitacion disponible, no
    * hay nada que reservar a ese precio y publicarlo seria anunciar una cifra que
    * el estudiante no puede conseguir.
    */

@@ -113,8 +113,8 @@ export default async function DetallePensionPage({ params }: Props) {
    */
   const galeria = galeriaDe(pension);
   /**
-   * Precio anunciable en los datos estructurados: `null` si el anfitrión marcó
-   * todas sus habitaciones como ocupadas. Antes se usaba `precioDesde()`, que en
+   * Precio anunciable en los datos estructurados: `null` si ninguna habitación
+   * está disponible. Antes se usaba `precioDesde()`, que en
    * ese caso devuelve el último `precio_mensual` conservado por la base y
    * publicaba un `priceRange` que ya no se puede reservar.
    */

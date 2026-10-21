@@ -138,15 +138,16 @@ export default function DetallePension({ pension }: Props) {
               Escríbele para conocer la disponibilidad y el precio exacto.
             </p>
           ) : (
-            /* Distinto de "no publicó habitaciones": aquí sí las hay, pero el
-               anfitrión las marcó todas como ocupadas. */
+            /* Distinto de "no publicó habitaciones": aquí sí las hay, pero ninguna
+               está disponible. No se afirma la causa: puede ser una reserva o un
+               huésped viviendo, y la base no los distingue. */
             <>
               <p className="font-display text-base font-bold text-neutro-800">
                 Sin habitaciones libres ahora
               </p>
               <p className="mt-1 text-base leading-relaxed text-neutro-600">
-                El anfitrión marcó todas sus habitaciones como ocupadas. Pregúntale por la
-                próxima disponibilidad o por otras opciones del mismo alojamiento.
+                Pregúntale por la próxima disponibilidad o por otras opciones del mismo
+                alojamiento.
               </p>
             </>
           )}
@@ -171,7 +172,7 @@ export default function DetallePension({ pension }: Props) {
       {agotadas.length > 0 && (
         <div className="mt-6">
           <h3 className="text-sm font-bold uppercase tracking-wide text-neutro-500">
-            Ocupadas por ahora
+            No disponibles por ahora
           </h3>
           <ul className="mt-2 space-y-2">
             {agotadas.map((h) => (

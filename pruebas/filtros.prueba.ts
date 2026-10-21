@@ -3,7 +3,7 @@
  *
  * Es el corazón del producto: decide qué anuncios ve un estudiante. Incluye la
  * regla corregida en la tarea #15 —un anuncio con todas las habitaciones
- * ocupadas no puede satisfacer una búsqueda por precio—, que antes solo se
+ * no disponibles no puede satisfacer una búsqueda por precio—, que antes solo se
  * comprobaba contra la base de datos y la web servida.
  */
 import assert from "node:assert/strict";
@@ -91,7 +91,7 @@ function filtros(extra: Partial<FiltrosUI> = {}): FiltrosUI {
   };
 }
 
-describe("pensionCumpleFiltros · anuncio con habitaciones pero todas ocupadas", () => {
+describe("pensionCumpleFiltros · anuncio con habitaciones pero ninguna disponible", () => {
   const ocupado = pension({
     precioMensual: 1000, // precio conservado por la base (podría venir de una edición)
     habitaciones: [habitacion({ disponible: false })],
@@ -149,7 +149,7 @@ describe("pensionCumpleFiltros · con habitaciones libres", () => {
     ],
   });
 
-  it("pasa si la habitación LIBRE cabe en el tope (la ocupada no cuenta)", () => {
+  it("pasa si la habitación LIBRE cabe en el tope (la no disponible no cuenta)", () => {
     assert.equal(
       pensionCumpleFiltros(casa, filtros({ precioMaximoCop: 300000 }), MAXIMO_REAL),
       true
@@ -314,7 +314,7 @@ describe("los cuatro tramos parten el rango sin huecos ni solapes", () => {
 });
 
 describe("limitesDePrecio · rango del deslizador", () => {
-  it("el precio conservado de un anuncio ocupado NO ensancha el rango", () => {
+  it("el precio conservado de un anuncio sin habitaciones disponibles NO ensancha el rango", () => {
     const catalogo = [
       pension({ id: "a", precioMensual: 1000, habitaciones: [habitacion({ disponible: false })] }),
       pension({ id: "b", habitaciones: [habitacion({ precio_mensual_cop: 400000 })] }),
@@ -345,7 +345,7 @@ describe("limitesDePrecio · rango del deslizador", () => {
 });
 
 describe("habitacionCumpleFiltros y habitacionDestacada", () => {
-  it("una habitación ocupada nunca cumple", () => {
+  it("una habitación no disponible nunca cumple", () => {
     assert.equal(habitacionCumpleFiltros(habitacion({ disponible: false }), filtros()), false);
   });
 
@@ -555,7 +555,7 @@ describe("ordenar resultados (M-24)", () => {
   });
 
   it("«menor precio» usa el precio reservable y manda al final lo que no tiene nada libre", () => {
-    // El precio conservado de un anuncio ocupado ($200.000) no puede encabezar la
+    // El precio conservado de un anuncio sin habitaciones disponibles ($200.000) no puede encabezar la
     // lista: sería ofrecer como lo más barato algo que no se puede alquilar.
     assert.deepEqual(ids({ orden: "precio" }), [
       "barato-lejos",

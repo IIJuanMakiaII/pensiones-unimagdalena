@@ -66,7 +66,7 @@ describe("precioReservable", () => {
     assert.equal(precioReservable(p), 300000);
   });
 
-  it("ignora las habitaciones ocupadas aunque sean más baratas", () => {
+  it("ignora las habitaciones no disponibles aunque sean más baratas", () => {
     const p = pension({
       habitaciones: [
         habitacion({ id: "h1", precio_mensual_cop: 300000, disponible: false }),
@@ -76,7 +76,7 @@ describe("precioReservable", () => {
     assert.equal(precioReservable(p), 480000);
   });
 
-  it("devuelve null cuando todas están ocupadas (el precio conservado no es una oferta)", () => {
+  it("devuelve null cuando ninguna está disponible (el precio conservado no es una oferta)", () => {
     const p = pension({
       precioMensual: 480000,
       habitaciones: [habitacion({ disponible: false })],
@@ -99,7 +99,7 @@ describe("precioDesde", () => {
     assert.equal(precioDesde(pension({ precioMensual: 600000 })), 600000);
   });
 
-  it("con habitaciones ocupadas devuelve el precio que conserva la base", () => {
+  it("sin habitaciones disponibles devuelve el precio que conserva la base", () => {
     const p = pension({ precioMensual: 480000, habitaciones: [habitacion({ disponible: false })] });
     assert.equal(precioDesde(p), 480000);
   });
@@ -135,7 +135,7 @@ describe("habitacionesDisponibles", () => {
 });
 
 describe("resumenHabitaciones", () => {
-  it("distingue «sin publicar» de «todas ocupadas»: son cosas distintas para el estudiante", () => {
+  it("distingue «sin publicar» de «ninguna disponible»: son cosas distintas para el estudiante", () => {
     assert.equal(resumenHabitaciones(pension()), "Sin habitaciones publicadas todavía");
     assert.equal(
       resumenHabitaciones(pension({ habitaciones: [habitacion({ disponible: false })] })),

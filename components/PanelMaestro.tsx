@@ -164,7 +164,7 @@ function FilaHabitacionMaestro({
                   : "bg-confianza-danger/10 text-confianza-danger"
               }`}
             >
-              {habitacion.disponible ? "Libre" : "Ocupada"}
+              {habitacion.disponible ? "Libre" : "Reservada"}
             </span>
           </p>
           <p className="precio mt-0.5 text-xs font-semibold text-neutro-500">
@@ -178,11 +178,11 @@ function FilaHabitacionMaestro({
           <input type="hidden" name="pensionId" value={pensionId} />
           <input type="hidden" name="disponible" value={siguienteDisponible ? "1" : "0"} />
           <BotonAccion
-            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar ocupada"}
+            etiqueta={siguienteDisponible ? "Marcar libre" : "Marcar reservada"}
             ariaLabel={
               siguienteDisponible
                 ? `Marcar como libre la habitación ${descripcion}`
-                : `Marcar como ocupada la habitación ${descripcion}`
+                : `Marcar como reservada la habitación ${descripcion}`
             }
             tono={siguienteDisponible ? "confirmar" : "neutral"}
           />

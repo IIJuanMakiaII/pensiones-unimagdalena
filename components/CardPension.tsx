@@ -32,7 +32,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
 
   /** Publicó el anuncio sin habitaciones (creado antes del editor de habitaciones). */
   const sinHabitacionesPublicadas = totalHabitaciones === 0;
-  /** Publicó habitaciones, pero el anfitrión las marcó todas como ocupadas. */
+  /** Publicó habitaciones, pero ninguna está disponible (reservadas o con huésped). */
   const sinLibres = !sinHabitacionesPublicadas && libres === 0;
 
   /**
@@ -44,7 +44,7 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
    * ambos números salen de la misma habitación (`destacada`).
    *
    * Sin habitaciones publicadas se conserva el precio declarado por el anfitrión.
-   * Con todas ocupadas NO se muestra precio: la base conserva el último
+   * Sin ninguna disponible NO se muestra precio: la base conserva el último
    * `precio_mensual` (el trigger solo lo recalcula si queda alguna disponible),
    * así que anunciarlo sería ofrecer un precio que ya no se puede reservar.
    */
@@ -174,12 +174,12 @@ export default function CardPension({ pension, filtros, prioridadImagen = false 
             Reservar por WhatsApp
           </a>
         ) : sinLibres ? (
-          /* Todas las habitaciones están ocupadas: ni se ofrece reservar ni se
+          /* Ninguna habitación está disponible: ni se ofrece reservar ni se
              muestra un precio que ya no aplica. Se ofrece preguntar al anfitrión. */
           <div className="relative z-10 mt-3 rounded-xl border border-dashed border-neutro-300 bg-neutro-100/60 p-3 text-center">
             <p className="text-sm font-bold text-neutro-700">Sin habitaciones libres ahora</p>
             <p className="mt-0.5 text-xs text-neutro-500">
-              El anfitrión las marcó como ocupadas. Pregúntale por la próxima disponibilidad.
+              Pregúntale por la próxima disponibilidad.
             </p>
             <a
               href={enlaceWhatsApp(pension)}
