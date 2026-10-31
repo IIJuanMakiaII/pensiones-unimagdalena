@@ -86,6 +86,25 @@ export async function enviarContactoRespaldo(formData: FormData): Promise<void> 
     p_contacto: validacion.datos.contacto,
     p_mensaje: validacion.datos.mensaje === "" ? null : validacion.datos.mensaje,
     p_pension_slug: slug === "" ? null : slug,
+    /**
+     * La autorización deja de perderse aquí (tarea #133, oleada 19).
+     *
+     * Hasta ahora el visitante marcaba la casilla, la validación la exigía y
+     * después se tiraba: quedaba constancia de que el formulario funcionaba, no
+     * de que la persona hubiera autorizado el tratamiento de sus datos.
+     *
+     * Se envía el valor ya validado —nunca el crudo del formulario—, así que
+     * solo puede llegar `true`: el flujo no alcanza esta línea con la casilla
+     * desmarcada. La función de la base vuelve a comprobarlo por su cuenta,
+     * porque una llamada directa puede saltarse el formulario.
+     *
+     * Si la migración aún no está aplicada, la función de cuatro argumentos no
+     * reconoce el quinto y PostgREST responde `PGRST202`; el visitante recibe el
+     * mismo aviso de siempre («usa WhatsApp»), no un fallo silencioso. El orden
+     * de despliegue está en `docs/auditorias/contacto-autorizacion-20261031.md`:
+     * primero la migración, después este código.
+     */
+    p_autorizacion: validacion.datos.consentimiento,
   });
 
   if (error) {
