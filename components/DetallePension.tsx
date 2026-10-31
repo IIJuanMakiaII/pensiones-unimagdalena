@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { PensionPublica } from "@/types";
 import {
   atributosDeContacto,
@@ -50,6 +51,20 @@ export default function DetallePension({ pension }: Props) {
       <p className="mt-3 rounded-xl bg-primary-50 px-3.5 py-2.5 text-base font-semibold leading-relaxed text-primary-800 ring-1 ring-primary-100">
         Tu reserva la gestionamos nosotros: al pulsar «Reservar» nos escribes por WhatsApp y
         cerramos contigo el primer mes.
+      </p>
+
+      {/* El enlace va aquí y no dentro del botón: el botón y el flujo de WhatsApp
+          se quedan como están (decisión de Juan). Lo que se añade es el documento
+          donde se explica el depósito del 20 % que la ficha ya desglosa. */}
+      <p className="mt-2 text-sm leading-relaxed text-neutro-600">
+        Antes de reservar puedes leer la{" "}
+        <Link
+          href="/legal/reembolsos"
+          className="font-bold text-primary-700 underline-offset-2 hover:underline"
+        >
+          política de reembolsos
+        </Link>
+        : qué parte del depósito se devuelve y en qué plazos.
       </p>
 
       {/* Qué paga al reservar, con las cifras de la habitación elegida. Va **antes

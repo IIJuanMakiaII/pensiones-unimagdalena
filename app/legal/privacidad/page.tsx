@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import DocumentoLegal from "@/components/DocumentoLegal";
+import EnlacesLegales from "@/components/EnlacesLegales";
 import Footer from "@/components/Footer";
 import { SITIO_URL } from "@/lib/sitio";
 
@@ -36,6 +37,8 @@ export default function PrivacidadPage() {
             ← Volver al catálogo
           </Link>
         </p>
+
+        <EnlacesLegales actual="/legal/privacidad" />
 
         <DocumentoLegal archivo="aviso-de-privacidad.md" />
       </main>
