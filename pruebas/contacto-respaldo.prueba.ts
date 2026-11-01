@@ -464,6 +464,18 @@ describe("la acción de servidor · valida antes de guardar", () => {
     assert.doesNotMatch(accion, /origen\s*:/);
   });
 
+  it("manda la autorización a la función, no solo la exige en el formulario (tarea #133)", () => {
+    // El defecto medido: la casilla se validaba, se bloqueaba el envío sin ella y
+    // después el dato se perdía. Quedaba constancia del envío, no del
+    // consentimiento. Se comprueba el argumento exacto que viaja a la base y que
+    // es el valor **validado**, no el crudo del formulario.
+    assert.match(
+      accion,
+      /p_autorizacion:\s*validacion\.datos\.consentimiento/,
+      "la acción no envía la autorización a registrar_contacto_respaldo"
+    );
+  });
+
   it("sin base configurada lo dice en lugar de fallar en silencio", () => {
     assert.match(accion, /esSupabaseConfigurado\(\)/);
     assert.match(accion, /"sin_base"/);
