@@ -1,6 +1,6 @@
 # Aviso de privacidad y tratamiento de datos personales
 
-> **En una frase.** Este aviso explica qué datos guarda Nido, para qué los usa, quién
+> Este aviso explica qué datos guarda Nido, para qué los usa, quién
 > puede verlos y cómo pedir que se corrijan o se borren.
 
 ---
@@ -13,8 +13,8 @@ Marta - Magdalena - Colombia** y correo para asuntos de datos personales
 **oterojuan15@gmail.com**, es el responsable del tratamiento de los datos que se recogen
 en este sitio.
 
-El sitio es un servicio de la Universidad del Magdalena y su área de influencia en
-Santa Marta, Magdalena (Colombia).
+Nido ofrece alojamiento para estudiantes de la Universidad del Magdalena y su área de influencia en
+Santa Marta, Magdalena (Colombia). **No tiene convenio, vínculo ni representación de la Universidad del Magdalena**: el nombre de la institución se usa solo para indicar la zona y el público al que se dirige el servicio.
 
 ## 2. Qué datos guardamos
 

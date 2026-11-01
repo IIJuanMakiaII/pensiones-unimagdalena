@@ -2,7 +2,7 @@
 
 **Última actualización:** 11 de octubre de 2026.
 
-> **En una frase.** Nido gestiona el contacto y **la reserva del primer mes**. La
+> Nido gestiona el contacto y **la reserva del primer mes**. La
 > reserva equivale al **20 % del primer canon**, en dos rubros jurídicamente
 > distintos: la **Tarifa de Servicio de la Plataforma** (la mitad) y el **Anticipo del
 > Arriendo** (la otra mitad, que se entrega al propietario).

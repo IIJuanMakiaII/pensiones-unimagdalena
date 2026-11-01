@@ -100,6 +100,12 @@ export default function Footer() {
           >
             Condiciones de uso
           </Link>
+          <Link
+            href="/legal/reembolsos"
+            className="font-normal text-neutro-600 underline-offset-2 hover:text-neutro-800 hover:underline"
+          >
+            Política de reembolsos
+          </Link>
         </nav>
 
         {/* El aviso de demostración solo tiene sentido mientras la demostración

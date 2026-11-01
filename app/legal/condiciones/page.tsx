@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import DocumentoLegal from "@/components/DocumentoLegal";
+import EnlacesLegales from "@/components/EnlacesLegales";
 import Footer from "@/components/Footer";
 import { SITIO_URL } from "@/lib/sitio";
 
@@ -30,6 +31,8 @@ export default function CondicionesPage() {
             ← Volver al catálogo
           </Link>
         </p>
+
+        <EnlacesLegales actual="/legal/condiciones" />
 
         <DocumentoLegal archivo="condiciones-de-uso.md" />
       </main>
