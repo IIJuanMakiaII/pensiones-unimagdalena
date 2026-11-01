@@ -73,8 +73,9 @@ Si el propietario no entrega la habitación en la fecha pactada, cambia unilater
 1. Escribe a **oterojuan15@gmail.com** o al WhatsApp de la plataforma, desde el mismo número o correo con el que hiciste la reserva.
 2. Indica: **nombre completo, anuncio, fecha de la reserva y motivo** de la cancelación.
 3. Si es por fuerza mayor, adjunta el soporte (certificación de la universidad, certificado médico o prueba de la calamidad).
-4. Nido te responde **por escrito** con el monto que se devuelve, el que se retiene y la fecha de la devolución.
-5. La devolución se hace **por el mismo medio en que pagaste**.
+4. Nido te responde **por escrito** en un máximo de **cinco (5) días hábiles** contados desde que recibe la solicitud completa, con el monto que se devuelve, el que se retiene y la fecha de la devolución.
+5. La devolución se hace **por el mismo medio en que pagaste**, dentro de esos mismos cinco (5) días hábiles.
+6. Si la solicitud llega incompleta, el plazo empieza a contar cuando se complete.
 
 ---
 
