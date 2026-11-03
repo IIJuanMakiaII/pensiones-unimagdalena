@@ -1,9 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase/config";
+import {
+  SESION_MAXAGE_SEGUNDOS,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "@/lib/supabase/config";
 
-/** Rutas que exigen sesión activa de anfitrión. */
-const RUTAS_PROTEGIDAS = ["/publicar"];
+/**
+ * Rutas que exigen sesión activa.
+ *
+ * `/maestro` se añadió por SEC-04: la página comprobaba el rol contra la base,
+ * pero cuando no había sesión devolvía 200 con un panel vacío en lugar de
+ * mandar al login. El control dependía de cuándo se vaciaba el búfer de
+ * streaming, no de una regla.
+ */
+const RUTAS_PROTEGIDAS = ["/publicar", "/maestro"];
 
 /**
  * Refresca la sesión de Supabase en cada petición y protege las rutas privadas.
@@ -13,6 +24,7 @@ export async function actualizarSesion(peticion: NextRequest) {
   let respuesta = NextResponse.next({ request: { headers: peticion.headers } });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: { maxAge: SESION_MAXAGE_SEGUNDOS },
     cookies: {
       get(nombre: string) {
         return peticion.cookies.get(nombre)?.value;

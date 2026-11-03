@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase/config";
+import {
+  SESION_MAXAGE_SEGUNDOS,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "@/lib/supabase/config";
 
 /**
  * Cliente de Supabase para Server Components y Server Actions.
@@ -19,6 +23,7 @@ export async function crearClienteServidor() {
   const almacen = await cookies();
 
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: { maxAge: SESION_MAXAGE_SEGUNDOS },
     cookies: {
       get(nombre: string) {
         return almacen.get(nombre)?.value;

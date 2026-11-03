@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { destinoInterno } from "@/lib/destino-seguro";
 import { crearClienteServidor } from "@/utils/supabase/server";
 
 /**
@@ -16,11 +17,10 @@ import { crearClienteServidor } from "@/utils/supabase/server";
 export async function GET(peticion: NextRequest) {
   const url = new URL(peticion.url);
   const codigo = url.searchParams.get("code");
-  const destino = url.searchParams.get("next") ?? "/publicar";
-
-  // Solo rutas internas: sin esto, `?next=//evil.com` sería una redirección
-  // abierta hacia un dominio ajeno.
-  const destinoSeguro = destino.startsWith("/") && !destino.startsWith("//") ? destino : "/publicar";
+  // Solo rutas del propio origen. La comparación se hace resolviendo la URL,
+  // no mirando si el texto empieza por «/»: `/\evil.com` empieza por «/» y el
+  // navegador lo interpreta como `//evil.com` (SEC-03).
+  const destinoSeguro = destinoInterno(url.searchParams.get("next"), url.origin);
 
   if (codigo) {
     try {

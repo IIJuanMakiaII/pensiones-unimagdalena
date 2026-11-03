@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  experimental: {
+    serverActions: {
+      // Mitigación parcial de SEC-01 mientras no se migre a Next 16: los DoS
+      // de Server Actions viven en el tamaño y la frecuencia de las peticiones,
+      // y aquí no hay ningún formulario que envíe más de un puñado de kilobytes
+      // (las fotos van directas a Storage desde el navegador). 64 kB deja
+      // margen para el formulario más largo y recorta el vector por volumen.
+      bodySizeLimit: "64kb",
+    },
+  },
+
   images: {
     // AVIF desactivado a propósito mientras el proyecto esté en next@14.2.35:
     // habilitarlo activa la superficie del advisory de RCE en la Image

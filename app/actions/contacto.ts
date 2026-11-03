@@ -108,7 +108,10 @@ export async function enviarContactoRespaldo(formData: FormData): Promise<void> 
   });
 
   if (error) {
-    console.error("No se pudo guardar un contacto de respaldo:", error);
+    // Solo código y mensaje (SEC-05). El objeto completo de PostgREST puede
+    // citar el valor de la fila en una violación de restricción, y aquí la fila
+    // lleva el nombre y el teléfono del estudiante.
+    console.error("No se pudo guardar un contacto de respaldo:", error.code, error.message);
     /**
      * Un fallo que significa «a este despliegue le falta la migración» se separa
      * de un fallo de guardado de verdad. Es el único caso en el que quien

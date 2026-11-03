@@ -20,6 +20,25 @@ export function esSupabaseConfigurado(): boolean {
   );
 }
 
+/**
+ * Vida máxima de la cookie de sesión, en segundos (SEC-02).
+ *
+ * `@supabase/ssr` no fija `maxAge` y el navegador interpreta entonces la cookie
+ * como persistente: 400 días. Con `httpOnly: false` —que la librería necesita
+ * para refrescar la sesión en el cliente— eso significa que una cookie robada
+ * sirve durante más de un año.
+ *
+ * Doce horas acota la ventana sin cambiar el modelo de sesión: mientras la
+ * pestaña esté en uso, el middleware refresca la cookie en cada petición, así
+ * que el usuario activo no nota nada. Lo que cambia es que una sesión
+ * abandonada deja de ser válida al día siguiente, en vez de al año.
+ *
+ * No se pone `httpOnly: true`: rompería el refresco en el navegador
+ * (`createBrowserClient` lee la cookie). Está razonado en
+ * `docs/auditorias/seguridad-app-20261103.md` §4.
+ */
+export const SESION_MAXAGE_SEGUNDOS = 12 * 60 * 60;
+
 /** Nombre que se muestra cuando falta configuración. */
 export const AVISO_SIN_SUPABASE =
   "Supabase aún no está configurado: agrega NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local";
