@@ -78,6 +78,13 @@ el ID del hallazgo y falla si alguien deshace la corrección.
 | `npm run probar` | **649 pruebas, 649 pasan, 0 fallan** (634 previas + 15 nuevas) |
 | `npm run build` | correcto, exit 0 |
 
+**Orden importante:** `payload-publico.prueba.ts` exige un `.next` de producción. Si antes se
+levantó `next dev` —como hice para medir SEC-04— el `.next` queda en modo desarrollo, sin
+páginas prerenderizadas, y esa prueba falla con «no se encontró ninguna página
+prerenderizada». No es una regresión: se comprobó compilando en producción y repitiendo la
+batería (649/649). Es la misma fragilidad de orden que ya quedó anotada en la auditoría del
+código del 31-oct.
+
 Pruebas por hallazgo:
 
 - **SEC-03**: ocho casos —ruta interna, `/\evil.com`, `/\\evil.com`, `/\//`, `//evil.com`,
