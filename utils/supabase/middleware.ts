@@ -5,6 +5,7 @@ import {
   SUPABASE_ANON_KEY,
   SUPABASE_URL,
 } from "@/lib/supabase/config";
+import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
 
 /**
  * Rutas que exigen sesión activa.
@@ -30,9 +31,12 @@ export async function actualizarSesion(peticion: NextRequest) {
         return peticion.cookies.get(nombre)?.value;
       },
       set(nombre: string, valor: string, opciones: CookieOptions) {
-        peticion.cookies.set({ name: nombre, value: valor, ...opciones });
+        // La vida se fuerza aquí, no en `cookieOptions` (SEC-02): la librería
+        // sobrescribe `maxAge` con su default de 400 días.
+        const efectivas = opcionesDeCookieDeSesion(opciones);
+        peticion.cookies.set({ name: nombre, value: valor, ...efectivas });
         respuesta = NextResponse.next({ request: { headers: peticion.headers } });
-        respuesta.cookies.set({ name: nombre, value: valor, ...opciones });
+        respuesta.cookies.set({ name: nombre, value: valor, ...efectivas });
       },
       remove(nombre: string, opciones: CookieOptions) {
         peticion.cookies.set({ name: nombre, value: "", ...opciones });

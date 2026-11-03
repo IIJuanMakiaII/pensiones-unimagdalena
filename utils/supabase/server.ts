@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { escribirCookieDeSesion } from "@/lib/supabase/cookies";
 import {
   SESION_MAXAGE_SEGUNDOS,
   SUPABASE_ANON_KEY,
@@ -30,7 +31,7 @@ export async function crearClienteServidor() {
       },
       set(nombre: string, valor: string, opciones: CookieOptions) {
         try {
-          almacen.set(nombre, valor, opciones);
+          escribirCookieDeSesion(almacen, nombre, valor, opciones);
         } catch {
           /* Llamado desde un Server Component: el middleware refresca la sesión. */
         }

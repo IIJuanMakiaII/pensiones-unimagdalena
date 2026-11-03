@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import FormularioLogin from "@/components/FormularioLogin";
 import Footer from "@/components/Footer";
+import { destinoInterno } from "@/lib/destino-seguro";
 import { esSupabaseConfigurado } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -17,10 +18,14 @@ interface Props {
 
 export default async function LoginPage({ searchParams }: Props) {
   const { destino: destinoSolicitado, aviso } = await searchParams;
-  // Solo rutas internas: `startsWith("/")` dejaba pasar `//evil.com`, que el
-  // navegador interpreta como dominio externo (redirección abierta).
-  const destino =
-    destinoSolicitado && /^\/(?!\/)/.test(destinoSolicitado) ? destinoSolicitado : "/publicar";
+  // Misma regla que `/auth/confirmar` (SEC-03): se resuelve el destino y se
+  // compara el origen. El filtro anterior —una expresión regular que exigía
+  // barra inicial y descartaba la doble barra— bloqueaba `//evil.com` pero no
+  // `/\evil.com`, que el navegador lee como dominio externo. Aquí el
+  // valor termina en `router.push`, que no sale del origen, así que era un fallo
+  // latente; se corrige igual para que solo haya una regla.
+  // El origen es ficticio a propósito: solo sirve de base para resolver rutas.
+  const destino = destinoInterno(destinoSolicitado, "https://nido.invalid");
 
   return (
     <>
